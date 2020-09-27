@@ -25,12 +25,19 @@ class Octree {
 		Octree * down_back_right;
 
 		Octree(float x, float y, float z, float size,int max_points,int max_depth);
+		~Octree();
+		void Octree::destructRecursive();
 
 		bool insertPoint(Point * p);
 		bool isOutside(std::vector<float> pos,float size,Point * p);
 		void subdivide();
+		
+		//o argumento count é usado para saber quantos pontos sao testados
+		std::vector<Point*> queryOctree(std::vector<float> center, float size,int & count);
+		bool intersects(std::vector<float> center, float size);
 
 		void draw();
 
 	private:
+		float right, left, top, bot, front, back;
 };
