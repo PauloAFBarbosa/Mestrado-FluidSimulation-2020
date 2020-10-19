@@ -1,0 +1,13 @@
+@article{doi:10.1111/cgf.14090,
+author = {Winchenbach, R. and Kolb, A.},
+title = {Multi-Level Memory Structures for Simulating and Rendering Smoothed Particle Hydrodynamics},
+journal = {Computer Graphics Forum},
+volume = {39},
+number = {6},
+pages = {527-541},
+keywords = {fluid modelling, animation, surface reconstruction, modelling, ray tracing, rendering},
+doi = {10.1111/cgf.14090},
+url = {https://onlinelibrary.wiley.com/doi/abs/10.1111/cgf.14090},
+eprint = {https://onlinelibrary.wiley.com/doi/pdf/10.1111/cgf.14090},
+year = {2020}
+}

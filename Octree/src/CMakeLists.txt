@@ -28,6 +28,7 @@ if  (WIN32)
 	endif (NOT EXISTS "${GLUT_DIR}/GL/glut.h" OR NOT EXISTS "${GLUT_DIR}/glut32.lib")	
 	include_directories(${GLUT_DIR})
 	link_directories(${GLUT_DIR})
+
 	target_link_libraries(${PROJECT_NAME} ${OPENGL_LIBRARIES} ${GLUT_DIR}/glut32.lib )
 	
 else (WIN32) #Linux and Mac

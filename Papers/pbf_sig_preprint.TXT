@@ -1,0 +1,10 @@
+@article{article,
+author = {Macklin, Miles and Müller, Matthias},
+year = {2013},
+month = {07},
+pages = {104:1-},
+title = {Position Based Fluids},
+volume = {32},
+journal = {ACM Transactions on Graphics},
+doi = {10.1145/2461912.2461984}
+}

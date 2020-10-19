@@ -1,0 +1,9 @@
+@inproceedings{inproceedings,
+author = {Ihmsen, Markus and Akinci, Nadir and Gissler, Marc and Teschner, Matthias},
+year = {2010},
+month = {01},
+pages = {79-88},
+title = {Boundary Handling and Adaptive Time-stepping for PCISPH},
+journal = {VRIPHYS'10},
+doi = {10.2312/PE/vriphys/vriphys10/079-088}
+}

@@ -1,0 +1,8 @@
+@ARTICLE{8941044,
+  author={R. {Xi} and Z. {Luo} and D. D. {Feng} and Y. {Zhang} and X. {Zhang} and T. {Han}},
+  journal={IEEE Access}, 
+  title={Survey on Smoothed Particle Hydrodynamics and the Particle Systems}, 
+  year={2020},
+  volume={8},
+  number={},
+  pages={3087-3105},}
