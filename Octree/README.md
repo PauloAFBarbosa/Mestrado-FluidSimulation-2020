@@ -21,9 +21,3 @@ If configure and generate was done correctly, you can open and just use any IDE 
 >If glut32.dll is missing at some point, try copy the file in toolkits to:
 >C:/WINDOWS/SysWOW64/
 
-# Team
-[Francisco Lira](https://github.com/FranciscoLira)
-
-[Joel Gama](https://github.com/JoelGama)
-
-[Paulo Barbosa](https://github.com/PauloAFBarbosa)
