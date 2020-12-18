@@ -1,12 +1,13 @@
 #pragma once
-#include <vector>
+#include "../glm/vec3.hpp"
 #include "../src/Point.h"
+#include <vector>
 
 class Octree {
 
 
 	public:
-		std::vector<float> pos;
+		glm::vec3 pos;
 		//metade do comprimento do lado do cubo
 		float size;
 		bool devided;
@@ -29,12 +30,12 @@ class Octree {
 		void Octree::destructRecursive();
 
 		bool insertPoint(Point * p);
-		bool isOutside(std::vector<float> pos,float size,Point * p);
+		bool isOutside(glm::vec3 pos,float size,Point * p);
 		void subdivide();
 		
 		//o argumento count é usado para saber quantos pontos sao testados
-		std::vector<Point*> queryOctree(std::vector<float> center, float size,int & count);
-		bool intersects(std::vector<float> center, float size);
+		void Octree::queryOctree(glm::vec3 center, float size, int& count, std::vector<Point*> * ret);
+		bool intersects(glm::vec3 center, float size);
 
 		void draw();
 

@@ -29,7 +29,15 @@ if  (WIN32)
 	include_directories(${GLUT_DIR})
 	link_directories(${GLUT_DIR})
 
-	target_link_libraries(${PROJECT_NAME} ${OPENGL_LIBRARIES} ${GLUT_DIR}/glut32.lib )
+	message(STATUS "Anttweakbar_DIR set to: " ${ANT_DIR})
+	set(ANDT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../toolkits/AntTweakBar/" CACHE PATH "Path to ANT folder")
+	if (NOT EXISTS "${ANDT_DIR}/include/AntTweakBar.h" OR NOT EXISTS "${ANDT_DIR}/include/AntTweakBar64.lib")
+		message(ERROR ": Ant not found")
+	endif (NOT EXISTS "${ANDT_DIR}/include/AntTweakBar.h" OR NOT EXISTS "${ANDT_DIR}/include/AntTweakBar64.lib")	
+	include_directories(${ANDT_DIR})
+	link_directories(${ANDT_DIR})
+
+	target_link_libraries(${PROJECT_NAME} ${OPENGL_LIBRARIES} ${GLUT_DIR}/glut32.lib ${ANDT_DIR}/include/AntTweakBar64.lib)
 	
 else (WIN32) #Linux and Mac
 

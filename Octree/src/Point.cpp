@@ -1,21 +1,23 @@
 #include "Point.h"
-#include <vector>
+
 #include "../toolkits/glut/GL/glut.h"
 
 Point::Point(float x, float y, float z)
 {
-	std::vector<float> temp (3);
-	temp.at(0) = x;
-	temp.at(1) = y;
-	temp.at(2) = z;
-	this->pos = temp;
+	this->originalPos = glm::vec3(x,y,z);
+	this->pos = glm::vec3(x, y, z);
+	
+	this->color = glm::vec3(1, 1, 1);
 
-	std::vector<float> temp2(3);
-	temp2.at(0) = 1;
-	temp2.at(1) = 1;
-	temp2.at(2) = 1;
+	this->force = glm::vec3(0, 0, 0);
 
-	this->color = temp2;
+	
+	this->velocity = glm::vec3 (0);
+	this->velocityEval = glm::vec3(0);
+	this->density = 0;
+	this->pressure= 0;
+	this->force = glm::vec3(0);
+	this->viscosity = glm::vec3(0);
 	
 }
 
@@ -26,11 +28,16 @@ Point::~Point()
 
 void Point::draw()
 {
-	glColor3f(this->color.at(0), this->color.at(1), this->color.at(2));
-	glVertex3f(this->pos.at(0), this->pos.at(1), this->pos.at(2));
+	
+	glColor3f(this->color.x, this->color.y, this->color.z);
+	glPushMatrix();
+	glTranslatef(this->pos.x, this->pos.y, this->pos.z);
+	glutWireSphere(1, 4, 4);
+	glPopMatrix();
+	//glVertex3f(this->pos.x, this->pos.y, this->pos.z);
 
-	this->color.at(0) = 1;
-	this->color.at(1) = 1;
-	this->color.at(2) = 1;
+	this->color.x = 1;
+	this->color.y = 1;
+	this->color.z = 1;
 
 }

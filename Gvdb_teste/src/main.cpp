@@ -330,6 +330,17 @@ int main(int argc, char** argv) {
 	gvdb.SetCudaDevice(GVDB_DEV_FIRST);
 	gvdb.Initialize();
 	gvdb.AddPath("/mypath");
+	gvdb.Configure(3, 3, 3, 3, 5);
+	gvdb.AddChannel(0, T_FLOAT, 1);
+	Vector3DF * n = new Vector3DF(1, 1, 1);
+	for (size_t i = 0; i < 100; i++)
+	{
+		gvdb.ActivateSpace(*n);
+	}
+
+	gvdb.FinishTopology();
+	gvdb.UpdateAtlas();
+	//gvdb.ClearAtlas();
 
 	o= new Octree(0,0,0,size,max_points,max_depth);
 
