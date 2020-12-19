@@ -38,6 +38,7 @@ class Octree {
 		bool intersects(glm::vec3 center, float size);
 
 		void draw();
+		void drawOut();
 
 	private:
 		float right, left, top, bot, front, back;

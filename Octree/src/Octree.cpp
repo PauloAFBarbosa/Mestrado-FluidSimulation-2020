@@ -142,9 +142,9 @@ void Octree::queryOctree(glm::vec3 center, float size,int & count, std::vector<P
 			if (!this->isOutside(center, size, this->points.at(i))) {
 				
 				//puts the point red
-				this->points.at(i)->color.x = 1;
-				this->points.at(i)->color.y = 0;
-				this->points.at(i)->color.z = 0;
+				//this->points.at(i)->color.x = 1;
+				//this->points.at(i)->color.y = 0;
+				//this->points.at(i)->color.z = 0;
 				ret->push_back(this->points.at(i));
 				count++;
 			}
@@ -225,4 +225,13 @@ void Octree::draw(){
 	}
 }
 
+
+void Octree::drawOut() {
+
+	glPushMatrix();
+	glTranslatef(this->pos.x, this->pos.y, this->pos.z);
+	glutWireCube(this->size * 2);
+	glPopMatrix();
+
+}
 

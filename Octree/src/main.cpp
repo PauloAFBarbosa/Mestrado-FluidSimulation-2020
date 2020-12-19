@@ -1,4 +1,4 @@
-#ifdef __APPLE__
+ï»¿#ifdef __APPLE__
 #include <GLUT/glut.h>
 #else
 #include <iostream>
@@ -14,9 +14,18 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 
+double PFORCE_FREQ = 8.0;
+double PFORCE_MIN = 0;
+//testar com 10 aqui 
+double PFORCE_MAX = 0;
+double H = 0.01; // Com o H a 10 ja apanha algumas particulas vizinhas
+double m_Poly6Kern = 315.0f / (64.0f * 3.141592 * pow(H, 9));	// Wpoly6 kernel (denominator part) - 2003 Muller, p.4
+double m_SpikyKern = -45.0f / (3.141592 * pow(H, 6));			// Laplacian of viscocity (denominator): PI h^6
+double m_LapKern = 45.0f / (3.141592 * pow(H, 6));
+
 double GRAVITYVALUE = -9.8;
-glm::vec3 GRAVITY= glm::vec3(0, GRAVITYVALUE, 0);
-//mins e max para o volume da simulação
+glm::vec3 GRAVITY = glm::vec3(0, GRAVITYVALUE, 0);
+//mins e max para o volume da simulaï¿½ï¿½o
 double XMIN = 0, XMAX = 200;
 double YMIN = 0, YMAX = 200;
 double ZMIN = 0, ZMAX = 200;
@@ -33,16 +42,16 @@ double PVEL_LIMIT = 3.0;		// m / s
 double PMAX_FRAC = 1.0;
 
 double EPSILON = 0.0001;
-double RADIUS = 1;
+double RADIUS = 0.02;
 double DECLIVE = 0.0;
-double SIMULATIONSCALE = 0.002;
+double SIMULATIONSCALE = 0.005;
 double MASS = 0.00020543;
 
-double H =3; // Com o H a 10 ja apanha algumas particulas vizinhas
-double RESTDENSITY= 1500;
-double VISCOSITY=0.35;
+double RESTDENSITY = 600;
+double VISCOSITY = 0.35;
 double K = 1.5;
-//se o spacing for muito grande as particulas ignoram as colisoes com a caixa. nao sei porque ----- o max que posso ter é 3
+//se o spacing for muito grande as particulas ignoram as colisoes com a caixa. nao sei porque ----- o max que posso ter ï¿½ 3
+//Spacing vai ser determinado pela rest density 
 double SPACING = 3; //espaco usado para separar particulas
 
 int points_p = 5000;
@@ -52,19 +61,19 @@ double size = 100;
 int max_points = 100;
 int max_depth = 5;
 
-int frame=0;
-double fps=0;
-glm::vec3 center= glm::vec3( 0, 0, 0 );
-double size_query=H*2;
-std::vector<Point *> points;
+int frame = 0;
+double fps = 0;
+glm::vec3 center = glm::vec3(0, 0, 0);
+double size_query = H * 2;
+std::vector<Point*> points;
 
 int mytime;
 int timebase;
 int maxTime = 10000;
 double stepT = 100.0f / maxTime;
 
-double alfa = 0.0f, beta = 0.5f, radius = 500.0f;
-double camX = 50, camY = 50, camZ = -50;
+double alfa = 0.0f, beta = 0.5f, radius = 200.0f;
+double camX = (XMIN+XMAX)/2, camY = 0, camZ = (ZMIN + ZMAX) / 2;
 double rot = 0;
 int winid = 0;
 
@@ -74,12 +83,32 @@ int winid = 0;
 
 /**
  * @brief calculates the cam values (used in GluLookAt function) from the alteration of alfa, beta and radius
- * 
+ *
  */
 void spherical2Cartesian() {
-	camX = radius * cos(beta) * sin(alfa) + 100;
-	camY = radius * sin(beta) +100;
-	camZ = radius * cos(beta) * cos(alfa)+100;
+	camX = radius * cos(beta) * sin(alfa) + (XMIN+XMAX)/2;
+	camY = radius * sin(beta) + (YMIN + YMAX) / 2;
+	camZ = radius * cos(beta) * cos(alfa) + (ZMIN + ZMAX) / 2;
+}
+
+
+void SetupSpacing()
+{
+	
+		// Determine spacing from density
+		double PDIST =pow(MASS / RESTDENSITY, 1 / 3.0);
+		SPACING = PDIST * 0.87 / SIMULATIONSCALE;
+
+		H = SPACING; 
+
+		//vai fazer update aos kernels
+
+		m_Poly6Kern = 315.0f / (64.0f * 3.141592 * pow(H, 9));	// Wpoly6 kernel (denominator part) - 2003 Muller, p.4
+		m_SpikyKern = -45.0f / (3.141592 * pow(H, 6));			// Laplacian of viscocity (denominator): PI h^6
+		m_LapKern = 45.0f / (3.141592 * pow(H, 6));
+		printf("Spacing -> %f \n", SPACING);
+	
+	
 }
 
 void restart() {
@@ -91,26 +120,39 @@ void restart() {
 	double step = 1.0;
 	double r1, r2, r3;
 	Point* p;
+	double sizex = XMAX - XMIN;
+	if (sizex < 0)
+		sizex = sizex * (-1);
 
+	double sizez = YMAX - YMIN;
+	if (sizez < 0)
+		sizez = sizez * (-1);
 	//controla o Y
 	for (size_t i = 0; i < (o->size * 2) / SPACING && done == false; i++)
 	{
 		//controla o Z
-		for (size_t j = 0; j < (o->size * 2) / SPACING && done == false; j++)
+		for (size_t j = 0; j < (sizez) / SPACING && done == false; j++)
 		{
 			//controla o X
-			for (size_t k = 0; k < (o->size * 2) / SPACING && done == false; k++)
+			for (size_t k = 0; k < (sizex) / SPACING && done == false; k++)
 			{
 				if (countPoints >= points_p) {
 					done = true;
 					break;
 				}
-				r1 = k * SPACING;
-				//o -10 é para nao estar a cirar as particulas mesmo em cima do cubo
-				r2 = (size * 2 - 10) - i * SPACING;
-				r3 = j * SPACING;
+				//vai adicionar um bocado de random aos pontos criados
+				double rx = ((double)rand() / (RAND_MAX));
+				double rz = ((double)rand() / (RAND_MAX));
+				r1 = (XMIN ) + k * SPACING;
+				//o -10 ï¿½ para nao estar a cirar as particulas mesmo em cima do cubo
+				r2 = 15 + i * SPACING;
+				r3 = (ZMIN)+j * SPACING;
 
-				p = new Point(r1, r2, r3);
+				//isto Ã© usado para nao gerar particulas perto das paredes
+				r1 = r1 * 0.8 +5;
+				r3 = r3 * 0.8+5;
+
+				p = new Point(r1, r2, r3 );
 				points.push_back(p);
 				countPoints++;
 			}
@@ -127,18 +169,27 @@ void restart() {
 
 	end = std::chrono::steady_clock::now();
 	pontos_inseridos += points_p;
-	std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() << "[µs]" << std::endl;
+	std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() << "[ï¿½s]" << std::endl;
 	std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::nanoseconds> (end - begin).count() << "[ns]" << std::endl;
 }
 
 void processKeys(unsigned char c, int xx, int yy) {
 	double step = 1.0;
-	double r1,r2,r3;
-	
+	double r1, r2, r3;
+
 	int countPoints = 0;
 	bool done = false;
 	std::chrono::steady_clock::time_point begin, end;
 	Point* p;
+
+	double sizex = XMAX - XMIN;
+	if (sizex < 0)
+		sizex = sizex * (-1);
+
+	double sizez = YMAX - YMIN;
+	if (sizez < 0)
+		sizez = sizez * (-1);
+
 	switch (c)
 	{
 	case 'w':
@@ -168,45 +219,51 @@ void processKeys(unsigned char c, int xx, int yy) {
 		restart();
 		break;
 	case 'p':
-			
-			//controla o Y
-			for (size_t i = 0; i < (o->size*2)/SPACING && done ==false ; i++)
+
+		//controla o Y
+		for (size_t i = 0; i < (o->size * 2) / SPACING && done == false; i++)
+		{
+			//controla o Z
+			for (size_t j = 0; j < (sizez) / SPACING && done == false; j++)
 			{
-				//controla o Z
-				for (size_t j = 0; j < (o->size * 2) / SPACING && done == false; j++)
+				//controla o X
+				for (size_t k = 0; k < (sizex) / SPACING && done == false; k++)
 				{
-					//controla o X
-					for (size_t k = 0; k < (o->size * 2) / SPACING && done == false; k++)
-					{
-						if (countPoints >= points_p) {
-							done = true;
-							break;
-						}
-						r1 = k * SPACING;
-						//o -10 é para nao estar a cirar as particulas mesmo em cima do cubo
-						r2 = (size*2 -10) - i * SPACING;
-						r3 = j * SPACING;
-
-						p = new Point(r1, r2, r3);
-						points.push_back(p);
-						countPoints++;
+					if (countPoints >= points_p) {
+						done = true;
+						break;
 					}
+					//vai adicionar um bocado de random aos pontos criados
+					double rx = ((double)rand() / (RAND_MAX));
+					double rz = ((double)rand() / (RAND_MAX));
 
+					r1 = XMIN + k * SPACING;
+					//o -10 ï¿½ para nao estar a cirar as particulas mesmo em cima do cubo
+					r2 = (15) + i * SPACING;
+					r3 = ZMIN + j * SPACING;
+					//isto Ã© usado para nao gerar particulas perto das paredes
+					r1 = r1 * 0.8 + 5;
+					r3 = r3 * 0.8 + 5;
+					p = new Point(r1+rx, r2, r3+rz);
+					points.push_back(p);
+					countPoints++;
 				}
+
 			}
+		}
 
 		//separei a parte de inserir os pontos porque quero medir apenas a parte de inserir.
 		//no programa ele vai gerar os pontos 1 vez e vai inserir numa nova arvore cada frame
 		begin = std::chrono::steady_clock::now();
 		for (int i = 0; i < points_p; i++) {
-			o->insertPoint(points.at(pontos_inseridos+i));
+			o->insertPoint(points.at(pontos_inseridos + i));
 		}
 
 		end = std::chrono::steady_clock::now();
 		pontos_inseridos += points_p;
-		std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() << "[µs]" << std::endl;
+		std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() << "[ï¿½s]" << std::endl;
 		std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::nanoseconds> (end - begin).count() << "[ns]" << std::endl;
-		
+
 		break;
 	default:
 		break;
@@ -214,7 +271,7 @@ void processKeys(unsigned char c, int xx, int yy) {
 	glutPostRedisplay();
 }
 
-void processSpecialKeys(int key, int xx, int yy) { 
+void processSpecialKeys(int key, int xx, int yy) {
 	switch (key) {
 
 	case GLUT_KEY_RIGHT:
@@ -272,11 +329,11 @@ void changeSize(int w, int h) {
 
 /**
  * @brief draw an x,y,z axis for better visualization of scenario
- * 
+ *
  */
 void drawAxis() {
 	// red x
-	glColor3f(1.0, 0.0, 0.0); 
+	glColor3f(1.0, 0.0, 0.0);
 	glBegin(GL_LINES);
 	glVertex3f(-4.0, 0.0f, 0.0f);
 	glVertex3f(4.0, 0.0f, 0.0f);
@@ -308,7 +365,7 @@ void drawAxis() {
 	glFlush();
 
 	// blue z
-	glColor3f(0.0, 0.0, 1.0); 
+	glColor3f(0.0, 0.0, 1.0);
 	glBegin(GL_LINES);
 	glVertex3f(0.0, 0.0f, -4.0f);
 	glVertex3f(0.0, 0.0f, 4.0f);
@@ -351,97 +408,243 @@ void updatePoints() {
 	}
 }
 
-void move() {
+
+
+void kernelPoly6(double h, double* ret) {
+
+	//*ret= (315 / (64 * 3.14159265359 * pow(h, 9))) * pow((pow(h, 2) - pow(glm::l1Norm(a - b), 2)), 3);
+	*ret = 315.0f / (64.0f * 3.141592 * pow(h, 9));
+	return;
+
+}
+
+void kernelSpiky(double h, double* ret) {
+
+	*ret = ((double)-45.0 / (double)(3.14159265359 * pow(h, 6)));
+
+
+	return;
+}
+
+void kernelSpikyPositive(double h, double* ret) {
+
+	*ret = ((double)45.0 / (double)(3.14159265359 * pow(h, 6)));
+
+
+	return;
+}
+
+void pressureGrid() {
+	int i, j, cnt = 0;
+	int nbr;
+	float dx, dy, dz, sum, dsq, c;
+	float d = SIMULATIONSCALE;
+	float d2 = d * d;
+
+	float radius = H / SIMULATIONSCALE;
+
+	glm::vec3 dst;
 	
-	double dif;
-	for each (Point * p in points)
-	{
-		glm::vec3 acceleration = p->force;
-		acceleration *= MASS;
+	int nbrcnt = 0;
+	int srch = 0;
+
+	
+
+	for each (Point * p in points ) {
 		
-		//vai ver se o ponto saiu para baixo
-		//estao a cair do cubo.
-		//vai calcular a colisão com o centro da particula --> se dif for positivo esta a baixo da base
-		double slope_x = p->pos.x - XMIN;
-		dif = RADIUS - (p->pos.y - (YMIN + (slope_x)*DECLIVE)) * SIMULATIONSCALE;
+		sum = 0.0;
 
-		if (dif > EPSILON) {
-			//vai fazer a normal com slope, caso exista
-			glm::vec3 normal = glm::vec3(-DECLIVE,1- DECLIVE,0);
+		std::vector<Point*> query;
+		int count = 0;
+		o->queryOctree(p->pos, H, count, &query);
 
-			double adj = PINTSTIFF * dif - PEXTDAMP * glm::dot(normal, p->velocityEval);
+		for each (Point * p2 in query) {
+			//se o ponto for o mesmo que o ponto atual, passa a frente
+			if (p->pos.x == p2->pos.x && p->pos.y == p2->pos.y && p->pos.z == p2->pos.z)
+				continue;
+			dst = p2->pos;
+			dst -= p->pos;
+			dsq = d2 * (dst.x * dst.x + dst.y * dst.y + dst.z * dst.z);
+			if (dsq <= (H*H)) {
+				c = (H * H) - dsq;
+				sum += c * c * c;
+				
+				
+			}
 			
-			acceleration.x += adj * normal.x ;
-			acceleration.y += adj * normal.y ;
-			acceleration.z += adj * normal.z ;
-		}
-
-		
-		// Nao vai fazer bound na parede de cima
-		dif = RADIUS - (YMAX - p->pos.y) * SIMULATIONSCALE;
-		if (dif > EPSILON) {
-			glm::vec3 normal = glm::vec3(0, -1, 0);
-			double adj = PINTSTIFF * dif - PEXTDAMP * glm::dot(normal, p->velocityEval);
-			acceleration.x += adj * normal.x ;
-			acceleration.y += adj * normal.y ;
-			acceleration.z += adj * normal.z ;
 			
 		}
+		//printf("Sum %f\n", sum);
+		p->density = sum * MASS * m_Poly6Kern;
+		p->pressure = (p->density - RESTDENSITY) * PINTSTIFF;
+		
+		p->density = 1.0f / p->density;
 
-		//X-azis walls
-		dif = RADIUS - (p->pos.x - XMIN) * SIMULATIONSCALE;
-		if (dif > EPSILON) {
-			glm::vec3 normal = glm::vec3(1, 0, 0);
-			double adj = PINTSTIFF * dif - PEXTDAMP * glm::dot(normal, p->velocityEval);
-			acceleration.x += adj * normal.x;
-			acceleration.y += adj * normal.y;
-			acceleration.z += adj * normal.z;
+		//printf("Density %f\nPressure %f\n", p->density, p->pressure);
+
+	}
+
+}
+
+void forceGrid() {
+	
+	register float pterm, vterm, dterm;
+	int i, j, nbr;
+	float c, d;
+	float dx, dy, dz;
+	float mR, mR2, visc;
+
+	d = SIMULATIONSCALE;
+	mR = H;
+	visc = VISCOSITY;
+	glm::vec3	jpos;
+	float		jdist;
+	float		jpress;
+	float		jdensity;
+	glm::vec3	jveleval;
+
+	float		dsq;
+	float		d2 = d * d;
+	
+	for each (Point * p in points) {
+		p->force = glm::vec3(0);
+
+		std::vector<Point*> query;
+		int count = 0;
+		o->queryOctree(p->pos, H, count, &query);
+		//printf("2- A query apanhou %d elementos\n", count);
+		for each (Point * p2 in query)
+		{
+			if (p->pos.x == p2->pos.x && p->pos.y == p2->pos.y && p->pos.z == p2->pos.z)
+				continue;
+			
+			jpos = p2->pos;
+			dx = (p->pos.x - jpos.x);		// dist in cm
+			dy = (p->pos.y - jpos.y);
+			dz = (p->pos.z - jpos.z);
+			dsq = d2 * (dx * dx + dy * dy + dz * dz);
+			if (dsq <= (H*H)) {
+
+				jdist = sqrt(dsq);
+
+				jpress = p2->pressure;
+				jdensity = p2->density;
+				jveleval = p2->velocityEval;
+				dx = (p->pos.x - jpos.x);		// dist in cm
+				dy = (p->pos.y - jpos.y);
+				dz = (p->pos.z - jpos.z);
+				c = (mR - jdist);
+				pterm = d * -0.5f * c * m_SpikyKern * (p->pressure + jpress) / jdist;
+				dterm = c * (p->density) * jdensity;
+				vterm = m_LapKern * visc;
+				p->force.x += (pterm * dx + vterm * (jveleval.x - p->velocityEval.x)) * dterm;
+				p->force.y += (pterm * dy + vterm * (jveleval.y - p->velocityEval.y)) * dterm;
+				p->force.z += (pterm * dz + vterm * (jveleval.z - p->velocityEval.z)) * dterm;
+
+				//printf("Force %f %f %f\n", p->force.x, p->force.y, p->force.z);
+			}
+			
 		}
-		dif = RADIUS - (XMAX - p->pos.x) * SIMULATIONSCALE;
-		if (dif > EPSILON) {
-			glm::vec3 normal = glm::vec3(-1, 0, 0);
-			double adj = PINTSTIFF * dif - PEXTDAMP * glm::dot(normal, p->velocityEval);
-			acceleration.x += adj * normal.x;
-			acceleration.y += adj * normal.y;
-			acceleration.z += adj * normal.z;
+		//printf("------\n");
+	}
+}
+
+void move() {
+	glm::vec3 norm, z;
+	glm::vec3 dir, accel;
+	glm::vec3 vnext;
+	glm::vec3 bmin, bmax;
+	glm::vec3 clr;
+	double adj;
+	float AL, AL2, SL, SL2, ss, radius;
+	float stiff, damp, speed, diff;
+
+	AL = PACCEL_LIMIT;	AL2 = AL * AL;
+	SL = PVEL_LIMIT;	SL2 = SL * SL;
+
+	stiff = PEXTSTIFF;
+	damp = PEXTDAMP;
+	radius = RADIUS;
+	bmin = glm::vec3(XMIN, YMIN, ZMIN);
+	bmax = glm::vec3(XMAX, YMAX, ZMAX);;
+	ss = SIMULATIONSCALE;
+
+	for each (Point * p in points) {
+		// Compute Acceleration		
+		accel = p->force;
+		accel *= MASS;
+
+		// Boundary Conditions
+		// Y-axis walls
+		diff = radius - (p->pos.y - (bmin.y + (p->pos.x - bmin.x) * DECLIVE)) * ss;
+		if (diff > EPSILON) {
+			norm = glm::vec3(-DECLIVE, 1 - DECLIVE, 0);
+
+			adj = stiff * diff - damp * glm::dot(norm, p->velocityEval);
+			accel.x += adj * norm.x; accel.y += adj * norm.y; accel.z += adj * norm.z;
+		}
+		diff = radius - (bmax.y - p->pos.y) * ss;
+		if (diff > EPSILON) {
+			norm = glm::vec3(0, -1, 0);
+			adj = stiff * diff - damp * glm::dot(norm, p->velocityEval);
+			accel.x += adj * norm.x; accel.y += adj * norm.y; accel.z += adj * norm.z;
+		}
+
+		// X-axis walls
+		if (true) {
+			diff = radius - (p->pos.x - (bmin.x + (sin(m_Time * PFORCE_FREQ) + 1) * 0.5 * PFORCE_MIN)) * ss;
+			//diff = 2 * radius - ( p->pos.x - min.x + (sin(m_Time*10.0)-1) * m_Param[FORCE_XMIN_SIN] )*ss;	
+			if (diff > EPSILON) {
+				norm = glm::vec3(1.0, 0, 0);
+				adj = (PFORCE_MIN + 1) * stiff * diff - damp * glm::dot(norm, p->velocityEval);
+				accel.x += adj * norm.x; accel.y += adj * norm.y; accel.z += adj * norm.z;
+			}
+
+			diff = radius - ((bmax.x - (sin(m_Time * PFORCE_FREQ) + 1) * 0.5 * PFORCE_MAX) - p->pos.x) * ss;
+			if (diff > EPSILON) {
+				norm = glm::vec3(-1, 0, 0);
+				adj = (PFORCE_MAX + 1) * stiff * diff - damp * glm::dot(norm, p->velocityEval);
+				accel.x += adj * norm.x; accel.y += adj * norm.y; accel.z += adj * norm.z;
+			}
 		}
 
 		// Z-axis walls
-		dif = RADIUS - (p->pos.z - ZMIN) * SIMULATIONSCALE;
-		if (dif > EPSILON) {
-			glm::vec3 normal = glm::vec3(0, 0, 1);
-			double adj = PINTSTIFF * dif - PEXTDAMP * glm::dot(normal, p->velocityEval);
-			acceleration.x += adj * normal.x;
-			acceleration.y += adj * normal.y;
-			acceleration.z += adj * normal.z;
+		diff = radius - (p->pos.z - bmin.z) * ss;
+		if (diff > EPSILON) {
+			norm = glm::vec3(0, 0, 1);
+			adj = stiff * diff - damp * glm::dot(norm, p->velocityEval);
+			accel.x += adj * norm.x; accel.y += adj * norm.y; accel.z += adj * norm.z;
 		}
-		dif = RADIUS - (ZMAX - p->pos.z) * SIMULATIONSCALE;
-		if (dif > EPSILON) {
-			glm::vec3 normal = glm::vec3(0, 0, -1);
-			double adj = PINTSTIFF * dif - PEXTDAMP * glm::dot(normal, p->velocityEval);
-			acceleration.x += adj * normal.x;
-			acceleration.y += adj * normal.y;
-			acceleration.z += adj * normal.z;
+		diff = radius - (bmax.z - p->pos.z) * ss;
+		if (diff > EPSILON) {
+			norm = glm::vec3(0, 0, -1);
+			adj = stiff * diff - damp * glm::dot(norm, p->velocityEval);
+			accel.x += adj * norm.x; accel.y += adj * norm.y; accel.z += adj * norm.z;
 		}
-		
+
+
+
+
 		// Plane gravity
-		acceleration += GRAVITY;
+		accel += GRAVITY;
+
+
 
 		// Acceleration limiting 
-		double speed = acceleration.x * acceleration.x + acceleration.y * acceleration.y + acceleration.z * acceleration.z;
-		if (speed > PACCEL_LIMIT* PACCEL_LIMIT) {
-			acceleration *= PACCEL_LIMIT / sqrt(speed);
+		speed = accel.x * accel.x + accel.y * accel.y + accel.z * accel.z;
+		if (speed > AL2) {
+			accel *= AL / sqrt(speed);
 		}
 
 		// Velocity limiting 
 		speed = p->velocity.x * p->velocity.x + p->velocity.y * p->velocity.y + p->velocity.z * p->velocity.z;
-		if (speed > PVEL_LIMIT* PVEL_LIMIT) {
-			speed = PVEL_LIMIT;
-			p->velocity *= PVEL_LIMIT / sqrt(speed);
+		if (speed > SL2) {
+			speed = SL2;
+			p->velocity *= SL / sqrt(speed);
 		}
-		
+
 		// Leapfrog Integration ----------------------------
-		glm::vec3 vnext = acceleration;
+		vnext = accel;
 		vnext *= m_DT;
 		vnext += p->velocity;						// v(t+1/2) = v(t-1/2) + a(t) dt
 
@@ -449,150 +652,33 @@ void move() {
 		p->velocityEval += vnext;
 		p->velocityEval *= 0.5;					// v(t+1) = [v(t-1/2) + v(t+1/2)] * 0.5		used to compute forces later
 		p->velocity = vnext;
-		vnext *= m_DT / SIMULATIONSCALE;
+		vnext *= m_DT / ss;
 		p->pos += vnext;						// p(t+1) = p(t) + v(t+1/2) dt
 
-		
-	}
-}
-
-void kernelPoly6(double h,double * ret) {
-	
-	//*ret= (315 / (64 * 3.14159265359 * pow(h, 9))) * pow((pow(h, 2) - pow(glm::l1Norm(a - b), 2)), 3);
-	*ret = 315.0f / (64.0f * 3.141592 * pow(h, 9));
-	return;
-	
-}
-
- void kernelSpiky(double h, double * ret) {
-
-	*ret = ((double)-45.0 / (double) (3.14159265359 * pow(h, 6))) ;
-	
-	
-	return ;
-}
-
- void kernelSpikyPositive(double h, double * ret) {
-
-	 *ret = ((double)45.0 / (double)(3.14159265359 * pow(h, 6)));
-
-
-	 return;
- }
-
-void pressureGrid() {
-	double sum;
-	//calcula todas as densidades
-	for each (Point * p in points)
-	{
-		sum = 0;
-		//Vai buscar vizinhos
-		std::vector<Point*> query;
-		int count = 0;
-		o->queryOctree(p->pos, H, count,&query);
-		
-		//printf("Apanhou %d na query\n", query.size());
-		//Density
-		double density = 1;
-		for each (Point * p2 in query)
-		{
-			//printf("---------- Entrou no for da query\n");
-			//Se for a mesma particula passa a frante
-			//printf("---------- Paticula 1 pos %f %f %f\n",p->pos.x, p->pos.y, p->pos.z);
-			//printf("---------- Paticula 2 pos %f %f %f\n", p2->pos.x, p2->pos.y, p2->pos.z);
-			if (p->pos.x == p2->pos.x && p->pos.y == p2->pos.y && p->pos.z == p2->pos.z)
-				continue;
-			//printf("---------- Passou o if que verifica se é a mesma particula\n");
-			//vai calcular a distancia entre os dois pontos
-			double d = SIMULATIONSCALE * SIMULATIONSCALE *(p2->pos.x * p2->pos.x + p2->pos.y * p2->pos.y + p2->pos.z * p2->pos.z);
-
-			//printf("---------- D-> %f\n", d);
-
-			if (d <= (H * H)) {
-				//printf("\n\n-------------entrou aqui-------------- \n\n");
-				double dif = (H * H) - d;
-				sum += dif * dif * dif; //^3
-			}
+		/*if ( m_Param[PCLR_MODE]==1.0 ) {
+			adj = fabs(vnext.x)+fabs(vnext.y)+fabs(vnext.z) / 7000.0;
+			adj = (adj > 1.0) ? 1.0 : adj;
+			*pclr = COLORA( 0, adj, adj, 1 );
 		}
-		double kernel;
-		
-		kernelPoly6(H ,&kernel );
-		//density
-		p->density = sum * MASS * kernel;
-		p->pressure = (p->density - RESTDENSITY) * K;
-		p->density = 1 / p->density;
-		//printf("Kernel %lf \nSUM %f\nParticula Density %f \n",kernel,sum,p->density);
+		if ( m_Param[PCLR_MODE]==2.0 ) {
+			float v = 0.5 + ( *ppress / 1500.0);
+			if ( v < 0.1 ) v = 0.1;
+			if ( v > 1.0 ) v = 1.0;
+			*pclr = COLORA ( v, 1-v, 0, 1 );
+		}*/
 
-		//printf("Particula pressure %f \n", p->pressure);
-		
-		
-		//printf("Density %f \n", p->density);
-	}
-	
-}
 
-void forceGrid() {
+		// Euler integration -------------------------------
+		/* accel += m_Gravity;
+		accel *= m_DT;
+		p->vel += accel;				// v(t+1) = v(t) + a(t) dt
+		p->vel_eval += accel;
+		p->vel_eval *= m_DT/d;
+		p->pos += p->vel_eval;
+		p->vel_eval = p->vel;  */
 
-	
-	//calcula todas as densidades
-	for each (Point * p in points)
-	{
-		p->force = glm::vec3(0);
-		//Vai buscar vizinhos
-		std::vector<Point*> query;
-		int count = 0;
-		o->queryOctree(p->pos, H, count,&query);
-		//printf("2- A query apanhou %d elementos\n", count);
-		for each (Point * p2 in query)
-		{
-			//Se for a mesma particula passa a frante
-			if (p->pos.x == p2->pos.x && p->pos.y == p2->pos.y && p->pos.z == p2->pos.z)
-				continue;
-			//calcular distancia
-			double dx, dy, dz,dist;
-			dx = p->pos.x - p2->pos.x;
-			dy = p->pos.y - p2->pos.y;
-			dz = p->pos.z - p2->pos.z;
 
-			dist = SIMULATIONSCALE * SIMULATIONSCALE * (dx * dx + dy * dy + dz * dz);
-			//printf("Dist %f\n", dist);
-			if (dist <= (H * H)) {
-				double sqrdist = sqrt(dist);
 
-				float p2Pressure = p2->pressure;
-				float p2Density = p2->density;
-				glm::vec3 p2VelEval = p2->velocityEval;
-
-				//printf("sqrDist %f\n", sqrdist);
-				dx = p->pos.x - p2->pos.x;
-				dy = p->pos.y - p2->pos.y;
-				dz = p->pos.z - p2->pos.z;
-				
-				double dif = H - sqrdist;
-				//printf("dif %f\n", dif);
-				double kernel;
-				
-				kernelSpiky(H, &kernel);
-				//posso usar p2Pressure ou p2->pressure
-				double pressureTerm = SIMULATIONSCALE * (-0.5f)* dif * kernel * (p->pressure + p2Pressure) / sqrdist;
-				double densityTerm = dif * p->density * p2->density;
-				
-				kernelSpikyPositive(H, &kernel);
-				double viscosityTerm = kernel * VISCOSITY;
-
-				
-
-				p->force.x += (pressureTerm * dx + viscosityTerm * (p2->velocityEval.x - p->velocityEval.x)) * densityTerm;
-				p->force.y += (pressureTerm * dy + viscosityTerm * (p2->velocityEval.y - p->velocityEval.y)) * densityTerm;
-				p->force.z += (pressureTerm * dz + viscosityTerm * (p2->velocityEval.z - p->velocityEval.z)) * densityTerm;
-				//printf("Pressure term %f\n", pressureTerm);
-				//printf("Visc term %f\n", viscosityTerm);
-				//printf("densityTerm %f\n", densityTerm);
-				//printf("Forca da particula %f %f %f\n", p->force.x, p->force.y, p->force.z);
-			}
-		}
-
-		//printf("Density %f \n", p->density);
 	}
 
 }
@@ -603,8 +689,8 @@ void renderScene(void) {
 	char fpss[200];
 
 	static double t = 0;
-	
-	
+
+
 
 	static double size = 1.5;
 	static bool grow = true;
@@ -620,7 +706,7 @@ void renderScene(void) {
 	// set the camera
 	glLoadIdentity();
 	gluLookAt(camX, camY, camZ,
-		100, 100, 100,
+		(XMIN+XMAX)/2, (YMIN + YMAX) / 2, (ZMIN + ZMAX) / 2,
 		0.0f, 1.0f, 0.0f);
 	//Fps
 
@@ -638,10 +724,10 @@ void renderScene(void) {
 	//Draw stuff
 	//drawAxis();
 
-	o->draw();
+	o->drawOut();
 
 	//Vai afetar o vector force de cada particula
-	
+
 
 	//Vai calcular a density de cada particula
 	pressureGrid();
@@ -653,9 +739,9 @@ void renderScene(void) {
 
 	//Vai reconstruir a octree
 	updatePoints();
-	
-	int count=0;
-	//count é usado para contar quantos pontos sao "checados" a ver se isto é eficiente
+
+	int count = 0;
+	//count ï¿½ usado para contar quantos pontos sao "checados" a ver se isto ï¿½ eficiente
 	//o->queryOctree(center, size_query,count);
 	drawQueryVolume();
 
@@ -667,15 +753,16 @@ void renderScene(void) {
 	{
 		points.at(i)->draw();
 	}
-	glVertex3f(0, 0, 0);
-	glVertex3f(200, 0, 0);
-	glVertex3f(200, 0, 200);
-	glVertex3f(0, 0, 200);
+	glVertex3f(XMIN, YMIN, ZMIN);
+	glVertex3f(XMAX, YMIN, ZMIN);
+	glVertex3f(XMIN, YMAX, ZMIN);
+	glVertex3f(XMIN, YMIN, ZMAX);
 
-	glVertex3f(0, 200, 0);
-	glVertex3f(200, 200, 0);
-	glVertex3f(200, 200, 200);
-	glVertex3f(0, 200, 200);
+	glVertex3f(XMAX, YMAX, ZMAX);
+	glVertex3f(XMIN, YMAX, ZMAX);
+	glVertex3f(XMAX, YMIN, ZMAX);
+	glVertex3f(XMAX, YMAX, ZMIN);
+
 	glEnd();
 
 	glColor3f(0.0f, 0.0f, 1.0f);
@@ -686,14 +773,45 @@ void renderScene(void) {
 	glutSwapBuffers();
 }
 
+void SetupDualWave() {
+	XMIN = -50;
+	XMAX = 50;
+	YMIN = 0;
+	YMAX = 100;
+	ZMIN = -50;
+	ZMAX = 50;
+
+	PFORCE_MIN= 20.0;
+	PFORCE_MAX= 20.0;
+	GRAVITY = glm::vec3(0.0f, -9.8f, 0.0f);
+
+}
+
+void SetupNormal() {
+	XMIN = -50;
+	XMAX = 50;
+	YMIN = 0;
+	YMAX = 100;
+	ZMIN = -50;
+	ZMAX = 50;
+
+	GRAVITY = glm::vec3(0.0f, -9.8f, 0.0f);
+
+}
+
 int main(int argc, char** argv) {
-	o= new Octree(100,100,100,size,max_points,max_depth);
+	o = new Octree(0, 100, 0, size, max_points, max_depth);
+
+	SetupDualWave();
+	//SetupNormal();
+
+	SetupSpacing();
 
 	TwBar* bar;         // Pointer to a tweak bar
 
 	// put GLUT init here
 	glutInit(&argc, argv);
-	
+
 	glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA);
 	glutInitWindowPosition(100, 100);
 	glutInitWindowSize(799, 599);
@@ -731,16 +849,16 @@ int main(int argc, char** argv) {
 	// Add 'wire' to 'bar': it is a modifable variable of type TW_TYPE_BOOL32 (32 bits boolean). Its key shortcut is [w].
 	TwAddVarRW(bar, "Particles", TW_TYPE_INT32, &points_p,
 		" label='Particles' min=1 max=10000000 step=1000 key=w help='Number of particles.' ");
-	//Se aumentar o H para 40 da para ver umas coisas engraçadas, talvez de para perceber o que esta a acontecer de errado
+	//Se aumentar o H para 40 da para ver umas coisas engraï¿½adas, talvez de para perceber o que esta a acontecer de errado
 	TwAddVarRW(bar, "Kernel H", TW_TYPE_DOUBLE, &H,
 		" label='Kernel H' min=0.1 max=50 step=0.5 keyIncr=s keyDecr=S help='Kernel H size' ");
 
 	TwAddVarRW(bar, "Declive", TW_TYPE_DOUBLE, &DECLIVE,
 		" label='Declive' min=0.0 max=1 step=0.05 keyIncr=s keyDecr=S help='Declive' ");
 
-	//Apenas controla as interações. Desenha sempre com radius a 1
+	//Apenas controla as interaï¿½ï¿½es. Desenha sempre com radius a 1
 	TwAddVarRW(bar, "Particle Radius", TW_TYPE_DOUBLE, &RADIUS,
-		" label='Particle Radius' min=0.01 max=50 step=0.5 keyIncr=s keyDecr=S help='Particle Radius - Only controlls the interactions, the draw will have a fixed radius' ");
+		" label='Particle Radius' min=0.01 max=50 step=0.01 keyIncr=s keyDecr=S help='Particle Radius - Only controlls the interactions, the draw will have a fixed radius' ");
 
 	TwAddVarRW(bar, "Particle Spacing", TW_TYPE_DOUBLE, &SPACING,
 		" label='Particle Spacing' min=1 max=10 step=0.5 keyIncr=s keyDecr=S help='Spacing between particles' ");
@@ -749,8 +867,14 @@ int main(int argc, char** argv) {
 		" label='Simulation Scale' min=0.001 max=3 step=0.001 keyIncr=s keyDecr=S help='Simulation Scale' ");
 
 	TwAddVarRW(bar, "Gravity", TW_TYPE_DOUBLE, &GRAVITYVALUE,
-		" label='Simulation Scale' min=-200 max=200 step=1 keyIncr=s keyDecr=S help='Gravity' ");
+		" label='Gravity' min=-200 max=200 step=1 keyIncr=s keyDecr=S help='Gravity' ");
+	TwAddVarRW(bar, "Damp", TW_TYPE_DOUBLE, &PEXTDAMP,
+		" label='Damp' min=1 max=1000 step=10 keyIncr=s keyDecr=S help='Atenution when particle hits wall' ");
+
+	TwAddVarRW(bar, "Viscosity", TW_TYPE_DOUBLE, &VISCOSITY,
+		" label='Viscosity' min=0.1 max=1 step=0.1 keyIncr=s keyDecr=S help='Fluid Viscosity' ");
 	
+
 	// OpenGL settings 
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);

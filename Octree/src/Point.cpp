@@ -18,6 +18,7 @@ Point::Point(float x, float y, float z)
 	this->pressure= 0;
 	this->force = glm::vec3(0);
 	this->viscosity = glm::vec3(0);
+	this->acceleration = glm::vec3(0);
 	
 }
 
@@ -32,7 +33,7 @@ void Point::draw()
 	glColor3f(this->color.x, this->color.y, this->color.z);
 	glPushMatrix();
 	glTranslatef(this->pos.x, this->pos.y, this->pos.z);
-	glutWireSphere(1, 4, 4);
+	glutWireSphere(0.05, 4, 4);
 	glPopMatrix();
 	//glVertex3f(this->pos.x, this->pos.y, this->pos.z);
 
