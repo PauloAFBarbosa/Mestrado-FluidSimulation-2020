@@ -19,6 +19,9 @@ Point::Point(float x, float y, float z)
 	this->force = glm::vec3(0);
 	this->viscosity = glm::vec3(0);
 	this->acceleration = glm::vec3(0);
+	this->gravity = glm::vec3(0);
+	this->surfaceNormal = glm::vec3(0);
+	this->surfaceTension = glm::vec3(0);
 	
 }
 
@@ -27,13 +30,14 @@ Point::~Point()
 	
 }
 
-void Point::draw()
+void Point::draw(double r)
 {
 	
 	glColor3f(this->color.x, this->color.y, this->color.z);
 	glPushMatrix();
 	glTranslatef(this->pos.x, this->pos.y, this->pos.z);
-	glutWireSphere(0.05, 4, 4);
+	glutSolidSphere(r, 4, 4);
+	
 	glPopMatrix();
 	//glVertex3f(this->pos.x, this->pos.y, this->pos.z);
 
