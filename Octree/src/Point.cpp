@@ -36,7 +36,7 @@ void Point::draw(double r)
 	glColor3f(this->color.x, this->color.y, this->color.z);
 	glPushMatrix();
 	glTranslatef(this->pos.x, this->pos.y, this->pos.z);
-	glutSolidSphere(r, 4, 4);
+	glutSolidSphere(r, 5, 5);
 	
 	glPopMatrix();
 	//glVertex3f(this->pos.x, this->pos.y, this->pos.z);
