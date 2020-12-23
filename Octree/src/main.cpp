@@ -498,20 +498,30 @@ void computeSurfaceTension(glm::vec3 surfaceNormal, glm::vec3 position, glm::vec
 }
 
 bool detectCollision(Point * particle, glm::vec3 * contactPoint, glm::vec3 * unitSurfaceNormal) {
-	if (particle->pos.x <= XMAX && particle->pos.x >= XMIN && particle->pos.y <= YMAX && particle->pos.y >= YMIN && particle->pos.z <= ZMAX && particle->pos.z >= ZMIN)
+	//o cubo esta centrado em 0,0,0
+	double newx = particle->pos.x + XMAX;
+	double temp = (XMAX + XMAX) - newx;
+	temp = temp / (XMAX + XMAX); //devolve 1 quando newx é 0, ou seja, a particula esta encostada a parede esquerda
+								// devolve 0 quando esta encostada a parede direita
+
+	double newy = YMIN + (temp * DECLIVE);
+
+	if (particle->pos.x <= XMAX && particle->pos.x >= XMIN && particle->pos.y <= YMAX && particle->pos.y >= newy && particle->pos.z <= ZMAX && particle->pos.z >= ZMIN)
 		return false;
 
 	char maxComponent = 'x';
 	float maxValue = abs(particle->pos.x);
-	if (maxValue < abs(particle->pos.y)) {
+	//Por causa do declive temos de ter isso em conta ao encontrar o maxvalue. (se nao fizer + temp*declive as vezes da como max component o Z quando na realidade deveria ter sido o Y, so nao foi por causa do declive)
+	if (maxValue < abs(particle->pos.y)+(temp*DECLIVE)) {
 		maxComponent = 'y';
-		maxValue = abs(particle->pos.y);
+		maxValue = abs(particle->pos.y) + (temp * DECLIVE);
 	}
 	if (maxValue < abs(particle->pos.z)) {
 		maxComponent = 'z';
 		maxValue = abs(particle->pos.z);
 	}
 	// 'unitSurfaceNormal' is based on the current position component with the largest absolute value
+	
 	switch (maxComponent) {
 	case 'x':
 		if (particle->pos.x < XMIN) {
@@ -519,7 +529,7 @@ bool detectCollision(Point * particle, glm::vec3 * contactPoint, glm::vec3 * uni
 			contactPoint->y = particle->pos.y; 
 			contactPoint->z = particle->pos.z;
 
-			if (particle->pos.y < YMIN)     contactPoint->y = YMIN;
+			if (particle->pos.y < newy)     contactPoint->y = newy;
 			else if (particle->pos.y > YMAX) contactPoint->y = YMAX;
 			if (particle->pos.z < ZMIN)     contactPoint->z = ZMIN;
 			else if (particle->pos.z > ZMAX) contactPoint->z = ZMAX;
@@ -527,13 +537,14 @@ bool detectCollision(Point * particle, glm::vec3 * contactPoint, glm::vec3 * uni
 			unitSurfaceNormal->x = 1;
 			unitSurfaceNormal->y = 0;
 			unitSurfaceNormal->z = 0;
+			
 		}
 		else if (particle->pos.x > XMAX) {
 			contactPoint->x = XMAX;
 			contactPoint->y = particle->pos.y;
 			contactPoint->z = particle->pos.z;
 
-			if (particle->pos.y < YMIN)     contactPoint->y = YMIN;
+			if (particle->pos.y < newy)     contactPoint->y = newy;
 			else if (particle->pos.y > YMAX) contactPoint->y = YMAX;
 			if (particle->pos.z < ZMIN)     contactPoint->z = ZMIN;
 			else if (particle->pos.z > ZMAX) contactPoint->z = ZMAX;
@@ -541,13 +552,14 @@ bool detectCollision(Point * particle, glm::vec3 * contactPoint, glm::vec3 * uni
 			unitSurfaceNormal->x = -1;
 			unitSurfaceNormal->y = 0;
 			unitSurfaceNormal->z = 0;
+			
 
 		}
 		break;
 	case 'y':
-		if (particle->pos.y < YMIN) {
+		if (particle->pos.y < newy) {
 			contactPoint->x = particle->pos.x;
-			contactPoint->y = YMIN;
+			contactPoint->y = newy;
 			contactPoint->z = particle->pos.z;
 
 			if (particle->pos.x < XMIN)     contactPoint->x = XMIN;
@@ -555,9 +567,10 @@ bool detectCollision(Point * particle, glm::vec3 * contactPoint, glm::vec3 * uni
 			if (particle->pos.z < ZMIN)     contactPoint->z = ZMIN;
 			else if (particle->pos.z > ZMAX) contactPoint->z = ZMAX;
 
-			unitSurfaceNormal->x = 0;
-			unitSurfaceNormal->y = 1;
+			unitSurfaceNormal->x = DECLIVE;
+			unitSurfaceNormal->y = 1-DECLIVE;
 			unitSurfaceNormal->z = 0;
+			
 		}
 		else if (particle->pos.y > YMAX) {
 			contactPoint->x = particle->pos.x;
@@ -572,6 +585,7 @@ bool detectCollision(Point * particle, glm::vec3 * contactPoint, glm::vec3 * uni
 			unitSurfaceNormal->x = 0;
 			unitSurfaceNormal->y = -1;
 			unitSurfaceNormal->z = 0;
+			
 		}
 		break;
 	case 'z':
@@ -582,11 +596,12 @@ bool detectCollision(Point * particle, glm::vec3 * contactPoint, glm::vec3 * uni
 
 			if (particle->pos.x < XMIN)     contactPoint->x = XMIN;
 			else if (particle->pos.x > XMAX) contactPoint->x = XMAX;
-			if (particle->pos.y < YMIN)     contactPoint->y = YMIN;
+			if (particle->pos.y < newy)     contactPoint->y = newy;
 			else if (particle->pos.y > YMAX) contactPoint->y = YMAX;
 			unitSurfaceNormal->x = 0;
 			unitSurfaceNormal->y = 0;
 			unitSurfaceNormal->z = 1;
+			
 		}
 		else if (particle->pos.z > ZMAX) {
 			contactPoint->x = particle->pos.x;
@@ -595,15 +610,17 @@ bool detectCollision(Point * particle, glm::vec3 * contactPoint, glm::vec3 * uni
 
 			if (particle->pos.x < XMIN)     contactPoint->x = XMIN;
 			else if (particle->pos.x > XMAX) contactPoint->x = XMAX;
-			if (particle->pos.y < YMIN)     contactPoint->y = YMIN;
+			if (particle->pos.y < newy)     contactPoint->y = newy;
 			else if (particle->pos.y > YMAX) contactPoint->y = YMAX;
 			unitSurfaceNormal->x = 0;
 			unitSurfaceNormal->y = 0;
 			unitSurfaceNormal->z = -1;
+			
 		}
 		break;
 	}
-	
+
+		
 	return true;
 }
 
@@ -702,8 +719,10 @@ void simulate() {
 			p->velocity.y = ret.y;
 			p->velocity.z = ret.z;
 			//printf("Depois --- Velocity %f %f %f length %f\n", p->velocity.x, p->velocity.y, p->velocity.z, glm::length(p->velocity));
+			
 			p->pos = contactPoint;
 		}
+		//p->velocity *= 0.5;
 
 	}
 
@@ -805,12 +824,13 @@ void renderScene(void) {
 
 void SetupNormal() {
 	//definir o volume da simulação
-	XMIN = -0.2;
-	XMAX = 0.2;
-	YMIN = -0.2;
-	YMAX = 0.2;
-	ZMIN = -0.2;
-	ZMAX = 0.2;
+	double side = 0.5;
+	XMIN = -side;
+	XMAX = side;
+	YMIN = -side;
+	YMAX = side;
+	ZMIN = -side;
+	ZMAX = side;
 
 	GRAVITY = glm::vec3(0.0f, -9.8f, 0.0f);
 
@@ -890,7 +910,7 @@ int main(int argc, char** argv) {
 		" label='Particles' min=1 max=10000000 step=1000 key=w help='Number of particles.' ");
 
 	TwAddVarRW(bar, "Declive", TW_TYPE_DOUBLE, &DECLIVE,
-		" label='Declive' min=0.0 max=1 step=0.05 keyIncr=s keyDecr=S help='Declive' ");
+		" label='Declive' min=-1.0 max=1 step=0.05 keyIncr=s keyDecr=S help='Declive' ");
 
 	TwAddVarRW(bar, "Gravity", TW_TYPE_DOUBLE, &GRAVITYVALUE,
 		" label='Gravity' min=-200 max=200 step=1 keyIncr=s keyDecr=S help='Gravity' ");
