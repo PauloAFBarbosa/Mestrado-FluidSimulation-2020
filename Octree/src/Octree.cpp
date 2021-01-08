@@ -1,11 +1,13 @@
 #include "Octree.h"
 #include "../toolkits/glut/GL/glut.h"
 
-Octree::Octree(float x, float y, float z, float size, int max_points,int max_depth)
+Octree::Octree(double x, double y, double z, double size, int max_points,int max_depth)
 {
 
 	
-	this->pos = glm::vec3(x, y, z);
+	this->pos[0] = x;
+	this->pos[0] = y;
+	this->pos[0] = z;
 	this->size = size;
 	this->devided = false;
 	this->max_points=max_points;
@@ -103,30 +105,30 @@ bool Octree::insertPoint(Point * p){
 	}
 }
 //return true if point is outside
-bool Octree::isOutside(glm::vec3 pos,float size,Point * p){
-	return (p->pos.x > (pos.x + size) || p->pos.x < (pos.x - size) ||
-		p->pos.y > (pos.y + size) || p->pos.y < (pos.y - size) ||
-		p->pos.z > (pos.z + size) || p->pos.z < (pos.z - size));
+bool Octree::isOutside(double pos[3],float size,Point * p){
+	return (p->pos[0] > (pos[0] + size) || p->pos[0] < (pos[0] - size) ||
+		p->pos[1] > (pos[1] + size) || p->pos[1] < (pos[1] - size) ||
+		p->pos[2] > (pos[2] + size) || p->pos[2] < (pos[2] - size));
 }
 
 void Octree::subdivide() {
 
-	this->up_front_left = new Octree(this->pos.x - (this->size / 2), this->pos.y + (this->size / 2), this->pos.z - (this->size / 2), this->size / 2, this->max_points, this->max_depth - 1);
-	this->up_front_right = new Octree(this->pos.x + (this->size / 2), this->pos.y + (this->size / 2), this->pos.z - (this->size / 2), this->size / 2, this->max_points, this->max_depth - 1);
-	this->up_back_left = new Octree(this->pos.x - (this->size / 2), this->pos.y + (this->size / 2), this->pos.z + (this->size / 2), this->size / 2, this->max_points, this->max_depth - 1);
-	this->up_back_right = new Octree(this->pos.x + (this->size / 2), this->pos.y + (this->size / 2), this->pos.z + (this->size / 2), this->size / 2, this->max_points, this->max_depth - 1);
+	this->up_front_left = new Octree(this->pos[0] - (this->size / 2), this->pos[1] + (this->size / 2), this->pos[2] - (this->size / 2), this->size / 2, this->max_points, this->max_depth - 1);
+	this->up_front_right = new Octree(this->pos[0] + (this->size / 2), this->pos[1] + (this->size / 2), this->pos[2] - (this->size / 2), this->size / 2, this->max_points, this->max_depth - 1);
+	this->up_back_left = new Octree(this->pos[0] - (this->size / 2), this->pos[1] + (this->size / 2), this->pos[2] + (this->size / 2), this->size / 2, this->max_points, this->max_depth - 1);
+	this->up_back_right = new Octree(this->pos[0] + (this->size / 2), this->pos[1] + (this->size / 2), this->pos[2] + (this->size / 2), this->size / 2, this->max_points, this->max_depth - 1);
 
-	this->down_front_left = new Octree(this->pos.x - (this->size / 2), this->pos.y - (this->size / 2), this->pos.z - (this->size / 2), this->size / 2, this->max_points, this->max_depth - 1);
-	this->down_front_right = new Octree(this->pos.x + (this->size / 2), this->pos.y - (this->size / 2), this->pos.z - (this->size / 2), this->size / 2, this->max_points, this->max_depth - 1);
-	this->down_back_left = new Octree(this->pos.x - (this->size / 2), this->pos.y - (this->size / 2), this->pos.z + (this->size / 2), this->size / 2, this->max_points, this->max_depth - 1);
-	this->down_back_right = new Octree(this->pos.x + (this->size / 2), this->pos.y - (this->size / 2), this->pos.z + (this->size / 2), this->size / 2, this->max_points, this->max_depth - 1);
+	this->down_front_left = new Octree(this->pos[0] - (this->size / 2), this->pos[1] - (this->size / 2), this->pos[2] - (this->size / 2), this->size / 2, this->max_points, this->max_depth - 1);
+	this->down_front_right = new Octree(this->pos[0] + (this->size / 2), this->pos[1] - (this->size / 2), this->pos[2] - (this->size / 2), this->size / 2, this->max_points, this->max_depth - 1);
+	this->down_back_left = new Octree(this->pos[0] - (this->size / 2), this->pos[1] - (this->size / 2), this->pos[2] + (this->size / 2), this->size / 2, this->max_points, this->max_depth - 1);
+	this->down_back_right = new Octree(this->pos[0] + (this->size / 2), this->pos[1] - (this->size / 2), this->pos[2] + (this->size / 2), this->size / 2, this->max_points, this->max_depth - 1);
 
 	this->devided = true;
 }
 
 
 
-void Octree::queryOctree(glm::vec3 center, float size,int & count, std::vector<Point*> * ret)
+void Octree::queryOctree(double center[3], float size,int & count, std::vector<Point*> * ret)
 {
 
 	if (!this->intersects(center, size)) {
@@ -192,23 +194,23 @@ void Octree::queryOctree(glm::vec3 center, float size,int & count, std::vector<P
 }
 
 //devolve true se houver interseçao
-bool Octree::intersects(glm::vec3 center, float size)
+bool Octree::intersects(double center[3], float size)
 {	//aplicar a lei de De Morgan faz isto ficar mais rapido
 	//em vez de A ou b ou c fica
 	// !A e !B e !C - assim mal um falhe ele nao precisa procurar mais nada
-	return (!(center.x - size > this->pos.x + this->size) && //esq dir
-		!(center.x + size < this->pos.x - this->size) && //dir esq
-		!(center.y - size > this->pos.y + this->size) && //baixo cima
-		!(center.y + size < this->pos.y - this->size) && //cima baixo
-		!(center.z - size > this->pos.z + this->size) && //frente tras
-		!(center.z + size < this->pos.z - this->size)  //tras frente
+	return (!(center[0] - size > this->pos[0] + this->size) && //esq dir
+		!(center[0] + size < this->pos[0] - this->size) && //dir esq
+		!(center[1] - size > this->pos[1] + this->size) && //baixo cima
+		!(center[1] + size < this->pos[1] - this->size) && //cima baixo
+		!(center[2] - size > this->pos[2] + this->size) && //frente tras
+		!(center[2] + size < this->pos[2] - this->size)  //tras frente
 		);
 }
 
 void Octree::draw(){
 	
 	glPushMatrix();
-	glTranslatef(this->pos.x,this->pos.y,this->pos.z);
+	glTranslatef(this->pos[0],this->pos[1],this->pos[2]);
 	glutWireCube(this->size*2);
 	glPopMatrix();
 
@@ -229,7 +231,7 @@ void Octree::draw(){
 void Octree::drawOut() {
 
 	glPushMatrix();
-	glTranslatef(this->pos.x, this->pos.y, this->pos.z);
+	glTranslatef(this->pos[0], this->pos[1], this->pos[2]);
 	glutWireCube(this->size * 2);
 	glPopMatrix();
 

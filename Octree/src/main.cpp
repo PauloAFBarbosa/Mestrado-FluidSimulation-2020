@@ -13,6 +13,7 @@
 
 #define _USE_MATH_DEFINES
 #include <math.h>
+#include "HashMap.h"
 
 
 
@@ -28,7 +29,7 @@ double RESTDENSITY = 998.29;
 double VISCOSITY = 3.5;
 
 double GRAVITYVALUE = -9.8;
-glm::vec3 GRAVITY = glm::vec3(0, GRAVITYVALUE, 0);
+double GRAVITY[3] = { 0, GRAVITYVALUE, 0 };
 //Valores max e min da simulação - determina o voluma da sim
 double XMIN = 0, XMAX = 200;
 double YMIN = 0, YMAX = 200;
@@ -48,6 +49,8 @@ int points_p = 9;
 //usado para inserir multiplos batches de pontos
 int pontos_inseridos = 0;
 
+
+HashMap* h;
 Octree* o;
 double size = 2.5;
 //numero maximo de pontos em cada celula da octree
@@ -56,9 +59,9 @@ int max_depth = 5;
 
 int frame = 0;
 double fps = 0;
-glm::vec3 center = glm::vec3(0, 0, 0);
+double center[3] = { 0,0,0 };
 double size_query = H * 2;
-std::vector<Point*> points;
+//std::vector<Point*> points;
 
 int mytime;
 int timebase;
@@ -78,6 +81,24 @@ int winid = 0;
  * @brief calculates the cam values (used in GluLookAt function) from the alteration of alfa, beta and radius
  *
  */
+
+double length(double vec[3]) {
+	return (sqrt(pow(vec[0],2)+ pow(vec[1], 2)+ pow(vec[2], 2)));
+}
+
+void normalize(double in[3], double out[3]) {
+	
+	double len = length(in);
+	out[0] = in[0] / len;
+	out[1] = in[1] / len;
+	out[2] = in[2] / len;
+	
+}
+
+double dot(double v1[3], double v2[3]) {
+	return v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2];
+}
+
 void spherical2Cartesian() {
 	camX = radius * cos(beta) * sin(alfa) + (XMIN+XMAX)/2;
 	camY = radius * sin(beta) + (YMIN + YMAX) / 2;
@@ -85,30 +106,59 @@ void spherical2Cartesian() {
 }
 
 void restart() {
-	points.clear();
+	std::vector<Point*> points; //Guarda os pontos temporariamente
 	pontos_inseridos = 0;
 	int countPoints = 0;
 	std::chrono::steady_clock::time_point begin, end;
+
+	int const hashSize = 1000; //o cubo tem 0.4 de lado, e o h tem 0.04.. isto da 8 divisões por cada lado, arredondo para 10, por isso fica 10*10*10
+
+	int bucketSizes[hashSize];
+
+	for (size_t i = 0; i < hashSize; i++)
+	{
+		bucketSizes[i] = 0;
+	}
 	
 	
 	Point* p;
 	
 	
+	h = new HashMap(2, hashSize, (points_p + 1) * (points_p + 1) * (points_p + 1));
 	for (float x = -particleRadius * points_p; x <= particleRadius * points_p; x += particleDiameter) {
 		for (float y = -particleRadius * points_p; y <= particleRadius * points_p; y += particleDiameter) {
 			for (float z = -particleRadius * points_p; z <= particleRadius * points_p; z += particleDiameter) {
 				p = new Point(x, y, z);
 				points.push_back(p);
+				bucketSizes[h->hashFunction(p->pos, H)]++;
 				countPoints++;
 			}
 		}
 	}
 
-	//separei a parte de inserir os pontos porque quero medir apenas a parte de inserir.
-	//no programa ele vai gerar os pontos 1 vez e vai inserir numa nova arvore cada frame
+
+
+
 	begin = std::chrono::steady_clock::now();
-	for (int i = 0; i < points_p; i++) {
-		o->insertPoint(points.at(pontos_inseridos + i));
+	for each (Point * p in points)
+	{
+		double pos[3];
+		pos[0] = p->pos[0];
+		pos[1] = p->pos[1];
+		pos[2] = p->pos[2];
+		unsigned int bucket = h->hashFunction(pos, H);
+		int offset = 0;
+		//vai correr o array com os tamanhos dos buckets até chegar ao bucket atual
+		for (int j = 0; j < bucket; j++)
+		{
+			//exemplo, se tivermos um array com [p1,p2,p3,p4]
+			//p1 e p2 sao do bucket 0 e p3 e p4 do bucket 1
+			//o bucket 1 começa no indice 2 que é o bucketsize do bucket 0
+			offset += bucketSizes[j];
+		}
+
+		h->addParticle(p, H, offset);
+
 	}
 
 	end = std::chrono::steady_clock::now();
@@ -126,6 +176,20 @@ void processKeys(unsigned char c, int xx, int yy) {
 	std::chrono::steady_clock::time_point begin, end;
 	Point* p;
 
+	//hashmap
+	//Vai criar o hashmap com 10*10*10 de size
+	int const hashSize = 1000; //o cubo tem 0.4 de lado, e o h tem 0.04.. isto da 8 divisões por cada lado, arredondo para 10, por isso fica 10*10*10
+	
+	int bucketSizes[hashSize];
+
+	for (size_t i = 0; i < hashSize; i++)
+	{
+		bucketSizes[i] = 0;
+	}
+
+	std::vector<Point*> points; //Guarda os pontos temporariamente
+	int total = 0;
+
 	double sizex = XMAX - XMIN;
 	if (sizex < 0)
 		sizex = sizex * (-1);
@@ -140,21 +204,21 @@ void processKeys(unsigned char c, int xx, int yy) {
 		start = !start;
 		break;
 	case 'w':
-		center.y += step;
+		center[1] += step;
 		break;
 	case 'd':
-		center.x += step;
+		center[0] += step;
 		break;
-	case 's':center.y -= step;
+	case 's':center[1] -= step;
 		break;
 	case 'a':
-		center.x -= step;
+		center[0] -= step;
 		break;
 	case 'q':
-		center.z += step;
+		center[2] += step;
 		break;
 	case 'e':
-		center.z -= step;
+		center[2] -= step;
 		break;
 	case 'k':
 		size_query += step;
@@ -166,26 +230,50 @@ void processKeys(unsigned char c, int xx, int yy) {
 		restart();
 		break;
 	case 'p':
-
+		h = new HashMap(2, hashSize, (points_p + 1) * (points_p + 1) * (points_p + 1));
 		for (float x = -particleRadius * points_p; x <= particleRadius * points_p; x += particleDiameter) {
 			for (float y = -particleRadius * points_p; y <= particleRadius * points_p; y += particleDiameter) {
 				for (float z = -particleRadius * points_p; z <= particleRadius * points_p; z += particleDiameter) {
 					p = new Point(x, y, z);
 					points.push_back(p);
+					bucketSizes[ h->hashFunction(p->pos,H)]++;
+					total++;
 					countPoints++;
 				}
 			}
 		}
+		
+		
+		
 
-		//separei a parte de inserir os pontos porque quero medir apenas a parte de inserir.
-		//no programa ele vai gerar os pontos 1 vez e vai inserir numa nova arvore cada frame
 		begin = std::chrono::steady_clock::now();
-		for (int i = 0; i < points_p; i++) {
-			o->insertPoint(points.at(pontos_inseridos + i));
+		for each (Point * p in points)
+		{
+			double pos[3];
+			pos[0]=p->pos[0];
+			pos[1] = p->pos[1];
+			pos[2] = p->pos[2];
+			unsigned int bucket = h->hashFunction(pos, H);
+			int offset = 0;
+			//vai correr o array com os tamanhos dos buckets até chegar ao bucket atual
+			for (int j = 0; j < bucket; j++)
+			{
+				//exemplo, se tivermos um array com [p1,p2,p3,p4]
+				//p1 e p2 sao do bucket 0 e p3 e p4 do bucket 1
+				//o bucket 1 começa no indice 2 que é o bucketsize do bucket 0
+				offset += bucketSizes[j];
+			}
+
+			h->addParticle(p, H, offset);
+			
 		}
 
+		
+
+		
+
 		end = std::chrono::steady_clock::now();
-		pontos_inseridos += points_p;
+		
 		std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() << "[micro s]" << std::endl;
 		std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::nanoseconds> (end - begin).count() << "[nano s]" << std::endl;
 
@@ -310,24 +398,26 @@ void drawQueryVolume() {
 	glPushMatrix();
 
 	glColor3f(1.0f, 0.0f, 0.0f);
-	glTranslatef(center.x, center.y, center.z);
+	glTranslatef(center[0], center[1], center[2]);
 	glutWireCube(H);
 
 	glPopMatrix();
 }
 
+
 void updatePoints() {
+	std::vector<Point*> points; //Guarda os pontos temporariamente
 	double x, y, z;
-	x = o->pos.x;
-	y = o->pos.y;
-	z = o->pos.z;
+	x = o->pos[0];
+	y = o->pos[1];
+	z = o->pos[2];
 	delete o;
 	o = new Octree(x, y, z, size, max_points, max_depth);
 	for (size_t i = 0; i < points.size(); i++)
 	{
-		//points.at(i)->force.x = 0;
-		//points.at(i)->force.y = 0;
-		//points.at(i)->force.z = 0;
+		//points.at(i)->force[0] = 0;
+		//points.at(i)->force[1] = 0;
+		//points.at(i)->force[2] = 0;
 		o->insertPoint(points.at(i));
 
 	}
@@ -335,8 +425,8 @@ void updatePoints() {
 
 //-------------------V 2
 //Kernels
-double useDefaultKernel(glm::vec3 distVector, double supportRadius) {
-	double dist = glm::length(distVector);
+double useDefaultKernel(double distVector[3], double supportRadius) {
+	double dist = length(distVector);
 	
 	if (dist > supportRadius) {
 		
@@ -347,73 +437,84 @@ double useDefaultKernel(glm::vec3 distVector, double supportRadius) {
 	}
 }
 
-void useDefaultKernel_gradient(glm::vec3 distVector, double supportRadius,glm::vec3 * ret) {
-	double dist = glm::length(distVector);
+void useDefaultKernel_gradient(double distVector[3], double supportRadius,double ret[3]) {
+	double dist = length(distVector);
 	if (dist > supportRadius) {
-		ret->x = 0;
-		ret->y = 0;
-		ret->z = 0;
+		ret[0] = 0;
+		ret[1] = 0;
+		ret[2] = 0;
 	}
 	else {
-		ret->x = -(distVector.x * (945 / (32 * M_PI * powf(supportRadius, 9.0f))) * powf(supportRadius * supportRadius - dist * dist, 2.0f));
-		ret->y = -(distVector.y * (945 / (32 * M_PI * powf(supportRadius, 9.0f))) * powf(supportRadius * supportRadius - dist * dist, 2.0f));
-		ret->z = -(distVector.z * (945 / (32 * M_PI * powf(supportRadius, 9.0f))) * powf(supportRadius * supportRadius - dist * dist, 2.0f));
+		ret[0] = -(distVector[0] * (945 / (32 * M_PI * powf(supportRadius, 9.0f))) * powf(supportRadius * supportRadius - dist * dist, 2.0f));
+		ret[1] = -(distVector[1] * (945 / (32 * M_PI * powf(supportRadius, 9.0f))) * powf(supportRadius * supportRadius - dist * dist, 2.0f));
+		ret[2] = -(distVector[2] * (945 / (32 * M_PI * powf(supportRadius, 9.0f))) * powf(supportRadius * supportRadius - dist * dist, 2.0f));
 	}
 }
 
-double useDefaultKernel_laplacian(glm::vec3 distVector, double supportRadius) {
-	double dist = glm::length(distVector);
+double useDefaultKernel_laplacian(double distVector[3], double supportRadius) {
+	double dist = length(distVector);
 	if (dist > supportRadius)
 		return 0.0f;
 	else
 		return -(945 / (32 * M_PI * powf(supportRadius, 9.0f))) * (supportRadius * supportRadius - dist * dist) * (3 * supportRadius * supportRadius - 7 * dist * dist);
 }
 
-void usePressureKernel_gradient(glm::vec3 distVector, double supportRadius, glm::vec3 * ret) {
-	double dist = glm::length(distVector);
+void usePressureKernel_gradient(double distVector[3], double supportRadius, double ret[3]) {
+	double dist = length(distVector);
 	if (dist > supportRadius) {
 		
-		ret->x = 0;
-		ret->y = 0;
-		ret->z = 0;
+		ret[0] = 0;
+		ret[1] = 0;
+		ret[2] = 0;
 	}
 	else if (dist < 10e-5) // If ||r|| -> 0+
 	{
 		
-		glm::vec3 normalized = glm::normalize(glm::vec3(1.0f, 1.0f, 1.0f));
-		ret->x= -(normalized.x * (45 / (M_PI * powf(supportRadius, 6.0f))) * powf(supportRadius - dist, 2.0f));
-		ret->y = -(normalized.y * (45 / (M_PI * powf(supportRadius, 6.0f))) * powf(supportRadius - dist, 2.0f));
-		ret->z = -(normalized.z * (45 / (M_PI * powf(supportRadius, 6.0f))) * powf(supportRadius - dist, 2.0f));
+		double normalized[3];
+		double in[3] = { 1,1,1 };
+		normalize(in,normalized);
+		ret[0]= -(normalized[0] * (45 / (M_PI * powf(supportRadius, 6.0f))) * powf(supportRadius - dist, 2.0f));
+		ret[1] = -(normalized[1] * (45 / (M_PI * powf(supportRadius, 6.0f))) * powf(supportRadius - dist, 2.0f));
+		ret[2] = -(normalized[2] * (45 / (M_PI * powf(supportRadius, 6.0f))) * powf(supportRadius - dist, 2.0f));
 	}
 	else
 	{
 		
-		glm::vec3 normalized = glm::normalize(distVector);
-		ret->x= -(normalized.x * (45 / (M_PI * powf(supportRadius, 6.0f))) * powf(supportRadius - dist, 2.0f));
-		ret->y = -(normalized.y * (45 / (M_PI * powf(supportRadius, 6.0f))) * powf(supportRadius - dist, 2.0f));
-		ret->z = -(normalized.z * (45 / (M_PI * powf(supportRadius, 6.0f))) * powf(supportRadius - dist, 2.0f));
+		double normalized[3];
+		normalize(distVector,normalized);
+		ret[0]= -(normalized[0] * (45 / (M_PI * powf(supportRadius, 6.0f))) * powf(supportRadius - dist, 2.0f));
+		ret[1] = -(normalized[1] * (45 / (M_PI * powf(supportRadius, 6.0f))) * powf(supportRadius - dist, 2.0f));
+		ret[2] = -(normalized[2] * (45 / (M_PI * powf(supportRadius, 6.0f))) * powf(supportRadius - dist, 2.0f));
 	}
 }
 
-double useViscosityKernel_laplacian(glm::vec3 distVector, double supportRadius) {
-	double dist = glm::length(distVector);
+double useViscosityKernel_laplacian(double distVector[3], double supportRadius) {
+	double dist = length(distVector);
 	if (dist > supportRadius)
 		return 0.0f;
 	else
 		return (45 / (M_PI * powf(supportRadius, 6.0f))) * (supportRadius - dist);
 }
 
-double computeDensity(glm::vec3 position) {
+double computeDensity(double position[3]) {
 	double sum = 0;
 	//ainda nao usa as query. Vai buscar todas as particulas
-	for each (Point * p in points)
+	//printf("Eu recebo Pos enviada %f %f %f\n", position[0], position[1], position[2]);
+	for (int i = 0; i < h->numbParticles ; i++)
 	{
 		//O meu kernel da 0 em todos
-		//printf("Position %f %f %f Ponto2 %f %f %f\n", position.x, position.y, position.z, p->pos.x, p->pos.y, p->pos.z);
+		//printf("Position %f %f %f Ponto2 %f %f %f\n", position[0], position[1], position[2], p->pos[0], p->pos[1], p->pos[2]);
 		//printf("Mass %f default kernel %f H %f\n", MASS, useDefaultKernel(position - p->pos, H), H);
-		sum += MASS * useDefaultKernel(position - p->pos, H);
+		//printf("Resultado do kernel %f pos da particula do for %f %f %f\n", useDefaultKernel(position - h->particles[i].pos, H), h->particles[i].pos[0], h->particles[i].pos[1], h->particles[i].pos[2]);
+		double arg[3];
+		arg[0] = position[0] - h->particles[i].pos[0];
+		arg[1] = position[1] - h->particles[i].pos[1];
+		arg[2] = position[2] - h->particles[i].pos[2];
+
+		sum += MASS * useDefaultKernel(arg, H);
 	}
 	
+	//printf("Sum dentro do computedensity %f\n", sum);
 	return sum;
 }
 
@@ -421,200 +522,221 @@ double computePressure(double density) {
 	return STIFF * (density - RESTDENSITY);
 }
 
-void computeForce( double density, double pressure, glm::vec3 position, glm::vec3 * ret) {
-	glm::vec3 sum=glm::vec3(0.0f, 0.0f, 0.0f);
+void computeForce( double density, double pressure, double position[3], double ret[3]) {
+	double sum[3] = { 0,0,0 };
 
-	for each (Point * p in points)
+	for (int i = 0; i < h->numbParticles; i++)
 	{
-		if (position.x == p->pos.x && position.y == p->pos.y && position.z == p->pos.z)
+		if (position[0] == h->particles[i].pos[0] && position[1] == h->particles[i].pos[1] && position[2] == h->particles[i].pos[2])
 			continue;
-		glm::vec3 ret = glm::vec3(0);
-		usePressureKernel_gradient(position - p->pos, H, &ret);
+		double ret_kernel[3] = { 0,0,0 };
 
+		double arg[3];
+		arg[0] = position[0] - h->particles[i].pos[0];
+		arg[1] = position[1] - h->particles[i].pos[1];
+		arg[2] = position[2] - h->particles[i].pos[2];
+		usePressureKernel_gradient(arg, H, ret_kernel);
+
+		//printf("RetKernel %f %f %f \n", ret_kernel[0], ret_kernel[1], ret_kernel[2]);
 		
-		
-		sum.x += ret.x * (pressure / (density * density) + p->pressure / (p->density * p->density)) * MASS;
-		sum.y += ret.y * (pressure / (density * density) + p->pressure / (p->density * p->density)) * MASS;
-		sum.z += ret.z * (pressure / (density * density) + p->pressure / (p->density * p->density)) * MASS;
+		sum[0] += ret_kernel[0] * (pressure / (density * density) + h->particles[i].pressure / (h->particles[i].density * h->particles[i].density)) * MASS;
+		sum[1] += ret_kernel[1] * (pressure / (density * density) + h->particles[i].pressure / (h->particles[i].density * h->particles[i].density)) * MASS;
+		sum[2] += ret_kernel[2] * (pressure / (density * density) + h->particles[i].pressure / (h->particles[i].density * h->particles[i].density)) * MASS;
 	}
 	
-	ret->x = -(sum.x * density);
-	ret->y = -(sum.y * density);
-	ret->z = -(sum.z * density);
+	ret[0] = -(sum[0] * density);
+	ret[1] = -(sum[1] * density);
+	ret[2] = -(sum[2] * density);
 	
 }
 
-void computeViscosity( glm::vec3 velocity, glm::vec3 position,glm::vec3 * ret) {
-	glm::vec3 sum= glm::vec3(0.0f, 0.0f, 0.0f);
+void computeViscosity( double velocity[3], double position[3],double ret[3]) {
+	double sum[3] = { 0,0,0 };
 
-	for each (Point *p in points)
+	for (int i = 0; i < h->numbParticles; i++)
 	{
-		if (position.x == p->pos.x && position.y == p->pos.y && position.z == p->pos.z)
+		if (position[0] == h->particles[i].pos[0] && position[1] == h->particles[i].pos[1] && position[2] == h->particles[i].pos[2])
 			continue;
-		sum.x += (p->velocity.x - velocity.x) * (MASS / p->density) * useViscosityKernel_laplacian(position - p->pos, H);
-		sum.y += (p->velocity.y - velocity.y) * (MASS / p->density) * useViscosityKernel_laplacian(position - p->pos, H);
-		sum.z += (p->velocity.z - velocity.z) * (MASS / p->density) * useViscosityKernel_laplacian(position - p->pos, H);
+		double arg[3];
+		arg[0] = position[0] - h->particles[i].pos[0];
+		arg[1] = position[1] - h->particles[i].pos[1];
+		arg[2] = position[2] - h->particles[i].pos[2];
+
+		sum[0] += (h->particles[i].velocity[0] - velocity[0]) * (MASS / h->particles[i].density) * useViscosityKernel_laplacian(arg, H);
+		sum[1] += (h->particles[i].velocity[1] - velocity[1]) * (MASS / h->particles[i].density) * useViscosityKernel_laplacian(arg, H);
+		sum[2] += (h->particles[i].velocity[2] - velocity[2]) * (MASS / h->particles[i].density) * useViscosityKernel_laplacian(arg, H);
 	}
-	ret->x = sum.x*VISCOSITY;
-	ret->y = sum.y * VISCOSITY;
-	ret->z = sum.z * VISCOSITY;
+	ret[0] = sum[0]*VISCOSITY;
+	ret[1] = sum[1] * VISCOSITY;
+	ret[2] = sum[2] * VISCOSITY;
 }
 
-void computeGravity(double density,glm::vec3 * ret) {
-	ret->x= GRAVITY.x * density;
-	ret->y = GRAVITY.y * density;
-	ret->z = GRAVITY.z * density;
+void computeGravity(double density,double ret[3]) {
+	ret[0]= GRAVITY[0] * density;
+	ret[1] = GRAVITY[1] * density;
+	ret[2] = GRAVITY[2] * density;
 }
 
-void computeSurfaceNormal(glm::vec3 position,glm::vec3 * ret) {
-	glm::vec3 sum= glm::vec3(0.0f, 0.0f, 0.0f);
+void computeSurfaceNormal(double position[3],double ret[3]) {
+	double sum[3] = { 0,0,0 };
 
-	for each (Point * p in points)
+	for (int i = 0; i < h->numbParticles; i++)
 	{
-		glm::vec3 ret2 = glm::vec3(0);
-		useDefaultKernel_gradient(position - p->pos, H, &ret2);
-		sum.x +=  ret2.x * (MASS / p->density);
-		sum.y += ret2.y * (MASS / p->density);
-		sum.z += ret2.z * (MASS / p->density);
+		double ret2[3] = { 0,0,0 };
+
+		double arg[3];
+		arg[0] = position[0] - h->particles[i].pos[0];
+		arg[1] = position[1] - h->particles[i].pos[1];
+		arg[2] = position[2] - h->particles[i].pos[2];
+		useDefaultKernel_gradient(arg, H, ret2);
+
+		sum[0] +=  ret2[0] * (MASS / h->particles[i].density);
+		sum[1] += ret2[1] * (MASS / h->particles[i].density);
+		sum[2] += ret2[2] * (MASS / h->particles[i].density);
 	}
-	ret->x = sum.x;
-	ret->y = sum.y;
-	ret->z = sum.z;
+	ret[0] = sum[0];
+	ret[1] = sum[1];
+	ret[2] = sum[2];
 }
 
-void computeSurfaceTension(glm::vec3 surfaceNormal, glm::vec3 position, glm::vec3 * ret) {
+void computeSurfaceTension(double surfaceNormal[3], double position[3], double ret[3]) {
 	double sum = 0.0f;
 
-	for each (Point *p in points)
+	for (int i = 0; i < h->numbParticles; i++)
 	{
-		sum += (MASS / p->density) * useDefaultKernel_laplacian(position - p->pos, H);
+		double arg[3];
+		arg[0] = position[0] - h->particles[i].pos[0];
+		arg[1] = position[1] - h->particles[i].pos[1];
+		arg[2] = position[2] - h->particles[i].pos[2];
+		sum += (MASS / h->particles[i].density) * useDefaultKernel_laplacian(arg, H);
 	}
 
-	glm::vec3 surfaceNormalNormalized = glm::normalize(surfaceNormal);
-	ret->x = -(surfaceNormalNormalized.x * SURFACETENSION * sum);
-	ret->y = -(surfaceNormalNormalized.y * SURFACETENSION * sum);
-	ret->z = -(surfaceNormalNormalized.z * SURFACETENSION * sum);
+	double surfaceNormalNormalized[3];
+	normalize(surfaceNormal, surfaceNormalNormalized);
+	ret[0] = -(surfaceNormalNormalized[0] * SURFACETENSION * sum);
+	ret[1] = -(surfaceNormalNormalized[1] * SURFACETENSION * sum);
+	ret[2] = -(surfaceNormalNormalized[2] * SURFACETENSION * sum);
 	
 }
 
-bool detectCollision(Point * particle, glm::vec3 * contactPoint, glm::vec3 * unitSurfaceNormal) {
+bool detectCollision(Point * particle, double contactPoint[3], double unitSurfaceNormal[3]) {
 	//o cubo esta centrado em 0,0,0
-	double newx = particle->pos.x + XMAX;
+	double newx = particle->pos[0] + XMAX;
 	double temp = (XMAX + XMAX) - newx;
 	temp = temp / (XMAX + XMAX); //devolve 1 quando newx é 0, ou seja, a particula esta encostada a parede esquerda
 								// devolve 0 quando esta encostada a parede direita
 
 	double newy = YMIN + (temp * DECLIVE);
 
-	if (particle->pos.x <= XMAX && particle->pos.x >= XMIN && particle->pos.y <= YMAX && particle->pos.y >= newy && particle->pos.z <= ZMAX && particle->pos.z >= ZMIN)
+	if (particle->pos[0] <= XMAX && particle->pos[0] >= XMIN && particle->pos[1] <= YMAX && particle->pos[1] >= newy && particle->pos[2] <= ZMAX && particle->pos[2] >= ZMIN)
 		return false;
 
 	char maxComponent = 'x';
-	float maxValue = abs(particle->pos.x);
+	float maxValue = abs(particle->pos[0]);
 	//Por causa do declive temos de ter isso em conta ao encontrar o maxvalue. (se nao fizer + temp*declive as vezes da como max component o Z quando na realidade deveria ter sido o Y, so nao foi por causa do declive)
-	if (maxValue < abs(particle->pos.y)+(temp*DECLIVE)) {
+	if (maxValue < abs(particle->pos[1])+(temp*DECLIVE)) {
 		maxComponent = 'y';
-		maxValue = abs(particle->pos.y) + (temp * DECLIVE);
+		maxValue = abs(particle->pos[1]) + (temp * DECLIVE);
 	}
-	if (maxValue < abs(particle->pos.z)) {
+	if (maxValue < abs(particle->pos[2])) {
 		maxComponent = 'z';
-		maxValue = abs(particle->pos.z);
+		maxValue = abs(particle->pos[2]);
 	}
 	// 'unitSurfaceNormal' is based on the current position component with the largest absolute value
 	
 	switch (maxComponent) {
 	case 'x':
-		if (particle->pos.x < XMIN) {
-			contactPoint->x = XMIN;
-			contactPoint->y = particle->pos.y; 
-			contactPoint->z = particle->pos.z;
+		if (particle->pos[0] < XMIN) {
+			contactPoint[0] = XMIN;
+			contactPoint[1] = particle->pos[1]; 
+			contactPoint[2] = particle->pos[2];
 
-			if (particle->pos.y < newy)     contactPoint->y = newy;
-			else if (particle->pos.y > YMAX) contactPoint->y = YMAX;
-			if (particle->pos.z < ZMIN)     contactPoint->z = ZMIN;
-			else if (particle->pos.z > ZMAX) contactPoint->z = ZMAX;
+			if (particle->pos[1] < newy)     contactPoint[1] = newy;
+			else if (particle->pos[1] > YMAX) contactPoint[1] = YMAX;
+			if (particle->pos[2] < ZMIN)     contactPoint[2] = ZMIN;
+			else if (particle->pos[2] > ZMAX) contactPoint[2] = ZMAX;
 			
-			unitSurfaceNormal->x = 1;
-			unitSurfaceNormal->y = 0;
-			unitSurfaceNormal->z = 0;
+			unitSurfaceNormal[0] = 1;
+			unitSurfaceNormal[1] = 0;
+			unitSurfaceNormal[2] = 0;
 			
 		}
-		else if (particle->pos.x > XMAX) {
-			contactPoint->x = XMAX;
-			contactPoint->y = particle->pos.y;
-			contactPoint->z = particle->pos.z;
+		else if (particle->pos[0] > XMAX) {
+			contactPoint[0] = XMAX;
+			contactPoint[1] = particle->pos[1];
+			contactPoint[2] = particle->pos[2];
 
-			if (particle->pos.y < newy)     contactPoint->y = newy;
-			else if (particle->pos.y > YMAX) contactPoint->y = YMAX;
-			if (particle->pos.z < ZMIN)     contactPoint->z = ZMIN;
-			else if (particle->pos.z > ZMAX) contactPoint->z = ZMAX;
+			if (particle->pos[1] < newy)     contactPoint[1] = newy;
+			else if (particle->pos[1] > YMAX) contactPoint[1] = YMAX;
+			if (particle->pos[2] < ZMIN)     contactPoint[2] = ZMIN;
+			else if (particle->pos[2] > ZMAX) contactPoint[2] = ZMAX;
 			
-			unitSurfaceNormal->x = -1;
-			unitSurfaceNormal->y = 0;
-			unitSurfaceNormal->z = 0;
+			unitSurfaceNormal[0] = -1;
+			unitSurfaceNormal[1] = 0;
+			unitSurfaceNormal[2] = 0;
 			
 
 		}
 		break;
 	case 'y':
-		if (particle->pos.y < newy) {
-			contactPoint->x = particle->pos.x;
-			contactPoint->y = newy;
-			contactPoint->z = particle->pos.z;
+		if (particle->pos[1] < newy) {
+			contactPoint[0] = particle->pos[0];
+			contactPoint[1] = newy;
+			contactPoint[2] = particle->pos[2];
 
-			if (particle->pos.x < XMIN)     contactPoint->x = XMIN;
-			else if (particle->pos.x > XMAX) contactPoint->x = XMAX;
-			if (particle->pos.z < ZMIN)     contactPoint->z = ZMIN;
-			else if (particle->pos.z > ZMAX) contactPoint->z = ZMAX;
+			if (particle->pos[0] < XMIN)     contactPoint[0] = XMIN;
+			else if (particle->pos[0] > XMAX) contactPoint[0] = XMAX;
+			if (particle->pos[2] < ZMIN)     contactPoint[2] = ZMIN;
+			else if (particle->pos[2] > ZMAX) contactPoint[2] = ZMAX;
 
-			unitSurfaceNormal->x = DECLIVE;
-			unitSurfaceNormal->y = 1-DECLIVE;
-			unitSurfaceNormal->z = 0;
+			unitSurfaceNormal[0] = DECLIVE;
+			unitSurfaceNormal[1] = 1-DECLIVE;
+			unitSurfaceNormal[2] = 0;
 			
 		}
-		else if (particle->pos.y > YMAX) {
-			contactPoint->x = particle->pos.x;
-			contactPoint->y = YMAX;
-			contactPoint->z = particle->pos.z;
+		else if (particle->pos[1] > YMAX) {
+			contactPoint[0] = particle->pos[0];
+			contactPoint[1] = YMAX;
+			contactPoint[2] = particle->pos[2];
 
-			if (particle->pos.x < XMIN)     contactPoint->x = XMIN;
-			else if (particle->pos.x > XMAX) contactPoint->x = XMAX;
-			if (particle->pos.z < ZMIN)     contactPoint->z = ZMIN;
-			else if (particle->pos.z > ZMAX) contactPoint->z = ZMAX;
+			if (particle->pos[0] < XMIN)     contactPoint[0] = XMIN;
+			else if (particle->pos[0] > XMAX) contactPoint[0] = XMAX;
+			if (particle->pos[2] < ZMIN)     contactPoint[2] = ZMIN;
+			else if (particle->pos[2] > ZMAX) contactPoint[2] = ZMAX;
 
-			unitSurfaceNormal->x = 0;
-			unitSurfaceNormal->y = -1;
-			unitSurfaceNormal->z = 0;
+			unitSurfaceNormal[0] = 0;
+			unitSurfaceNormal[1] = -1;
+			unitSurfaceNormal[2] = 0;
 			
 		}
 		break;
 	case 'z':
-		if (particle->pos.z < ZMIN) {
-			contactPoint->x = particle->pos.x;
-			contactPoint->y = particle->pos.y;
-			contactPoint->z = ZMIN;
+		if (particle->pos[2] < ZMIN) {
+			contactPoint[0] = particle->pos[0];
+			contactPoint[1] = particle->pos[1];
+			contactPoint[2] = ZMIN;
 
-			if (particle->pos.x < XMIN)     contactPoint->x = XMIN;
-			else if (particle->pos.x > XMAX) contactPoint->x = XMAX;
-			if (particle->pos.y < newy)     contactPoint->y = newy;
-			else if (particle->pos.y > YMAX) contactPoint->y = YMAX;
-			unitSurfaceNormal->x = 0;
-			unitSurfaceNormal->y = 0;
-			unitSurfaceNormal->z = 1;
+			if (particle->pos[0] < XMIN)     contactPoint[0] = XMIN;
+			else if (particle->pos[0] > XMAX) contactPoint[0] = XMAX;
+			if (particle->pos[1] < newy)     contactPoint[1] = newy;
+			else if (particle->pos[1] > YMAX) contactPoint[1] = YMAX;
+			unitSurfaceNormal[0] = 0;
+			unitSurfaceNormal[1] = 0;
+			unitSurfaceNormal[2] = 1;
 			
 		}
-		else if (particle->pos.z > ZMAX) {
-			contactPoint->x = particle->pos.x;
-			contactPoint->y = particle->pos.y;
-			contactPoint->z = ZMAX;
+		else if (particle->pos[2] > ZMAX) {
+			contactPoint[0] = particle->pos[0];
+			contactPoint[1] = particle->pos[1];
+			contactPoint[2] = ZMAX;
 
-			if (particle->pos.x < XMIN)     contactPoint->x = XMIN;
-			else if (particle->pos.x > XMAX) contactPoint->x = XMAX;
-			if (particle->pos.y < newy)     contactPoint->y = newy;
-			else if (particle->pos.y > YMAX) contactPoint->y = YMAX;
-			unitSurfaceNormal->x = 0;
-			unitSurfaceNormal->y = 0;
-			unitSurfaceNormal->z = -1;
+			if (particle->pos[0] < XMIN)     contactPoint[0] = XMIN;
+			else if (particle->pos[0] > XMAX) contactPoint[0] = XMAX;
+			if (particle->pos[1] < newy)     contactPoint[1] = newy;
+			else if (particle->pos[1] > YMAX) contactPoint[1] = YMAX;
+			unitSurfaceNormal[0] = 0;
+			unitSurfaceNormal[1] = 0;
+			unitSurfaceNormal[2] = -1;
 			
 		}
 		break;
@@ -624,105 +746,120 @@ bool detectCollision(Point * particle, glm::vec3 * contactPoint, glm::vec3 * uni
 	return true;
 }
 
-void updateVelocity(glm::vec3 velocity, glm::vec3 unitSurfaceNormal, float penetrationDepth, glm::vec3 * ret) {
+void updateVelocity(double velocity[3], double unitSurfaceNormal[3], float penetrationDepth, double ret[3]) {
 	//ret = velocity - unitSurfaceNormal * (1 + RESTITUTION * penetrationDepth / (TIMESTEP * glm::length(velocity))) * glm::dot(velocity, unitSurfaceNormal);
 	
-	ret->x = velocity.x - unitSurfaceNormal.x * (1 + RESTITUTION * penetrationDepth / (TIMESTEP * glm::length(velocity))) * glm::dot(unitSurfaceNormal, velocity);
-	ret->y = velocity.y - unitSurfaceNormal.y * (1 + RESTITUTION * penetrationDepth / (TIMESTEP * glm::length(velocity))) * glm::dot(unitSurfaceNormal, velocity);
-	ret->z = velocity.z - unitSurfaceNormal.z * (1 + RESTITUTION * penetrationDepth / (TIMESTEP * glm::length(velocity))) * glm::dot(unitSurfaceNormal, velocity);
+	ret[0] = velocity[0] - unitSurfaceNormal[0] * (1 + RESTITUTION * penetrationDepth / (TIMESTEP * length(velocity))) * dot(unitSurfaceNormal, velocity);
+	ret[1] = velocity[1] - unitSurfaceNormal[1] * (1 + RESTITUTION * penetrationDepth / (TIMESTEP * length(velocity))) * dot(unitSurfaceNormal, velocity);
+	ret[2] = velocity[2] - unitSurfaceNormal[2] * (1 + RESTITUTION * penetrationDepth / (TIMESTEP * length(velocity))) * dot(unitSurfaceNormal, velocity);
 }
 
 void simulate() {
-	
+
 	//density and pressure
-	for each (Point * p in points) {
-		p->density = computeDensity(p->pos);
-		p->pressure = computePressure(p->density);
+	for (int i = 0; i < h->numbParticles; i++){
+		//printf("Eu mando o pos %f %f %f\n", h->particles[i].pos[0], h->particles[i].pos[1], h->particles[i].pos[2]);
+		h->particles[i].density = computeDensity(h->particles[i].pos);
+		h->particles[i].pressure = computePressure(h->particles[i].density);
+		//printf("DEnsity %f\n", h->particles[i].density);
+		//printf("pressure %f\n", h->particles[i].pressure);
+		//p->density = computeDensity(p->pos);
+		//p->pressure = computePressure(p->density);
 	}
 	//Internal forces
-	for each (Point * p in points) {
-		glm::vec3 ret = glm::vec3(0);
-		computeForce(p->density,p->pressure,p->pos,&ret);
-		//printf("ret 1 %f %f %f\n", ret.x, ret.y, ret.z);
-		p->force.x = ret.x;
-		p->force.y = ret.y;
-		p->force.z = ret.z;
-		//printf("Force %f %f %f\n", p->force.x, p->force.y, p->force.z);
+	for (int i = 0; i < h->numbParticles; i++) {
+		double ret[3] = { 0,0,0 };
+		computeForce(h->particles[i].density,h->particles[i].pressure ,h->particles[i].pos,ret);
+		//printf("ret 1 %f %f %f\n", ret[0], ret[1], ret[2]);
+		h->particles[i].force[0] = ret[0];
+		h->particles[i].force[1] = ret[1];
+		h->particles[i].force[2] = ret[2];
+		//printf("Force %f %f %f\n", p->force[0], p->force[1], p->force[2]);
 
-		computeViscosity( p->velocity, p->pos,&ret);
-		//printf("ret 2 %f %f %f\n", ret.x, ret.y, ret.z);
-		p->viscosity.x = ret.x;
-		p->viscosity.y = ret.y;
-		p->viscosity.z = ret.z;
-		//printf("Viscosity %f %f %f\n", p->viscosity.x, p->viscosity.y, p->viscosity.z);
+		computeViscosity( h->particles[i].velocity , h->particles[i].pos,ret);
+		//printf("ret 2 %f %f %f\n", ret[0], ret[1], ret[2]);
+		h->particles[i].viscosity[0] = ret[0];
+		h->particles[i].viscosity[1] = ret[1];
+		h->particles[i].viscosity[2] = ret[2];
+		//printf("Viscosity %f %f %f\n", p->viscosity[0], p->viscosity[1], p->viscosity[2]);
 	}
 	
 	//external forces
-	for each (Point * p in points)
+	for (int i = 0; i < h->numbParticles; i++) 
 	{
-		glm::vec3 ret = glm::vec3(0);
-		computeGravity(p->density,&ret);
-		p->gravity.x = ret.x;
-		p->gravity.y = ret.y;
-		p->gravity.z = ret.z;
+		double ret[3] = { 0,0,0 };
+		computeGravity(h->particles[i].density,ret);
+		h->particles[i].gravity[0] = ret[0];
+		h->particles[i].gravity[1] = ret[1];
+		h->particles[i].gravity[2] = ret[2];
 
-		computeSurfaceNormal(p->pos, &ret);
-		p->surfaceNormal.x = ret.x;
-		p->surfaceNormal.y = ret.y;
-		p->surfaceNormal.z = ret.z;
-		if (glm::length(p->surfaceNormal) >= THRESHOLD) {
-			computeSurfaceTension(p->surfaceNormal, p->pos, &ret);
-			p->surfaceTension.x = ret.x;
-			p->surfaceTension.y = ret.y;
-			p->surfaceTension.z = ret.z;
+		computeSurfaceNormal(h->particles[i].pos, ret);
+		h->particles[i].surfaceNormal[0] = ret[0];
+		h->particles[i].surfaceNormal[1] = ret[1];
+		h->particles[i].surfaceNormal[2] = ret[2];
+		if (length(h->particles[i].surfaceNormal) >= THRESHOLD) {
+			computeSurfaceTension(h->particles[i].surfaceNormal, h->particles[i].pos, ret);
+			h->particles[i].surfaceTension[0] = ret[0];
+			h->particles[i].surfaceTension[1] = ret[1];
+			h->particles[i].surfaceTension[2] = ret[2];
 		}
-		else
-			p->surfaceTension = glm::vec3(0);
+		else {
+			h->particles[i].surfaceTension[0] = 0;
+			h->particles[i].surfaceTension[1] = 0;
+			h->particles[i].surfaceTension[2] = 0;
+		}
+			
 	}
 
 	// Time integration and collision handling
 	static double time = 0.0f;
 	time += TIMESTEP;
-	glm::vec3 totalForce=glm::vec3(0);
+	double totalForce[3] = { 0,0,0 };
 
-	for each (Point * p in points)
+	for (int i = 0; i < h->numbParticles; i++) 
 	{
-		//printf("PressureForce %f %f %f Viscosity %f %f %f Gravity %f %f %f surface tension %f %f %f\n", mParticles[i].mPressureForce.x, mParticles[i].mPressureForce.y, mParticles[i].mPressureForce.z, mParticles[i].mViscosityForce.x, mParticles[i].mViscosityForce.y, mParticles[i].mViscosityForce.z, mParticles[i].mGravitationalForce.x, mParticles[i].mGravitationalForce.y, mParticles[i].mGravitationalForce.z, mParticles[i].mSurfaceTensionForce.x, mParticles[i].mSurfaceTensionForce.y, mParticles[i].mSurfaceTensionForce.z);
-		totalForce.x = p->force.x + p->viscosity.x + p->gravity.x + p->surfaceTension.x;
-		totalForce.y = p->force.y + p->viscosity.y + p->gravity.y + p->surfaceTension.y;
-		totalForce.z = p->force.z + p->viscosity.z + p->gravity.z + p->surfaceTension.z;
+		//printf("PressureForce %f %f %f Viscosity %f %f %f Gravity %f %f %f surface tension %f %f %f\n", mParticles[i].mPressureForce[0], mParticles[i].mPressureForce[1], mParticles[i].mPressureForce[2], mParticles[i].mViscosityForce[0], mParticles[i].mViscosityForce[1], mParticles[i].mViscosityForce[2], mParticles[i].mGravitationalForce[0], mParticles[i].mGravitationalForce[1], mParticles[i].mGravitationalForce[2], mParticles[i].mSurfaceTensionForce[0], mParticles[i].mSurfaceTensionForce[1], mParticles[i].mSurfaceTensionForce[2]);
+		totalForce[0] = h->particles[i].force[0] + h->particles[i].viscosity[0] + h->particles[i].gravity[0] + h->particles[i].surfaceTension[0];
+		totalForce[1] = h->particles[i].force[1] + h->particles[i].viscosity[1] + h->particles[i].gravity[1] + h->particles[i].surfaceTension[1];
+		totalForce[2] = h->particles[i].force[2] + h->particles[i].viscosity[2] + h->particles[i].gravity[2] + h->particles[i].surfaceTension[2];
 		//employEulerIntegrator
-		//printf("TotalFrce %f %f %f density %f\n", totalForce.x, totalForce.y, totalForce.z, p->density);
-		p->acceleration.x = totalForce.x / p->density;
-		p->acceleration.y = totalForce.y / p->density;
-		p->acceleration.z = totalForce.z / p->density;
+		//printf("TotalFrce %f %f %f density %f\n", totalForce[0], totalForce[1], totalForce[2], h->particles[i].density);
+		h->particles[i].acceleration[0] = totalForce[0] / h->particles[i].density;
+		h->particles[i].acceleration[1] = totalForce[1] / h->particles[i].density;
+		h->particles[i].acceleration[2] = totalForce[2] / h->particles[i].density;
 
-		//printf("Acceleration %f %f %f\n", p->acceleration.x, p->acceleration.y, p->acceleration.z);
-		p->velocity.x = p->velocity.x + p->acceleration.x * TIMESTEP;
-		p->velocity.y = p->velocity.y + p->acceleration.y * TIMESTEP;
-		p->velocity.z = p->velocity.z + p->acceleration.z * TIMESTEP;
-		//printf("Antes Position %f %f %f velocity %f %f %f\n", p->pos.x, p->pos.y, p->pos.z, p->velocity.x, p->velocity.y, p->velocity.z);
-		p->pos.x = p->pos.x + p->velocity.x * TIMESTEP;
-		p->pos.y = p->pos.y + p->velocity.y * TIMESTEP;
-		p->pos.z = p->pos.z + p->velocity.z * TIMESTEP;
+		//printf("Acceleration %f %f %f\n", h->particles[i].acceleration[0], h->particles[i].acceleration[1], h->particles[i].acceleration[2]);
+		h->particles[i].velocity[0] = h->particles[i].velocity[0] + h->particles[i].acceleration[0] * TIMESTEP;
+		h->particles[i].velocity[1] = h->particles[i].velocity[1] + h->particles[i].acceleration[1] * TIMESTEP;
+		h->particles[i].velocity[2] = h->particles[i].velocity[2] + h->particles[i].acceleration[2] * TIMESTEP;
+		//printf("Antes Position %f %f %f velocity %f %f %f\n", h->particles[i].pos[0], h->particles[i].pos[1], h->particles[i].pos[2], h->particles[i].velocity[0], h->particles[i].velocity[1], h->particles[i].velocity[2]);
+		h->particles[i].pos[0] = h->particles[i].pos[0] + h->particles[i].velocity[0] * TIMESTEP;
+		h->particles[i].pos[1] = h->particles[i].pos[1] + h->particles[i].velocity[1] * TIMESTEP;
+		h->particles[i].pos[2] = h->particles[i].pos[2] + h->particles[i].velocity[2] * TIMESTEP;
 
-		//printf("Position %f %f %f\n", p->pos.x, p->pos.y, p->pos.z);
-		
-		glm::vec3 contactPoint = glm::vec3(0);
-		glm::vec3 unitSurfaceNormal=glm::vec3(0);
-		if (detectCollision(p, &contactPoint, &unitSurfaceNormal)) {
-			//printf("unitSurfaceNormal %f %f %f\n", unitSurfaceNormal.x, unitSurfaceNormal.y, unitSurfaceNormal.z);
-			glm::vec3 ret = glm::vec3(0);
-			updateVelocity(p->velocity, unitSurfaceNormal, glm::length((p->pos - contactPoint)),&ret);
-			//printf("Antes --- Velocity %f %f %f length %f\n", p->velocity.x, p->velocity.y, p->velocity.z, glm::length(p->velocity));
-			p->velocity.x = ret.x;
-			p->velocity.y = ret.y;
-			p->velocity.z = ret.z;
-			//printf("Depois --- Velocity %f %f %f length %f\n", p->velocity.x, p->velocity.y, p->velocity.z, glm::length(p->velocity));
-			
-			p->pos = contactPoint;
+		//printf("Position %f %f %f\n", h->particles[i].pos[0], h->particles[i].pos[1], h->particles[i].pos[2]);
+
+		double contactPoint[3] = { 0,0,0 };
+		double unitSurfaceNormal[3] = { 0,0,0 };
+		if (detectCollision(&h->particles[i], contactPoint, unitSurfaceNormal)) {
+			//printf("unitSurfaceNormal %f %f %f\n", unitSurfaceNormal[0], unitSurfaceNormal[1], unitSurfaceNormal[2]);
+			double ret[3] = { 0,0,0 };
+			double arg[3];
+			arg[0] = h->particles[i].pos[0] - contactPoint[0];
+			arg[1] = h->particles[i].pos[1] - contactPoint[1];
+			arg[2] = h->particles[i].pos[2] - contactPoint[2];
+			updateVelocity(h->particles[i].velocity, unitSurfaceNormal, length(arg), ret);
+			//printf("Antes --- Velocity %f %f %f length %f\n", h->particles[i].velocity[0], h->particles[i].velocity[1], h->particles[i].velocity[2], glm::length(h->particles[i].velocity));
+			h->particles[i].velocity[0] = ret[0];
+			h->particles[i].velocity[1] = ret[1];
+			h->particles[i].velocity[2] = ret[2];
+			//printf("Depois --- Velocity %f %f %f length %f\n", h->particles[i].velocity[0], h->particles[i].velocity[1], h->particles[i].velocity[2], glm::length(h->particles[i].velocity));
+
+			h->particles[i].pos[0] = contactPoint[0];
+			h->particles[i].pos[1] = contactPoint[1];
+			h->particles[i].pos[2] = contactPoint[2];
 		}
-		//p->velocity *= 0.5;
+		//h->particles[i].velocity *= 0.5;
 
 	}
 
@@ -793,15 +930,13 @@ void renderScene(void) {
 	//Draw stuff
 	//drawAxis();
 
-	//Desenha o volume da octree (apenas o maior cubo)
-	o->drawOut();
-
 	//Calcula o raio das esferas
 	double sphereRadius = powf((3 * MASS) / (4 * M_PI * RESTDENSITY), 1.0f / 3.0f);
 	
-	for (size_t i = 0; i < points.size(); i++)
+	for (int i = 0; h!=NULL && i < h->numbParticles; i++) 
 	{
-		points.at(i)->draw(sphereRadius);
+			h->particles[i].draw(sphereRadius); 
+			//printf("Render scene Pos da particula %f %f %f\n", h->particles[i].pos[0], h->particles[i].pos[1], h->particles[i].pos[2]);
 	}
 
 	drawBox();
@@ -832,7 +967,9 @@ void SetupNormal() {
 	ZMIN = -side;
 	ZMAX = side;
 
-	GRAVITY = glm::vec3(0.0f, -9.8f, 0.0f);
+	GRAVITY[0] = 0.0;
+	GRAVITY[1] = -9.8;
+	GRAVITY[2] = 0.0;
 
 }
 
@@ -860,7 +997,7 @@ void setLighting(void) {
 }
 
 int main(int argc, char** argv) {
-	o = new Octree(0, 0, 0, size, max_points, max_depth);
+
 
 	//SetupDualWave();
 	SetupNormal();
@@ -923,7 +1060,7 @@ int main(int argc, char** argv) {
 		" label='Rest Density' min=100 max=10000 step=100 keyIncr=s keyDecr=S help='Rest density' ");
 
 	TwAddVarRW(bar, "Restitution", TW_TYPE_DOUBLE, &RESTITUTION,
-		" label='Restitution' min=0.1 max=2 step=0.05 keyIncr=s keyDecr=S help='Determines the velocity 'lost' when a particle hits an object' ");
+		" label='Restitution' min=0 max=10 step=0.05 keyIncr=s keyDecr=S help='Determines the velocity 'lost' when a particle hits an object' ");
 
 	TwAddVarRW(bar, "SurfaceTension", TW_TYPE_DOUBLE, &SURFACETENSION,
 		" label='Surface Tension' min=0.0001 max=2 step=0.0001 keyIncr=s keyDecr=S help='Determines the surface tension of the fluid' ");

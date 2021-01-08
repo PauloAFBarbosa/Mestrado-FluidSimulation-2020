@@ -5,7 +5,7 @@ PROJECT(Octree)
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
-add_executable(${PROJECT_NAME} main.cpp Octree.h Octree.cpp Point.h Point.cpp)
+add_executable(${PROJECT_NAME} main.cpp Octree.h Octree.cpp Point.h Point.cpp HashMap.cpp HashMap.h)
 
 find_package(OpenGL REQUIRED)
 include_directories(${OpenGL_INCLUDE_DIRS})

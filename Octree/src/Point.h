@@ -6,21 +6,24 @@ class Point {
 	
 
 public:
-	glm::vec3 originalPos;
-	glm::vec3 pos;
-	glm::vec3 color;
-	glm::vec3 force;
-	glm::vec3 velocity;
-	glm::vec3 velocityEval;
-	glm::vec3 acceleration;
-	glm::vec3 gravity;
-	glm::vec3 surfaceNormal;
-	glm::vec3 surfaceTension;
+	double originalPos[3];
+	double pos[3];
+	double color[3];
+	double force[3];
+	double velocity[3];
+	double velocityEval[3];
+	double acceleration[3];
+	double gravity[3];
+	double surfaceNormal[3];
+	double surfaceTension[3];
 	
 	double density;
 	double pressure;
 	
-	glm::vec3 viscosity;
+	double viscosity[3];
+
+	
+
 	//Cria um ponto na posição xyz, sem qualquer força aplicada ao mesmo
 	Point(float x, float y, float z);
 	~Point();
