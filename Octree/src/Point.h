@@ -6,6 +6,7 @@ class Point {
 	
 
 public:
+	int id;
 	double originalPos[3];
 	double pos[3];
 	double color[3];
@@ -25,7 +26,7 @@ public:
 	
 
 	//Cria um ponto na posição xyz, sem qualquer força aplicada ao mesmo
-	Point(float x, float y, float z);
+	Point(float x, float y, float z,int id);
 	~Point();
 	void draw(double r);
 private:

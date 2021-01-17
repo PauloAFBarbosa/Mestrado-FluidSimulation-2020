@@ -376,117 +376,184 @@ int HashMap::getAdj(double pos[3], double H, unsigned int ret[27]) {
 }
 
 
-void HashMap::getAdjV2(double pos[3], double H, unsigned int ret[27]) {
-	unsigned int m = 100;
+int HashMap::getAdjV2(double pos[3], double H, unsigned int ret[27]) {
+	
 	double tempPos[3];
-	
-
-	
+	unsigned int tempBucket;
+	int retSize = 0;
 	//bucket recebido
 	ret[0] = this->hashFunction(pos, H, this->size);
-
+	retSize++;
 	//bucket right
 	tempPos[0] = pos[0] + H;
 	tempPos[1] = pos[1];
 	tempPos[2] = pos[2];
-	ret[1] = this->hashFunction(tempPos, H, this->size);
+	tempBucket = this->hashFunction(tempPos, H, this->size);
+	if (contains(ret, retSize, tempBucket) == false) {
+		ret[retSize] = this->hashFunction(tempPos, H, this->size);
+		retSize++;
+	}
 
 	//bucket left
 	tempPos[0] = pos[0] - H;
 	tempPos[1] = pos[1];
 	tempPos[2] = pos[2];
-	ret[2] = this->hashFunction(tempPos, H, this->size);
+	tempBucket = this->hashFunction(tempPos, H, this->size);
+	if (contains(ret, retSize, tempBucket) == false) {
+		ret[retSize] = this->hashFunction(tempPos, H, this->size);
+		retSize++;
+	}
 
 	//bucket right front
 	tempPos[0] = pos[0] + H;
 	tempPos[1] = pos[1];
 	tempPos[2] = pos[2] - H;
-	ret[3] = this->hashFunction(tempPos, H, this->size);
+	tempBucket = this->hashFunction(tempPos, H, this->size);
+	if (contains(ret, retSize, tempBucket) == false) {
+		ret[retSize] = this->hashFunction(tempPos, H, this->size);
+		retSize++;
+	}
 
 	//bucket right back
 	tempPos[0] = pos[0] + H;
 	tempPos[1] = pos[1];
 	tempPos[2] = pos[2] + H;
-	ret[4] = this->hashFunction(tempPos, H, this->size);
+	tempBucket = this->hashFunction(tempPos, H, this->size);
+	if (contains(ret, retSize, tempBucket) == false) {
+		ret[retSize] = this->hashFunction(tempPos, H, this->size);
+		retSize++;
+	}
 
 	//bucket front
 	tempPos[0] = pos[0];
 	tempPos[1] = pos[1];
 	tempPos[2] = pos[2] - H;
-	ret[5] = this->hashFunction(tempPos, H, this->size);
+	tempBucket = this->hashFunction(tempPos, H, this->size);
+	if (contains(ret, retSize, tempBucket) == false) {
+		ret[retSize] = this->hashFunction(tempPos, H, this->size);
+		retSize++;
+	}
 
 	//bucket back
 	tempPos[0] = pos[0];
 	tempPos[1] = pos[1];
 	tempPos[2] = pos[2] + H;
-	ret[6] = this->hashFunction(tempPos, H, this->size);
+	tempBucket = this->hashFunction(tempPos, H, this->size);
+	if (contains(ret, retSize, tempBucket) == false) {
+		ret[retSize] = this->hashFunction(tempPos, H, this->size);
+		retSize++;
+	}
 
 	//bucket left front
 	tempPos[0] = pos[0] - H;
 	tempPos[1] = pos[1];
 	tempPos[2] = pos[2] - H;
-	ret[7] = this->hashFunction(tempPos, H, this->size);
+	tempBucket = this->hashFunction(tempPos, H, this->size);
+	if (contains(ret, retSize, tempBucket) == false) {
+		ret[retSize] = this->hashFunction(tempPos, H, this->size);
+		retSize++;
+	}
 
 	//bucket left back 
 	tempPos[0] = pos[0] - H;
 	tempPos[1] = pos[1];
 	tempPos[2] = pos[2] + H;
-	ret[8] = this->hashFunction(tempPos, H, this->size);
+	tempBucket = this->hashFunction(tempPos, H, this->size);
+	if (contains(ret, retSize, tempBucket) == false) {
+		ret[retSize] = this->hashFunction(tempPos, H, this->size);
+		retSize++;
+	}
 
 	//-----O mesmo mas para os buckets de cima
 	//bucket recebido cima
 	tempPos[0] = pos[0];
 	tempPos[1] = pos[1] + H;
 	tempPos[2] = pos[2];
-	ret[9] = this->hashFunction(tempPos, H, this->size);
+	tempBucket = this->hashFunction(tempPos, H, this->size);
+	if (contains(ret, retSize, tempBucket) == false) {
+		ret[retSize] = this->hashFunction(tempPos, H, this->size);
+		retSize++;
+	}
 
 	//bucket right cima
 	tempPos[0] = pos[0] + H;
 	tempPos[1] = pos[1] + H;
 	tempPos[2] = pos[2];
-	ret[10] = this->hashFunction(tempPos, H, this->size);
+	tempBucket = this->hashFunction(tempPos, H, this->size);
+	if (contains(ret, retSize, tempBucket) == false) {
+		ret[retSize] = this->hashFunction(tempPos, H, this->size);
+		retSize++;
+	}
 
 	//bucket left cima
 	tempPos[0] = pos[0] - H;
 	tempPos[1] = pos[1] + H;
 	tempPos[2] = pos[2];
-	ret[11] = this->hashFunction(tempPos, H, this->size);
+	tempBucket = this->hashFunction(tempPos, H, this->size);
+	if (contains(ret, retSize, tempBucket) == false) {
+		ret[retSize] = this->hashFunction(tempPos, H, this->size);
+		retSize++;
+	}
 
 	//bucket right front cima
 	tempPos[0] = pos[0] + H;
 	tempPos[1] = pos[1] + H;
 	tempPos[2] = pos[2] - H;
-	ret[12] = this->hashFunction(tempPos, H, this->size);
+	tempBucket = this->hashFunction(tempPos, H, this->size);
+	if (contains(ret, retSize, tempBucket) == false) {
+		ret[retSize] = this->hashFunction(tempPos, H, this->size);
+		retSize++;
+	}
 
 	//bucket right back cima
 	tempPos[0] = pos[0] + H;
 	tempPos[1] = pos[1] + H;
 	tempPos[2] = pos[2] + H;
-	ret[13] = this->hashFunction(tempPos, H, this->size);
+	tempBucket = this->hashFunction(tempPos, H, this->size);
+	if (contains(ret, retSize, tempBucket) == false) {
+		ret[retSize] = this->hashFunction(tempPos, H, this->size);
+		retSize++;
+	}
 
 	//bucket front cima
 	tempPos[0] = pos[0];
 	tempPos[1] = pos[1] + H;
 	tempPos[2] = pos[2] - H;
-	ret[14] = this->hashFunction(tempPos, H, this->size);
+	tempBucket = this->hashFunction(tempPos, H, this->size);
+	if (contains(ret, retSize, tempBucket) == false) {
+		ret[retSize] = this->hashFunction(tempPos, H, this->size);
+		retSize++;
+	}
 
 	//bucket back cima
 	tempPos[0] = pos[0];
 	tempPos[1] = pos[1] + H;
 	tempPos[2] = pos[2] + H;
-	ret[15] = this->hashFunction(tempPos, H, this->size);
+	tempBucket = this->hashFunction(tempPos, H, this->size);
+	if (contains(ret, retSize, tempBucket) == false) {
+		ret[retSize] = this->hashFunction(tempPos, H, this->size);
+		retSize++;
+	}
 
 	//bucket left front cima
 	tempPos[0] = pos[0] - H;
 	tempPos[1] = pos[1] + H;
 	tempPos[2] = pos[2] - H;
-	ret[16] = this->hashFunction(tempPos, H, this->size);
+	tempBucket = this->hashFunction(tempPos, H, this->size);
+	if (contains(ret, retSize, tempBucket) == false) {
+		ret[retSize] = this->hashFunction(tempPos, H, this->size);
+		retSize++;
+	}
 
 	//bucket left back cima 
 	tempPos[0] = pos[0] - H;
 	tempPos[1] = pos[1] + H;
 	tempPos[2] = pos[2] + H;
-	ret[17] = this->hashFunction(tempPos, H, this->size);
+	tempBucket = this->hashFunction(tempPos, H, this->size);
+	if (contains(ret, retSize, tempBucket) == false) {
+		ret[retSize] = this->hashFunction(tempPos, H, this->size);
+		retSize++;
+	}
 
 
 	//-----O mesmo mas para os buckets de baixo
@@ -494,56 +561,93 @@ void HashMap::getAdjV2(double pos[3], double H, unsigned int ret[27]) {
 	tempPos[0] = pos[0];
 	tempPos[1] = pos[1] - H;
 	tempPos[2] = pos[2];
-	ret[18] = this->hashFunction(tempPos, H, this->size);
+	tempBucket = this->hashFunction(tempPos, H, this->size);
+	if (contains(ret, retSize, tempBucket) == false) {
+		ret[retSize] = this->hashFunction(tempPos, H, this->size);
+		retSize++;
+	}
 
 	//bucket right baixo
 	tempPos[0] = pos[0] + H;
 	tempPos[1] = pos[1] - H;
 	tempPos[2] = pos[2];
-	ret[19] = this->hashFunction(tempPos, H, this->size);
+	tempBucket = this->hashFunction(tempPos, H, this->size);
+	if (contains(ret, retSize, tempBucket) == false) {
+		ret[retSize] = this->hashFunction(tempPos, H, this->size);
+		retSize++;
+	}
 
 	//bucket left baixo
 	tempPos[0] = pos[0] - H;
 	tempPos[1] = pos[1] - H;
 	tempPos[2] = pos[2];
-	ret[20] = this->hashFunction(tempPos, H, this->size);
+	tempBucket = this->hashFunction(tempPos, H, this->size);
+	if (contains(ret, retSize, tempBucket) == false) {
+		ret[retSize] = this->hashFunction(tempPos, H, this->size);
+		retSize++;
+	}
 
 	//bucket right front baixo
 	tempPos[0] = pos[0] + H;
 	tempPos[1] = pos[1] - H;
 	tempPos[2] = pos[2] - H;
-	ret[21] = this->hashFunction(tempPos, H, this->size);
+	tempBucket = this->hashFunction(tempPos, H, this->size);
+	if (contains(ret, retSize, tempBucket) == false) {
+		ret[retSize] = this->hashFunction(tempPos, H, this->size);
+		retSize++;
+	}
 
 	//bucket right back baixo
 	tempPos[0] = pos[0] + H;
 	tempPos[1] = pos[1] - H;
 	tempPos[2] = pos[2] + H;
-	ret[22] = this->hashFunction(tempPos, H, this->size);
+	tempBucket = this->hashFunction(tempPos, H, this->size);
+	if (contains(ret, retSize, tempBucket) == false) {
+		ret[retSize] = this->hashFunction(tempPos, H, this->size);
+		retSize++;
+	}
 
 	//bucket front baixo
 	tempPos[0] = pos[0];
 	tempPos[1] = pos[1] - H;
 	tempPos[2] = pos[2] - H;
-	ret[23] = this->hashFunction(tempPos, H, this->size);
+	tempBucket = this->hashFunction(tempPos, H, this->size);
+	if (contains(ret, retSize, tempBucket) == false) {
+		ret[retSize] = this->hashFunction(tempPos, H, this->size);
+		retSize++;
+	}
 
 	//bucket back baixo
 	tempPos[0] = pos[0];
 	tempPos[1] = pos[1] - H;
 	tempPos[2] = pos[2] + H;
-	ret[24] = this->hashFunction(tempPos, H, this->size);
+	tempBucket = this->hashFunction(tempPos, H, this->size);
+	if (contains(ret, retSize, tempBucket) == false) {
+		ret[retSize] = this->hashFunction(tempPos, H, this->size);
+		retSize++;
+	}
 
 	//bucket left front baixo
 	tempPos[0] = pos[0] - H;
 	tempPos[1] = pos[1] - H;
 	tempPos[2] = pos[2] - H;
-	ret[25] = this->hashFunction(tempPos, H, this->size);
+	tempBucket = this->hashFunction(tempPos, H, this->size);
+	if (contains(ret, retSize, tempBucket) == false) {
+		ret[retSize] = this->hashFunction(tempPos, H, this->size);
+		retSize++;
+	}
 
 	//bucket left back baixo 
 	tempPos[0] = pos[0] - H;
 	tempPos[1] = pos[1] - H;
 	tempPos[2] = pos[2] + H;
-	ret[26] = this->hashFunction(tempPos, H, this->size);
+	tempBucket = this->hashFunction(tempPos, H, this->size);
+	if (contains(ret, retSize, tempBucket) == false) {
+		ret[retSize] = this->hashFunction(tempPos, H, this->size);
+		retSize++;
+	}
 
+	return retSize;
 	//for (int i = 0; i < 27; i++)
 	//{
 	//	printf("Os buckets que vai devolver sao %d\n", ret[i]);
@@ -560,6 +664,7 @@ void HashMap::addParticle(Point* p,double H,int offset) {
 	//[offset + bucket_size]
 	//bucket_size dentro do h conta quantos elementos tem atualmente dentro do bucket
 	//printf("offset %d bucketSizes %d bucket %d\n", offset, h->bucketSizes[bucket],bucket);
+	this->particles[offset + this->bucketSizes[bucket]].id = p->id;
 	//pos
 	this->particles[offset + this->bucketSizes[bucket]].pos[0] = p->pos[0];
 	this->particles[offset + this->bucketSizes[bucket]].pos[1] = p->pos[1];

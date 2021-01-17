@@ -19,7 +19,7 @@ class HashMap {
 		unsigned int HashMap::hashFunctionV2(double pos[3], double H, int size);
 		void HashMap::addParticle(Point* p,double H,int offset);
 		int HashMap::getAdj(double pos[3], double H, unsigned int ret[27]);
-		void HashMap::getAdjV2(double pos[3], double H, unsigned int ret[27]);
+		int HashMap::getAdjV2(double pos[3], double H, unsigned int ret[27]);
 		int HashMap::getAdjBruteForce(double pos[3], double H, Point* ret);
 		void HashMap::computeOffsets();
 		void HashMap::updateHashMap(double H);

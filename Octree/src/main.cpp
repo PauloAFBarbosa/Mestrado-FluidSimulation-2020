@@ -18,7 +18,7 @@
 
 #define NOQUERY 0
 #define QUERYV1 1
-
+double maxSpeed = 5;
 double RESTITUTION=0.5;
 double TIMESTEP=0.01f;
 double SURFACETENSION=0.0728;
@@ -50,7 +50,7 @@ bool simulateFrame = false; //usado para simular apenas um frame
 int framesSimulated = 0;
 
 //Diz quantos pontos sao inseridos (points_p*points_p*points_p)
-int points_p = 15;
+int points_p = 9;
 int countPoints = 0;
 //usado para inserir multiplos batches de pontos
 int pontos_inseridos = 0;
@@ -134,7 +134,8 @@ void restart() {
 	for (float x = -particleRadius * points_p; x <= particleRadius * points_p; x += particleDiameter) {
 		for (float y = -particleRadius * points_p; y <= particleRadius * points_p; y += particleDiameter) {
 			for (float z = -particleRadius * points_p; z <= particleRadius * points_p; z += particleDiameter) {
-				p = new Point(x, y, z);
+				p = new Point(x, y, z, countPoints);
+				
 				points.push_back(p);
 				bucketSizes[h->hashFunction(p->pos, H,hashSize)]++;
 				countPoints++;
@@ -234,11 +235,11 @@ void processKeys(unsigned char c, int xx, int yy) {
 		simulateFrame = true;
 		break;
 	case 'p':
-		
+		countPoints = 0;
 		for (float x = -particleRadius * points_p; x <= particleRadius * points_p; x += particleDiameter) {
 			for (float y = -particleRadius * points_p; y <= particleRadius * points_p; y += particleDiameter) {
 				for (float z = -particleRadius * points_p; z <= particleRadius * points_p; z += particleDiameter) {
-					p = new Point(x, y, z);
+					p = new Point(x, y, z, countPoints);
 					points.push_back(p);
 					bucketSizes[ h->hashFunction(p->pos,H,hashSize)]++;
 					total++;
@@ -472,17 +473,17 @@ void usePressureKernel_gradient(double distVector[3], double supportRadius, doub
 		ret[2] = 0;
 		
 	}
-	else if (dist < 10e-5) // If ||r|| -> 0+
-	{
+	//else if (dist < 10e-5) // If ||r|| -> 0+
+	//{
 		
-		double normalized[3];
-		double in[3] = { 1,1,1 };
-		normalize(in,normalized);
-		ret[0]= -(normalized[0] * (45 / (M_PI * powf(supportRadius, 6.0f))) * powf(supportRadius - dist, 2.0f));
-		ret[1] = -(normalized[1] * (45 / (M_PI * powf(supportRadius, 6.0f))) * powf(supportRadius - dist, 2.0f));
-		ret[2] = -(normalized[2] * (45 / (M_PI * powf(supportRadius, 6.0f))) * powf(supportRadius - dist, 2.0f));
+	//	double normalized[3];
+	//	double in[3] = { 1,1,1 };
+	//	normalize(in,normalized);
+	//	ret[0]= -(normalized[0] * (45 / (M_PI * powf(supportRadius, 6.0f))) * powf(supportRadius - dist, 2.0f));
+	//	ret[1] = -(normalized[1] * (45 / (M_PI * powf(supportRadius, 6.0f))) * powf(supportRadius - dist, 2.0f));
+	//	ret[2] = -(normalized[2] * (45 / (M_PI * powf(supportRadius, 6.0f))) * powf(supportRadius - dist, 2.0f));
 		
-	}
+	//}
 	else
 	{
 		
@@ -506,19 +507,15 @@ double useViscosityKernel_laplacian(double distVector[3], double supportRadius) 
 double computeDensity(double position[3],int query) {
 	double sum = 0;
 	int realcount = 0;
-
+	
 	if (query == NOQUERY) {
+		
 		for (int i = 0; i < h->numbParticles; i++)
 		{
-			//O meu kernel da 0 em todos
-			//printf("Position %f %f %f Ponto2 %f %f %f\n", position[0], position[1], position[2], p->pos[0], p->pos[1], p->pos[2]);
-			//printf("Mass %f default kernel %f H %f\n", MASS, useDefaultKernel(position - p->pos, H), H);
-			//printf("Resultado do kernel %f pos da particula do for %f %f %f\n", useDefaultKernel(position - h->particles[i].pos, H), h->particles[i].pos[0], h->particles[i].pos[1], h->particles[i].pos[2]);
 			double arg[3];
 			arg[0] = position[0] - h->particles[i].pos[0];
 			arg[1] = position[1] - h->particles[i].pos[1];
 			arg[2] = position[2] - h->particles[i].pos[2];
-
 			//if (length(arg) <= H){
 			//		realcount++;
 			//		printf("no getadj temos a particula com %f %f %f pos\n", h->particles[ i].pos[0], h->particles[ i].pos[1], h->particles[i].pos[2]);
@@ -558,8 +555,10 @@ double computeDensity(double position[3],int query) {
 				arg[0] = position[0] - h->particles[offset + i].pos[0];
 				arg[1] = position[1] - h->particles[offset + i].pos[1];
 				arg[2] = position[2] - h->particles[offset + i].pos[2];
+				
+				double ker_res = useDefaultKernel(arg, H);
 
-				sum += MASS * useDefaultKernel(arg, H);
+				sum += MASS * ker_res;
 
 				//if (length(arg) <= H){
 				//	realcount++;
@@ -606,7 +605,7 @@ void computeForce( double density, double pressure, double position[3], double r
 			//}
 
 			//printf("RetKernel %f %f %f \n", ret_kernel[0], ret_kernel[1], ret_kernel[2]);
-
+			
 			sum[0] += ret_kernel[0] * (pressure / (density * density) + h->particles[i].pressure / (h->particles[i].density * h->particles[i].density)) * MASS;
 			sum[1] += ret_kernel[1] * (pressure / (density * density) + h->particles[i].pressure / (h->particles[i].density * h->particles[i].density)) * MASS;
 			sum[2] += ret_kernel[2] * (pressure / (density * density) + h->particles[i].pressure / (h->particles[i].density * h->particles[i].density)) * MASS;
@@ -654,7 +653,6 @@ void computeForce( double density, double pressure, double position[3], double r
 				//	realcount++;
 				//}
 				//printf("RetKernel %f %f %f \n", ret_kernel[0], ret_kernel[1], ret_kernel[2]);
-
 				sum[0] += ret_kernel[0] * (pressure / (density * density) + h->particles[offset+i].pressure / (h->particles[offset + i].density * h->particles[offset + i].density)) * MASS;
 				sum[1] += ret_kernel[1] * (pressure / (density * density) + h->particles[offset+i].pressure / (h->particles[offset + i].density * h->particles[offset + i].density)) * MASS;
 				sum[2] += ret_kernel[2] * (pressure / (density * density) + h->particles[offset + i].pressure / (h->particles[offset + i].density * h->particles[offset + i].density)) * MASS;
@@ -721,6 +719,117 @@ void computeViscosity( double velocity[3], double position[3],double ret[3], int
 	ret[2] = sum[2] * VISCOSITY;
 }
 
+
+//Calcula tudo que usa vizinhos no mesmo ciclo
+//Evita fazer a procura de vizinhos muitas vezes
+void computeForceViscositySurfaceNormal(double velocity[3], double density, double pressure, double position[3], double retForce[3], double retViscosity[3], double retSurfaceNormal[3], int query) {
+	double sumViscosity[3] = { 0,0,0 };
+	double sumForce[3] = { 0,0,0 };
+	double sumSurfaceNormal[3] = { 0,0,0 };
+	int count = 0;
+	int realcount = 0;
+
+	if (query == NOQUERY) {
+		for (int i = 0; i < h->numbParticles; i++)
+		{
+			if (position[0] == h->particles[i].pos[0] && position[1] == h->particles[i].pos[1] && position[2] == h->particles[i].pos[2])
+				continue;
+			//Viscosity
+			double arg[3];
+
+			arg[0] = position[0] - h->particles[i].pos[0];
+			arg[1] = position[1] - h->particles[i].pos[1];
+			arg[2] = position[2] - h->particles[i].pos[2];
+
+			sumViscosity[0] += (h->particles[i].velocity[0] - velocity[0]) * (MASS / h->particles[i].density) * useViscosityKernel_laplacian(arg, H);
+			sumViscosity[1] += (h->particles[i].velocity[1] - velocity[1]) * (MASS / h->particles[i].density) * useViscosityKernel_laplacian(arg, H);
+			sumViscosity[2] += (h->particles[i].velocity[2] - velocity[2]) * (MASS / h->particles[i].density) * useViscosityKernel_laplacian(arg, H);
+
+			//Force
+			double ret_kernel[3] = { 0,0,0 };
+			arg[0] = position[0] - h->particles[i].pos[0];
+			arg[1] = position[1] - h->particles[i].pos[1];
+			arg[2] = position[2] - h->particles[i].pos[2];
+			usePressureKernel_gradient(arg, H, ret_kernel);
+
+			sumForce[0] += ret_kernel[0] * (pressure / (density * density) + h->particles[i].pressure / (h->particles[i].density * h->particles[i].density)) * MASS;
+			sumForce[1] += ret_kernel[1] * (pressure / (density * density) + h->particles[i].pressure / (h->particles[i].density * h->particles[i].density)) * MASS;
+			sumForce[2] += ret_kernel[2] * (pressure / (density * density) + h->particles[i].pressure / (h->particles[i].density * h->particles[i].density)) * MASS;
+
+			//SurfaceNormal
+			double ret2[3] = { 0,0,0 };
+			
+			arg[0] = position[0] - h->particles[i].pos[0];
+			arg[1] = position[1] - h->particles[i].pos[1];
+			arg[2] = position[2] - h->particles[i].pos[2];
+			useDefaultKernel_gradient(arg, H, ret2);
+			sumSurfaceNormal[0] += ret2[0] * (MASS / h->particles[i].density);
+			sumSurfaceNormal[1] += ret2[1] * (MASS / h->particles[i].density);
+			sumSurfaceNormal[2] += ret2[2] * (MASS / h->particles[i].density);
+		}
+	}
+	else if (query == QUERYV1) {
+		unsigned int ret[27];
+		int retSize;
+		//printf("vou mandar a posicao %f %f %f\n", position[0], position[1], position[2]);
+		retSize = h->getAdj(position, H, ret);
+		//printf("retSize deu %d\n", retSize);
+		for (int j = 0; j < retSize; j++)
+		{
+			unsigned int bucket = ret[j];
+			int offset = h->offsets[bucket];
+			int bucketSize = h->bucketSizes[bucket];
+			for (unsigned int i = 0; i < bucketSize; i++)
+			{
+				if (position[0] == h->particles[offset + i].pos[0] && position[1] == h->particles[offset + i].pos[1] && position[2] == h->particles[offset + i].pos[2])
+					continue;
+				//Viscosity
+				double arg[3];
+				arg[0] = position[0] - h->particles[offset + i].pos[0];
+				arg[1] = position[1] - h->particles[offset + i].pos[1];
+				arg[2] = position[2] - h->particles[offset + i].pos[2];
+
+				sumViscosity[0] += (h->particles[offset + i].velocity[0] - velocity[0]) * (MASS / h->particles[offset + i].density) * useViscosityKernel_laplacian(arg, H);
+				sumViscosity[1] += (h->particles[offset + i].velocity[1] - velocity[1]) * (MASS / h->particles[offset + i].density) * useViscosityKernel_laplacian(arg, H);
+				sumViscosity[2] += (h->particles[offset + i].velocity[2] - velocity[2]) * (MASS / h->particles[offset + i].density) * useViscosityKernel_laplacian(arg, H);
+
+				//Force
+				double ret_kernel[3] = { 0,0,0 };
+				arg[0] = position[0] - h->particles[offset + i].pos[0];
+				arg[1] = position[1] - h->particles[offset + i].pos[1];
+				arg[2] = position[2] - h->particles[offset + i].pos[2];
+				usePressureKernel_gradient(arg, H, ret_kernel);
+				sumForce[0] += ret_kernel[0] * (pressure / (density * density) + h->particles[offset + i].pressure / (h->particles[offset + i].density * h->particles[offset + i].density)) * MASS;
+				sumForce[1] += ret_kernel[1] * (pressure / (density * density) + h->particles[offset + i].pressure / (h->particles[offset + i].density * h->particles[offset + i].density)) * MASS;
+				sumForce[2] += ret_kernel[2] * (pressure / (density * density) + h->particles[offset + i].pressure / (h->particles[offset + i].density * h->particles[offset + i].density)) * MASS;
+				count++;
+
+				//SurfaceNormal
+				double ret2[3] = { 0,0,0 };
+				
+				arg[0] = position[0] - h->particles[offset + i].pos[0];
+				arg[1] = position[1] - h->particles[offset + i].pos[1];
+				arg[2] = position[2] - h->particles[offset + i].pos[2];
+				useDefaultKernel_gradient(arg, H, ret2);
+				sumSurfaceNormal[0] += ret2[0] * (MASS / h->particles[offset + i].density);
+				sumSurfaceNormal[1] += ret2[1] * (MASS / h->particles[offset + i].density);
+				sumSurfaceNormal[2] += ret2[2] * (MASS / h->particles[offset + i].density);
+			}
+		}
+	}
+	retViscosity[0] = sumViscosity[0] * VISCOSITY;
+	retViscosity[1] = sumViscosity[1] * VISCOSITY;
+	retViscosity[2] = sumViscosity[2] * VISCOSITY;
+
+	retForce[0] = -(sumForce[0] * density);
+	retForce[1] = -(sumForce[1] * density);
+	retForce[2] = -(sumForce[2] * density);
+
+	retSurfaceNormal[0] = sumSurfaceNormal[0];
+	retSurfaceNormal[1] = sumSurfaceNormal[1];
+	retSurfaceNormal[2] = sumSurfaceNormal[2];
+}
+
 void computeGravity(double density,double ret[3]) {
 	ret[0]= GRAVITY[0] * density;
 	ret[1] = GRAVITY[1] * density;
@@ -733,7 +842,6 @@ void computeSurfaceNormal(double position[3],double ret[3],int query) {
 		for (int i = 0; i < h->numbParticles; i++)
 		{
 			double ret2[3] = { 0,0,0 };
-
 			double arg[3];
 			arg[0] = position[0] - h->particles[i].pos[0];
 			arg[1] = position[1] - h->particles[i].pos[1];
@@ -960,49 +1068,47 @@ void simulate() {
 
 	//density and pressure
 	for (int i = 0; i < h->numbParticles; i++){
-		//printf("Eu mando o pos %f %f %f\n", h->particles[i].pos[0], h->particles[i].pos[1], h->particles[i].pos[2]);
+		
 		h->particles[i].density = computeDensity(h->particles[i].pos, QUERYV1);
-		//Ja uso query no compute density, agora tenho de aplicar o mesmo processo ao resto. e ver se funciona
-
-
 		h->particles[i].pressure = computePressure(h->particles[i].density);
-		//printf("DEnsity %f\n", h->particles[i].density);
-		//printf("pressure %f\n", h->particles[i].pressure);
-		//p->density = computeDensity(p->pos);
-		//p->pressure = computePressure(p->density);
 	}
-	//Internal forces
+
+	//Internal forces && External forces
+	//Calcular as forças internas/externas no mesmo ciclo para ser mais eficiente
 	for (int i = 0; i < h->numbParticles; i++) {
-		double ret[3] = { 0,0,0 };
-		computeForce(h->particles[i].density,h->particles[i].pressure ,h->particles[i].pos,ret, QUERYV1);
-		//printf("ret 1 %f %f %f\n", ret[0], ret[1], ret[2]);
-		h->particles[i].force[0] = ret[0];
-		h->particles[i].force[1] = ret[1];
-		h->particles[i].force[2] = ret[2];
-		//printf("Force %f %f %f\n", p->force[0], p->force[1], p->force[2]);
+		//Em vez de fazer
+		//ComputeForce()
+		//ComputeDensity()
+		//Faz apenas uma função e assim faz apenas uma vez a busca dos vizinhos, e com isso calcula tudo que precisa calcular
+		
+		double retForce[3] = { 0,0,0 };
+		double retViscosity[3] = { 0,0,0 };
+		double retSurfaceNormal[3] = { 0,0,0 };
+		
+		//Esta função calcula a force e viscosity no mesmo ciclo, assim é mais eficiente
+		computeForceViscositySurfaceNormal(h->particles[i].velocity, h->particles[i].density, h->particles[i].pressure, h->particles[i].pos, retForce, retViscosity,retSurfaceNormal, QUERYV1);
+		
+		h->particles[i].force[0] = retForce[0];
+		h->particles[i].force[1] = retForce[1];
+		h->particles[i].force[2] = retForce[2];
 
-		computeViscosity( h->particles[i].velocity , h->particles[i].pos,ret, QUERYV1);
-		//printf("ret 2 %f %f %f\n", ret[0], ret[1], ret[2]);
-		h->particles[i].viscosity[0] = ret[0];
-		h->particles[i].viscosity[1] = ret[1];
-		h->particles[i].viscosity[2] = ret[2];
-		//printf("Viscosity %f %f %f\n", p->viscosity[0], p->viscosity[1], p->viscosity[2]);
-	}
-	
-	//external forces
-	for (int i = 0; i < h->numbParticles; i++) 
-	{
-		double ret[3] = { 0,0,0 };
-		computeGravity(h->particles[i].density,ret);
-		h->particles[i].gravity[0] = ret[0];
-		h->particles[i].gravity[1] = ret[1];
-		h->particles[i].gravity[2] = ret[2];
+		h->particles[i].viscosity[0] = retViscosity[0];
+		h->particles[i].viscosity[1] = retViscosity[1];
+		h->particles[i].viscosity[2] = retViscosity[2];
 
-		computeSurfaceNormal(h->particles[i].pos, ret, QUERYV1);
-		h->particles[i].surfaceNormal[0] = ret[0];
-		h->particles[i].surfaceNormal[1] = ret[1];
-		h->particles[i].surfaceNormal[2] = ret[2];
+		double retGravity[3] = { 0,0,0 };
+		computeGravity(h->particles[i].density, retGravity);
+		h->particles[i].gravity[0] = retGravity[0];
+		h->particles[i].gravity[1] = retGravity[1];
+		h->particles[i].gravity[2] = retGravity[2];
+
+		h->particles[i].surfaceNormal[0] = retSurfaceNormal[0];
+		h->particles[i].surfaceNormal[1] = retSurfaceNormal[1];
+		h->particles[i].surfaceNormal[2] = retSurfaceNormal[2];
+
 		if (length(h->particles[i].surfaceNormal) >= THRESHOLD) {
+			double ret[3] = { 0,0,0 };
+			//Tenho de fazer esta função aqui, porque preciso de ter a surface normal calculada
 			computeSurfaceTension(h->particles[i].surfaceNormal, h->particles[i].pos, ret, QUERYV1);
 			h->particles[i].surfaceTension[0] = ret[0];
 			h->particles[i].surfaceTension[1] = ret[1];
@@ -1013,7 +1119,6 @@ void simulate() {
 			h->particles[i].surfaceTension[1] = 0;
 			h->particles[i].surfaceTension[2] = 0;
 		}
-			
 	}
 
 	// Time integration and collision handling
@@ -1023,53 +1128,44 @@ void simulate() {
 
 	for (int i = 0; i < h->numbParticles; i++) 
 	{
-		//printf("PressureForce %f %f %f Viscosity %f %f %f Gravity %f %f %f surface tension %f %f %f\n", mParticles[i].mPressureForce[0], mParticles[i].mPressureForce[1], mParticles[i].mPressureForce[2], mParticles[i].mViscosityForce[0], mParticles[i].mViscosityForce[1], mParticles[i].mViscosityForce[2], mParticles[i].mGravitationalForce[0], mParticles[i].mGravitationalForce[1], mParticles[i].mGravitationalForce[2], mParticles[i].mSurfaceTensionForce[0], mParticles[i].mSurfaceTensionForce[1], mParticles[i].mSurfaceTensionForce[2]);
+		
 		totalForce[0] = h->particles[i].force[0] + h->particles[i].viscosity[0] + h->particles[i].gravity[0] + h->particles[i].surfaceTension[0];
 		totalForce[1] = h->particles[i].force[1] + h->particles[i].viscosity[1] + h->particles[i].gravity[1] + h->particles[i].surfaceTension[1];
 		totalForce[2] = h->particles[i].force[2] + h->particles[i].viscosity[2] + h->particles[i].gravity[2] + h->particles[i].surfaceTension[2];
 		//employEulerIntegrator
-		//printf("TotalFrce %f %f %f density %f\n", totalForce[0], totalForce[1], totalForce[2], h->particles[i].density);
 		h->particles[i].acceleration[0] = totalForce[0] / h->particles[i].density;
 		h->particles[i].acceleration[1] = totalForce[1] / h->particles[i].density;
 		h->particles[i].acceleration[2] = totalForce[2] / h->particles[i].density;
 
-		//printf("Acceleration %f %f %f\n", h->particles[i].acceleration[0], h->particles[i].acceleration[1], h->particles[i].acceleration[2]);
 		h->particles[i].velocity[0] = h->particles[i].velocity[0] + h->particles[i].acceleration[0] * TIMESTEP;
 		h->particles[i].velocity[1] = h->particles[i].velocity[1] + h->particles[i].acceleration[1] * TIMESTEP;
 		h->particles[i].velocity[2] = h->particles[i].velocity[2] + h->particles[i].acceleration[2] * TIMESTEP;
 		
-		//printf("Antes Position %f %f %f velocity %f %f %f\n", h->particles[i].pos[0], h->particles[i].pos[1], h->particles[i].pos[2], h->particles[i].velocity[0], h->particles[i].velocity[1], h->particles[i].velocity[2]);
 		h->particles[i].pos[0] = h->particles[i].pos[0] + h->particles[i].velocity[0] * TIMESTEP;
 		h->particles[i].pos[1] = h->particles[i].pos[1] + h->particles[i].velocity[1] * TIMESTEP;
 		h->particles[i].pos[2] = h->particles[i].pos[2] + h->particles[i].velocity[2] * TIMESTEP;
 
-		//printf("Position %f %f %f\n", h->particles[i].pos[0], h->particles[i].pos[1], h->particles[i].pos[2]);
-
 		double contactPoint[3] = { 0,0,0 };
 		double unitSurfaceNormal[3] = { 0,0,0 };
 		if (detectCollision(&h->particles[i], contactPoint, unitSurfaceNormal)) {
-			//printf("unitSurfaceNormal %f %f %f\n", unitSurfaceNormal[0], unitSurfaceNormal[1], unitSurfaceNormal[2]);
+			
 			double ret[3] = { 0,0,0 };
 			double arg[3];
 			arg[0] = h->particles[i].pos[0] - contactPoint[0];
 			arg[1] = h->particles[i].pos[1] - contactPoint[1];
 			arg[2] = h->particles[i].pos[2] - contactPoint[2];
 			updateVelocity(h->particles[i].velocity, unitSurfaceNormal, length(arg), ret);
-			//printf("Antes --- Velocity %f %f %f length %f\n", h->particles[i].velocity[0], h->particles[i].velocity[1], h->particles[i].velocity[2], glm::length(h->particles[i].velocity));
+			
 			h->particles[i].velocity[0] = ret[0];
 			h->particles[i].velocity[1] = ret[1];
 			h->particles[i].velocity[2] = ret[2];
-			//printf("Depois --- Velocity %f %f %f length %f\n", h->particles[i].velocity[0], h->particles[i].velocity[1], h->particles[i].velocity[2], glm::length(h->particles[i].velocity));
+			
 
 			h->particles[i].pos[0] = contactPoint[0];
 			h->particles[i].pos[1] = contactPoint[1];
 			h->particles[i].pos[2] = contactPoint[2];
 		}
-		//h->particles[i].velocity *= 0.5;
-
 	}
-
-	h->updateHashMap(H);
 
 }
 
@@ -1140,6 +1236,8 @@ void renderScene(void) {
 		simulateFrame = false;
 		framesSimulated++;
 	}
+	if (h)
+		h->updateHashMap(H);
 
 	//Draw stuff
 	//drawAxis();
@@ -1267,7 +1365,7 @@ int main(int argc, char** argv) {
 	
 
 	TwAddVarRW(bar, "Viscosity", TW_TYPE_DOUBLE, &VISCOSITY,
-		" label='Viscosity' min=0.1 max=20 step=0.1 keyIncr=s keyDecr=S help='Fluid Viscosity' ");
+		" label='Viscosity' min=3 max=25 step=0.1 keyIncr=s keyDecr=S help='Fluid Viscosity' ");
 
 	TwAddVarRW(bar, "Rest Density", TW_TYPE_DOUBLE, &RESTDENSITY,
 		" label='Rest Density' min=100 max=10000 step=100 keyIncr=s keyDecr=S help='Rest density' ");
