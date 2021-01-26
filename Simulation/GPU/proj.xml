@@ -18,7 +18,7 @@
 			<attribute name="Particle_Mass" 			data="FLOAT" 	type="RENDERER" value="0.02" />
 			<attribute name="Particle_Stiffness" 		data="INT" 		type="RENDERER" value="2000" />
 			<attribute name="Number_Particles" 			data="INT" 		type="RENDERER" value="NUMBER_OF_PARTICLES"/>
-			<attribute name="Particle_Color" 			data="VEC4" 	type="RENDERER" x="0.0" y="1.0" z="1.0" w="0.8"/>
+			<attribute name="Particle_Color" 			data="VEC4" 	type="RENDERER" x="0.0" y="1.0" z="1.0" w="0.6"/>
 			<attribute name="External_Force" 			data="VEC3" 	type="RENDERER" x="0" y="0.0" z="0.0" />
 			<attribute name="Viscosity"					data="FLOAT" 	type="RENDERER" value="3000" />
 			<attribute name="ETA"						data="FLOAT" 	type="RENDERER" value="1.1" />
@@ -27,7 +27,7 @@
 			<attribute name="WhiteParticles"			data="INT" 	type="RENDERER" value="0" />
 			<attribute name="Particle_alpha"			data="FLOAT" 	type="RENDERER" value="0.1" />
 			<attribute name="Alpha_Threshold"			data="FLOAT" 	type="RENDERER" value="0.1" />
-			<attribute name="Particle_Size"				data="VEC2" 	type="RENDERER" x="0.03" y="0.02" />
+			<attribute name="Particle_Size"				data="VEC2" 	type="RENDERER" x="0.03" y="0.015" />
 			<attribute name="Blur_Quality" data="FLOAT" type="RENDERER" value="4.106"  />
 			<attribute name="Blur_Size" data="FLOAT" type="RENDERER" value="16.277"  />
 			<!--Minha simulação do sph-->
