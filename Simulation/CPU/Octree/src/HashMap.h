@@ -15,14 +15,14 @@ class HashMap {
 
 
 		HashMap::HashMap(int version,int size, int particleNumber);
-		unsigned int HashMap::hashFunction(double pos[3],double H,int size);
-		unsigned int HashMap::hashFunctionV2(double pos[3], double H, int size);
-		void HashMap::addParticle(Point* p,double H,int offset);
-		int HashMap::getAdj(double pos[3], double H, unsigned int ret[27]);
-		int HashMap::getAdjV2(double pos[3], double H, unsigned int ret[27]);
-		int HashMap::getAdjBruteForce(double pos[3], double H, Point* ret);
+		unsigned int HashMap::hashFunction(float pos[3],float H,int size);
+		unsigned int HashMap::hashFunctionV2(float pos[3], float H, int size);
+		void HashMap::addParticle(Point* p,float H,int offset);
+		int HashMap::getAdj(float pos[3], float H, unsigned int ret[27]);
+		int HashMap::getAdjV2(float pos[3], float H, unsigned int ret[27]);
+		int HashMap::getAdjBruteForce(float pos[3], float H, Point* ret);
 		void HashMap::computeOffsets();
-		void HashMap::updateHashMap(double H);
+		void HashMap::updateHashMap(float H);
 
 	private:
 		

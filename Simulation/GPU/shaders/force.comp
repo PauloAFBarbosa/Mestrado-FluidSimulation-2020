@@ -1,0 +1,610 @@
+// Copyright (c) 2017-2018, Samuel Ivan Gunadi
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+
+#version 460
+
+#define WORK_GROUP_SIZE 1
+
+layout (local_size_x = WORK_GROUP_SIZE) in;
+
+// constants
+
+#define PI_FLOAT 3.1415927410125732421875f
+#define PARTICLE_RADIUS 0.005f
+#define PARTICLE_RESTING_DENSITY 4000
+// Mass = Density * Volume
+#define PARTICLE_MASS 0.02
+#define SMOOTHING_LENGTH (4 * PARTICLE_RADIUS)
+
+uniform float THRESHOLD;
+uniform float SURFACETENSION;
+uniform float VISCOSITY;
+uniform int HASHSIZE;
+uniform float MASS;
+uniform vec4 GRAVITY;
+uniform float H;
+uniform int Number_Particles;
+uniform vec3 External_Force;
+uniform int Pause;
+layout(std430, binding = 0) buffer Position
+{
+    vec4 position[];
+};
+
+layout(std430, binding = 1) buffer Velocity
+{
+    vec4 velocity[];
+};
+
+layout(std430, binding = 2) buffer Force
+{
+    vec4 force[];
+};
+
+layout(std430, binding = 3) buffer Density
+{
+    float density[];
+};
+
+layout(std430, binding = 4) buffer Pressure
+{
+    float pressure[];
+};
+
+layout(std430, binding = 5) buffer Acceleration
+{
+    vec4 acceleration[];
+};
+
+layout(std430, binding = 6) buffer Gravity
+{
+    vec4 gravity[];
+};
+
+layout(std430, binding = 7) buffer SurfaceNormal
+{
+    vec4 surfaceNormal[];
+};
+
+layout(std430, binding = 8) buffer SurfaceTension
+{
+    vec4 surfaceTension[];
+};
+
+layout(std430, binding = 9) buffer Viscosity
+{
+    vec4 viscosity[];
+};
+
+layout(std430, binding = 10) buffer TempPosition
+{
+    vec4 tempPosition[];
+};
+
+layout(std430, binding = 11) buffer BucketSizes
+{
+    int bucketSizes[];
+};
+
+layout(std430, binding = 12) buffer Offsets
+{
+    int offsets[];
+};
+
+float length(float vec[3]) {
+    return (sqrt(pow(vec[0],2)+ pow(vec[1], 2)+ pow(vec[2], 2)));
+}
+
+float lengthVec(vec4 vec) {
+    return (sqrt(pow(vec.x,2)+ pow(vec.y, 2)+ pow(vec.z, 2)));
+}
+
+void normalize(float i[3], out float o[3]) {
+    
+    float len = length(i);
+    o[0] = i[0] / len;
+    o[1] = i[1] / len;
+    o[2] = i[2] / len;
+    
+}
+
+void normalizeVec(vec4 i, out float o[3]) {
+    
+    float len = lengthVec(i);
+    o[0] = i.x / len;
+    o[1] = i.y / len;
+    o[2] = i.z / len;
+    
+}
+
+void usePressureKernel_gradient(float distVector[3], float supportRadius, out float ret[3]) {
+    float dist = length(distVector);
+    if (dist > supportRadius) {
+        
+        ret[0] = 0.0;
+        ret[1] = 0.0;
+        ret[2] = 0.0;
+        
+    }
+    else
+    {
+        
+        float normalized[3];
+        normalize(distVector,normalized);
+        ret[0]= -(normalized[0] * (45 / (PI_FLOAT * pow(supportRadius, 6.0f))) * pow(supportRadius - dist, 2.0f));
+        ret[1] = -(normalized[1] * (45 / (PI_FLOAT * pow(supportRadius, 6.0f))) * pow(supportRadius - dist, 2.0f));
+        ret[2] = -(normalized[2] * (45 / (PI_FLOAT * pow(supportRadius, 6.0f))) * pow(supportRadius - dist, 2.0f));
+        
+    }
+}
+
+bool contains(uint arr[27], int size, uint member) {
+    bool ret = false;
+
+    for (int i = 0; i < size; i++)
+    {
+        if (arr[i] == member)
+            ret = true;
+    }
+    return ret;
+}
+
+int getAdj(vec4 pos, float H, out uint ret[27]) {
+    
+    int p1 = 2693;
+    int p2 = 3163;
+    int p3 = 4091;
+    int part1, part2, part3;
+    int cell[3];
+    cell[0] = int(pos.x / H);
+    cell[1] = int(pos.y / H);
+    cell[2] = int(pos.z / H);
+
+    uint tempBucket;
+    int retSize = 0;
+
+    //bucket recebido
+    part1 = int(cell[0] * p1);
+    part2 = int(cell[1] * p2);
+    part3 = int(cell[2] * p3);
+    tempBucket = uint((part1 ^ part2 ^ part3) % HASHSIZE);
+    ret[0] = tempBucket;
+    
+    retSize++;
+    //bucket right
+    part1 = ((cell[0] + 1) * p1);
+    part2 = ((cell[1]) * p2);
+    part3 = ((cell[2]) * p3);
+    tempBucket = uint((part1 ^ part2 ^ part3) % HASHSIZE);
+    //tempPosition[0]=vec4(tempBucket);
+    if (contains(ret,retSize,tempBucket)==false) {
+        ret[retSize] = tempBucket;
+        retSize++;
+    }
+
+    //bucket left
+    part1 = ((cell[0] - 1) * p1);
+    part2 = ((cell[1]) * p2);
+    part3 = ((cell[2]) * p3);
+    tempBucket = uint((part1 ^ part2 ^ part3) % HASHSIZE);
+    if (contains(ret, retSize, tempBucket) == false) {
+        ret[retSize] = tempBucket;
+        retSize++;
+    }
+
+    //bucket right front
+    part1 = ((cell[0] + 1) * p1);
+    part2 = ((cell[1]) * p2);
+    part3 = ((cell[2] - 1) * p3);
+    tempBucket = uint((part1 ^ part2 ^ part3) % HASHSIZE);
+    if (contains(ret, retSize, tempBucket) == false) {
+        ret[retSize] = tempBucket;
+        retSize++;
+    }
+
+    //bucket right back
+    part1 = ((cell[0] + 1) * p1);
+    part2 = ((cell[1]) * p2);
+    part3 = ((cell[2] + 1) * p3);
+    tempBucket = uint((part1 ^ part2 ^ part3) % HASHSIZE);
+    if (contains(ret, retSize, tempBucket) == false) {
+        ret[retSize] = tempBucket;
+        retSize++;
+    }
+
+    //bucket front
+    part1 = ((cell[0]) * p1);
+    part2 = ((cell[1]) * p2);
+    part3 = ((cell[2] - 1) * p3);
+    tempBucket = uint((part1 ^ part2 ^ part3) % HASHSIZE);
+    if (contains(ret, retSize, tempBucket) == false) {
+        ret[retSize] = tempBucket;
+        retSize++;
+    }
+
+    //bucket back
+    part1 = ((cell[0]) * p1);
+    part2 = ((cell[1]) * p2);
+    part3 = ((cell[2] + 1) * p3);
+    tempBucket = uint((part1 ^ part2 ^ part3) % HASHSIZE);
+    if (contains(ret, retSize, tempBucket) == false) {
+        ret[retSize] = tempBucket;
+        retSize++;
+    }
+
+    //bucket left front
+    part1 = ((cell[0] - 1) * p1);
+    part2 = ((cell[1]) * p2);
+    part3 = ((cell[2] - 1) * p3);
+    tempBucket = uint((part1 ^ part2 ^ part3) % HASHSIZE);
+    if (contains(ret, retSize, tempBucket) == false) {
+        ret[retSize] = tempBucket;
+        retSize++;
+    }
+
+    //bucket left back 
+    part1 = ((cell[0] - 1) * p1);
+    part2 = ((cell[1]) * p2);
+    part3 = ((cell[2] + 1) * p3);
+    tempBucket = uint((part1 ^ part2 ^ part3) % HASHSIZE);
+    if (contains(ret, retSize, tempBucket) == false) {
+        ret[retSize] = tempBucket;
+        retSize++;
+    }
+
+    //-----O mesmo mas para os buckets de cima
+    //bucket recebido cima
+    part1 = ((cell[0]) * p1);
+    part2 = ((cell[1] + 1) * p2);
+    part3 = ((cell[2]) * p3);
+    tempBucket = uint((part1 ^ part2 ^ part3) % HASHSIZE);
+    if (contains(ret, retSize, tempBucket) == false) {
+        ret[retSize] = tempBucket;
+        retSize++;
+    }
+
+    //bucket right cima
+    part1 = ((cell[0] + 1) * p1);
+    part2 = ((cell[1] + 1) * p2);
+    part3 = ((cell[2]) * p3);
+    tempBucket = uint((part1 ^ part2 ^ part3) % HASHSIZE);
+    if (contains(ret, retSize, tempBucket) == false) {
+        ret[retSize] = tempBucket;
+        retSize++;
+    }
+
+    //bucket left cima
+    part1 = ((cell[0] - 1) * p1);
+    part2 = ((cell[1] + 1) * p2);
+    part3 = ((cell[2]) * p3);
+    tempBucket = uint((part1 ^ part2 ^ part3) % HASHSIZE);
+    if (contains(ret, retSize, tempBucket) == false) {
+        ret[retSize] = tempBucket;
+        retSize++;
+    }
+
+    //bucket right front cima
+    part1 = ((cell[0] + 1) * p1);
+    part2 = ((cell[1] + 1) * p2);
+    part3 = ((cell[2] - 1) * p3);
+    tempBucket = uint((part1 ^ part2 ^ part3) % HASHSIZE);
+    if (contains(ret, retSize, tempBucket) == false) {
+        ret[retSize] = tempBucket;
+        retSize++;
+    }
+
+    //bucket right back cima
+    part1 = ((cell[0] + 1) * p1);
+    part2 = ((cell[1] + 1) * p2);
+    part3 = ((cell[2] + 1) * p3);
+    tempBucket = uint((part1 ^ part2 ^ part3) % HASHSIZE);
+    if (contains(ret, retSize, tempBucket) == false) {
+        ret[retSize] = tempBucket;
+        retSize++;
+    }
+
+    //bucket front cima
+    part1 = ((cell[0]) * p1);
+    part2 = ((cell[1] + 1) * p2);
+    part3 = ((cell[2] - 1) * p3);
+    tempBucket = uint((part1 ^ part2 ^ part3) % HASHSIZE);
+    if (contains(ret, retSize, tempBucket) == false) {
+        ret[retSize] = tempBucket;
+        retSize++;
+    }
+
+    //bucket back cima
+    part1 = ((cell[0]) * p1);
+    part2 = ((cell[1] + 1) * p2);
+    part3 = ((cell[2] + 1) * p3);
+    tempBucket = uint((part1 ^ part2 ^ part3) % HASHSIZE);
+    if (contains(ret, retSize, tempBucket) == false) {
+        ret[retSize] = tempBucket;
+        retSize++;
+    }
+
+    //bucket left front cima
+    part1 = ((cell[0] - 1) * p1);
+    part2 = ((cell[1] + 1) * p2);
+    part3 = ((cell[2] - 1) * p3);
+    tempBucket = uint((part1 ^ part2 ^ part3) % HASHSIZE);
+    if (contains(ret, retSize, tempBucket) == false) {
+        ret[retSize] = tempBucket;
+        retSize++;
+    }
+
+    //bucket left back cima 
+    part1 = ((cell[0] - 1) * p1);
+    part2 = ((cell[1] + 1) * p2);
+    part3 = ((cell[2] + 1) * p3);
+    tempBucket = uint((part1 ^ part2 ^ part3) % HASHSIZE);
+    if (contains(ret, retSize, tempBucket) == false) {
+        ret[retSize] = tempBucket;
+        retSize++;
+    }
+
+
+    //-----O mesmo mas para os buckets de baixo
+    //bucket recebido baixo
+    part1 = ((cell[0]) * p1);
+    part2 = ((cell[1] - 1) * p2);
+    part3 = ((cell[2]) * p3);
+    tempBucket = uint((part1 ^ part2 ^ part3) % HASHSIZE);
+    if (contains(ret, retSize, tempBucket) == false) {
+        ret[retSize] = tempBucket;
+        retSize++;
+    }
+
+    //bucket right baixo
+    part1 = ((cell[0] + 1) * p1);
+    part2 = ((cell[1] - 1) * p2);
+    part3 = ((cell[2]) * p3);
+    tempBucket = uint((part1 ^ part2 ^ part3) % HASHSIZE);
+    if (contains(ret, retSize, tempBucket) == false) {
+        ret[retSize] = tempBucket;
+        retSize++;
+    }
+
+    //bucket left baixo
+    part1 = ((cell[0] - 1) * p1);
+    part2 = ((cell[1] - 1) * p2);
+    part3 = ((cell[2]) * p3);
+    tempBucket = uint((part1 ^ part2 ^ part3) % HASHSIZE);
+    if (contains(ret, retSize, tempBucket) == false) {
+        ret[retSize] = tempBucket;
+        retSize++;
+    }
+
+    //bucket right front baixo
+    part1 = ((cell[0] + 1) * p1);
+    part2 = ((cell[1] - 1) * p2);
+    part3 = ((cell[2] - 1) * p3);
+    tempBucket = uint((part1 ^ part2 ^ part3) % HASHSIZE);
+    if (contains(ret, retSize, tempBucket) == false) {
+        ret[retSize] = tempBucket;
+        retSize++;
+    }
+
+    //bucket right back baixo
+    part1 = ((cell[0] + 1) * p1);
+    part2 = ((cell[1] - 1) * p2);
+    part3 = ((cell[2] + 1) * p3);
+    tempBucket = uint((part1 ^ part2 ^ part3) % HASHSIZE);
+    if (contains(ret, retSize, tempBucket) == false) {
+        ret[retSize] = tempBucket;
+        retSize++;
+    }
+
+    //bucket front baixo
+    part1 = ((cell[0]) * p1);
+    part2 = ((cell[1] - 1) * p2);
+    part3 = ((cell[2] - 1) * p3);
+    tempBucket = uint((part1 ^ part2 ^ part3) % HASHSIZE);
+    if (contains(ret, retSize, tempBucket) == false) {
+        ret[retSize] = tempBucket;
+        retSize++;
+    }
+
+    //bucket back baixo
+    part1 = ((cell[0]) * p1);
+    part2 = ((cell[1] - 1) * p2);
+    part3 = ((cell[2] + 1) * p3);
+    tempBucket = uint((part1 ^ part2 ^ part3) % HASHSIZE);
+    if (contains(ret, retSize, tempBucket) == false) {
+        ret[retSize] = tempBucket;
+        retSize++;
+    }
+
+    //bucket left front baixo
+    part1 = ((cell[0] - 1) * p1);
+    part2 = ((cell[1] - 1) * p2);
+    part3 = ((cell[2] - 1) * p3);
+    tempBucket = uint((part1 ^ part2 ^ part3) % HASHSIZE);
+    if (contains(ret, retSize, tempBucket) == false) {
+        ret[retSize] = tempBucket;
+        retSize++;
+    }
+
+    //bucket left back baixo 
+    part1 = ((cell[0] - 1) * p1);
+    part2 = ((cell[1] - 1) * p2);
+    part3 = ((cell[2] + 1) * p3);
+    tempBucket = uint((part1 ^ part2 ^ part3) % HASHSIZE);
+    if (contains(ret, retSize, tempBucket) == false) {
+        ret[retSize] = tempBucket;
+        retSize++;
+    }
+
+    
+
+    return retSize;
+    
+}
+
+float useViscosityKernel_laplacian(float distVector[3], float supportRadius) {
+    float dist = length(distVector);
+    if (dist > supportRadius)
+        return 0.0f;
+    else
+        return (45 / (PI_FLOAT * pow(supportRadius, 6.0f))) * (supportRadius - dist);
+}
+
+void useDefaultKernel_gradient(float distVector[3], float supportRadius,out float ret[3]) {
+    float dist = length(distVector);
+    if (dist > supportRadius) {
+        ret[0] = 0;
+        ret[1] = 0;
+        ret[2] = 0;
+    }
+    else {
+        ret[0] = -(distVector[0] * (945 / (32 * PI_FLOAT * pow(supportRadius, 9.0f))) * pow(supportRadius * supportRadius - dist * dist, 2.0f));
+        ret[1] = -(distVector[1] * (945 / (32 * PI_FLOAT * pow(supportRadius, 9.0f))) * pow(supportRadius * supportRadius - dist * dist, 2.0f));
+        ret[2] = -(distVector[2] * (945 / (32 * PI_FLOAT * pow(supportRadius, 9.0f))) * pow(supportRadius * supportRadius - dist * dist, 2.0f));
+    }
+}
+
+float useDefaultKernel_laplacian(float distVector[3], float supportRadius) {
+    float dist = length(distVector);
+    if (dist > supportRadius)
+        return 0.0f;
+    else
+        return -(945 / (32 * PI_FLOAT * pow(supportRadius, 9.0f))) * (supportRadius * supportRadius - dist * dist) * (3 * supportRadius * supportRadius - 7 * dist * dist);
+}
+
+void main()
+{
+    if (Pause == 1)
+        return;
+    uint index = gl_GlobalInvocationID.x;
+
+    uint ret[27];
+    int retSize=0;
+    retSize=getAdj(position[index], H, ret);
+
+    float sumViscosity[3] = { 0,0,0 };
+    vec4 sumForce = vec4(0);
+    float sumSurfaceNormal[3] = { 0,0,0 };
+    float sum =0;
+
+    
+    int count;
+    count=0;
+    for (int j = 0; j < retSize; j++)
+    {
+        
+        uint bucket = ret[j];
+
+        int offset = offsets[bucket];
+        int bucketSize = bucketSizes[bucket];
+        
+        for (uint i = 0; i < bucketSize; i++)
+        {
+            if (position[index].x == position[offset + i].x && position[index].y == position[offset + i].y && position[index].z == position[offset + i].z)
+                continue;
+
+            
+            //Viscosity
+            float arg[3];
+            arg[0] = position[index].x - position[offset + i].x;
+            arg[1] = position[index].y - position[offset + i].y;
+            arg[2] = position[index].z - position[offset + i].z;
+
+            sumViscosity[0] += (velocity[offset + i].x - velocity[index].x) * (MASS / density[offset + i]) * useViscosityKernel_laplacian(arg, H);
+            sumViscosity[1] += (velocity[offset + i].y - velocity[index].y) * (MASS / density[offset + i]) * useViscosityKernel_laplacian(arg, H);
+            sumViscosity[2] += (velocity[offset + i].z - velocity[index].z) * (MASS / density[offset + i]) * useViscosityKernel_laplacian(arg, H);
+
+            //Force
+            float ret_kernel[3]= {0,0,0};
+            arg[0] = position[index].x - position[offset + i].x;
+            arg[1] = position[index].y - position[offset + i].y;
+            arg[2] = position[index].z - position[offset + i].z;
+            
+            usePressureKernel_gradient(arg, H, ret_kernel);
+            
+            sumForce[0] += ret_kernel[0] * (pressure[index] / (density[index] * density[index]) + pressure[offset + i] / (density[offset + i] * density[offset + i])) * MASS;
+            sumForce[1] += ret_kernel[1] * (pressure[index] / (density[index] * density[index]) + pressure[offset + i] / (density[offset + i] * density[offset + i])) * MASS;
+            sumForce[2] += ret_kernel[2] * (pressure[index] / (density[index] * density[index]) + pressure[offset + i] / (density[offset + i] * density[offset + i])) * MASS;
+            
+            //SurfaceNormal
+            float ret2[3] = { 0,0,0 };
+            
+            arg[0] = position[index].x - position[offset + i].x;
+            arg[1] = position[index].y - position[offset + i].y;
+            arg[2] = position[index].z - position[offset + i].z;
+            useDefaultKernel_gradient(arg, H, ret2);
+            sumSurfaceNormal[0] += ret2[0] * (MASS / density[offset + i]);
+            sumSurfaceNormal[1] += ret2[1] * (MASS / density[offset + i]);
+            sumSurfaceNormal[2] += ret2[2] * (MASS / density[offset + i]);
+        }
+    }
+
+    
+    viscosity[index].x= sumViscosity[0] * VISCOSITY;
+    viscosity[index].y= sumViscosity[1] * VISCOSITY;
+    viscosity[index].z= sumViscosity[2] * VISCOSITY;
+    
+
+    
+    force[index].x= -(sumForce[0]*density[index]);
+    force[index].y= -(sumForce[1]*density[index]);
+    force[index].z= -(sumForce[2]*density[index]);
+
+    //tempPosition[index]=vec4(sumForce[0],sumForce[1],sumForce[2 ],0);
+
+    surfaceNormal[index].x = sumSurfaceNormal[0];
+    surfaceNormal[index].y = sumSurfaceNormal[1];
+    surfaceNormal[index].z = sumSurfaceNormal[2];
+
+    gravity[index].x = GRAVITY.x * density[index];
+    gravity[index].y = GRAVITY.y * density[index];
+    gravity[index].z = GRAVITY.z * density[index];
+
+    if (lengthVec(surfaceNormal[index]) >= THRESHOLD) {
+            
+            
+            uint ret[27];
+            int retSize;
+            //printf("vou mandar a posicao %f %f %f\n", position[0], position[1], position[2]);
+            retSize = getAdj(position[index], H, ret);
+            for (int j = 0; j < retSize; j++)
+            {
+                uint bucket = ret[j];
+                int offset = offsets[bucket];
+                int bucketSize = bucketSizes[bucket];
+                for (uint i = 0; i < bucketSize; i++)
+                {
+                    float arg[3];
+                    arg[0] = position[index].x - position[offset + i].x;
+                    arg[1] = position[index].y - position[offset + i].y;
+                    arg[2] = position[index].z - position[offset + i].z;
+                    sum += (MASS / density[offset + i]) * useDefaultKernel_laplacian(arg, H);
+                }
+            }    
+            float surfaceNormalNormalized[3];
+            normalizeVec(surfaceNormal[index], surfaceNormalNormalized);  
+            surfaceTension[index].x= -(surfaceNormalNormalized[0] * SURFACETENSION * sum);
+            surfaceTension[index].y= -(surfaceNormalNormalized[0] * SURFACETENSION * sum);
+            surfaceTension[index].z= -(surfaceNormalNormalized[0] * SURFACETENSION * sum);
+
+        }
+        else {
+            surfaceTension[index]= vec4(0);
+        }
+}

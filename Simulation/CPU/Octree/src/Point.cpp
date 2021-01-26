@@ -56,7 +56,7 @@ Point::~Point()
 	
 }
 
-void Point::draw(double r)
+void Point::draw(float r)
 {
 	
 	glColor3f(this->color[0], this->color[1], this->color[2]);

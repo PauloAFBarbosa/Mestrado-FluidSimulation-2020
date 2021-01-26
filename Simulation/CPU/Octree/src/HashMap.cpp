@@ -36,7 +36,7 @@ void HashMap::computeOffsets(){
 	}
 }
 
-unsigned int HashMap::hashFunction(double pos[3],double H,int size) {
+unsigned int HashMap::hashFunction(float pos[3],float H,int size) {
 	unsigned int m = 100;
 	unsigned int p1 = 2693;
 	unsigned int p2 = 3163;
@@ -51,7 +51,7 @@ unsigned int HashMap::hashFunction(double pos[3],double H,int size) {
 	return ret;
 }
 
-unsigned int HashMap::hashFunctionV2(double pos[3], double H, int size) {
+unsigned int HashMap::hashFunctionV2(float pos[3], float H, int size) {
 
 	int newx = ((int)(pos[0] / H));
 	int newy = ((int)(pos[1] / H));
@@ -78,7 +78,7 @@ bool contains(unsigned int arr[27], int size, unsigned int member) {
 //Assim algumas particulas vao ter um peso dobradou (ou mais)
 //Tenho de remover buckets repetidos
 //Vai devolver o tamanho to array que devolve---> devido as colisões as vezes o array vai ter menos que 27, para nao adicionar buckets repetidos
-int HashMap::getAdj(double pos[3], double H, unsigned int ret[27]) {
+int HashMap::getAdj(float pos[3], float H, unsigned int ret[27]) {
 	
 	unsigned int p1 = 2693;
 	unsigned int p2 = 3163;
@@ -376,9 +376,9 @@ int HashMap::getAdj(double pos[3], double H, unsigned int ret[27]) {
 }
 
 
-int HashMap::getAdjV2(double pos[3], double H, unsigned int ret[27]) {
+int HashMap::getAdjV2(float pos[3], float H, unsigned int ret[27]) {
 	
-	double tempPos[3];
+	float tempPos[3];
 	unsigned int tempBucket;
 	int retSize = 0;
 	//bucket recebido
@@ -653,9 +653,9 @@ int HashMap::getAdjV2(double pos[3], double H, unsigned int ret[27]) {
 	//	printf("Os buckets que vai devolver sao %d\n", ret[i]);
 	//}
 }
-void HashMap::addParticle(Point* p,double H,int offset) {
-	double density;
-	double pressure;
+void HashMap::addParticle(Point* p,float H,int offset) {
+	float density;
+	float pressure;
 
 	glm::vec3 viscosity;
 
@@ -719,7 +719,7 @@ void HashMap::addParticle(Point* p,double H,int offset) {
 
 }
 
-void HashMap::updateHashMap(double H) {
+void HashMap::updateHashMap(float H) {
 	
 	int * bucketSizes  = new int[this->size];
 	Point* particlesTemp = (Point*)malloc(sizeof(Point) * this->numbParticles);
@@ -742,11 +742,12 @@ void HashMap::updateHashMap(double H) {
 	// e no final vai hazer o compute dos offsets
 	for (int i =0 ; i <this->numbParticles ; i ++)
 	{
-		double pos[3];
+		float pos[3];
 		pos[0] = particlesTemp[i].pos[0];
 		pos[1] = particlesTemp[i].pos[1];
 		pos[2] = particlesTemp[i].pos[2];
 		unsigned int bucket = this->hashFunction(pos, H, this->size);
+		
 		int offset = 0;
 		//vai correr o array com os tamanhos dos buckets até chegar ao bucket atual
 		for (int j = 0; j < bucket; j++)
@@ -766,16 +767,16 @@ void HashMap::updateHashMap(double H) {
 	delete particlesTemp;
 }
 
-int HashMap::getAdjBruteForce(double pos[3], double H, Point * ret) {
+int HashMap::getAdjBruteForce(float pos[3], float H, Point * ret) {
 	int pointsAdded = 0;
 	for (int i = 0; i < this->numbParticles; i++)
 	{
 		Point p1 = this->particles[i];
-		double dist[3];
+		float dist[3];
 		dist[0] = pos[0] - p1.pos[0];
 		dist[1] = pos[1] - p1.pos[1];
 		dist[2] = pos[2] - p1.pos[2];
-		double length = (sqrt(pow(dist[0], 2) + pow(dist[1], 2) + pow(dist[2], 2)));
+		float length = (sqrt(pow(dist[0], 2) + pow(dist[1], 2) + pow(dist[2], 2)));
 		if (length < H) {
 			ret[pointsAdded] = p1;
 			pointsAdded++;
