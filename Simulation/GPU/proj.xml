@@ -2,7 +2,14 @@
 <project name="Particles" width = "1280" height = "720">
 	<assets>
 		<constants>
-			<constant name="NUMBER_OF_PARTICLES" value="1000" />
+			<constant name="NUMBER_OF_PARTICLES" value="27000" />
+
+			<!-- Lança com 625 workgroups. Cada workgroup vai ter 25 threads-->
+			<constant name="NUMBER_OF_WORK_GROUPS" value="1080" />
+
+			<!-- Lança com 100 workgroups. Cada workgroup vai ter 10 threads-->
+			<constant name="NUMBER_OF_WORK_GROUPS_HASH" value="100" />
+
 			<constant name="HASH_SIZE" value="1000" />
 		</constants>
         <attributes>
@@ -20,9 +27,9 @@
 			<attribute name="WhiteParticles"			data="INT" 	type="RENDERER" value="0" />
 			<attribute name="Particle_alpha"			data="FLOAT" 	type="RENDERER" value="0.1" />
 			<attribute name="Alpha_Threshold"			data="FLOAT" 	type="RENDERER" value="0.1" />
-			<attribute name="Particle_Size"				data="VEC2" 	type="RENDERER" x="0.03" y="0.01" />
-			<attribute name="Blur_Quality" data="FLOAT" type="RENDERER" value="16.0"  />
-			<attribute name="Blur_Size" data="FLOAT" type="RENDERER" value="16.0"  />
+			<attribute name="Particle_Size"				data="VEC2" 	type="RENDERER" x="0.03" y="0.02" />
+			<attribute name="Blur_Quality" data="FLOAT" type="RENDERER" value="4.106"  />
+			<attribute name="Blur_Size" data="FLOAT" type="RENDERER" value="16.277"  />
 			<!--Minha simulação do sph-->
 			<attribute name="RESTITUTION"				data="FLOAT" type="RENDERER" value="0.5"/>
 			<attribute name="TIMESTEP" 					data="FLOAT" type="RENDERER" value = "0.01" />
@@ -36,15 +43,15 @@
 			<attribute name="VISCOSITY" 				data="FLOAT" type="RENDERER" value = "3.5" />
 			<attribute name="GRAVITY" 					data="VEC4" type="RENDERER" x = "0" y = "-9.8" z = "0" w="0" />
 
-			<attribute name="PONTOS_LADO" 				data="INT" 		type="RENDERER" value="10"/>
+			<attribute name="PONTOS_LADO" 				data="INT" 		type="RENDERER" value="30"/>
 			<attribute name="HASHSIZE" 					data="INT" 		type="RENDERER" value="HASH_SIZE"/>
 			<!--Usado para definir o volume onde vai ser feita a simulação-->
-			<attribute name="XMIN" 						data="FLOAT" 		type="RENDERER" value="-0.2"/>
-			<attribute name="YMIN" 						data="FLOAT" 		type="RENDERER" value="-0.2"/>
-			<attribute name="ZMIN" 						data="FLOAT" 		type="RENDERER" value="-0.2"/>
-			<attribute name="XMAX" 						data="FLOAT" 		type="RENDERER" value="0.2"/>
-			<attribute name="YMAX" 						data="FLOAT" 		type="RENDERER" value="0.2"/>
-			<attribute name="ZMAX" 						data="FLOAT" 		type="RENDERER" value="0.2"/>
+			<attribute name="XMIN" 						data="FLOAT" 		type="RENDERER" value="-1"/>
+			<attribute name="YMIN" 						data="FLOAT" 		type="RENDERER" value="-1"/>
+			<attribute name="ZMIN" 						data="FLOAT" 		type="RENDERER" value="-1"/>
+			<attribute name="XMAX" 						data="FLOAT" 		type="RENDERER" value="1"/>
+			<attribute name="YMAX" 						data="FLOAT" 		type="RENDERER" value="1"/>
+			<attribute name="ZMAX" 						data="FLOAT" 		type="RENDERER" value="1"/>
 
 
 		</attributes>
@@ -98,19 +105,36 @@
 			</pass>
 			<pass class="compute" name="DensityPressure">
 				
-				<material name="density_pressure" fromLibrary="particleLib" dimX="NUMBER_OF_PARTICLES" dimY="1" dimZ="1"/>
+				<material name="density_pressure" fromLibrary="particleLib" dimX="NUMBER_OF_WORK_GROUPS" dimY="1" dimZ="1"/>
 			</pass>
 			<pass class="compute" name="Force">
 				
-				<material name="force" fromLibrary="particleLib" dimX="NUMBER_OF_PARTICLES" dimY="1" dimZ="1"/>
+				<material name="force" fromLibrary="particleLib" dimX="NUMBER_OF_WORK_GROUPS" dimY="1" dimZ="1"/>
 			</pass>
 			<pass class="compute" name="Integrate">
 				
-				<material name="integrate" fromLibrary="particleLib" dimX="NUMBER_OF_PARTICLES" dimY="1" dimZ="1"/>
+				<material name="integrate" fromLibrary="particleLib" dimX="NUMBER_OF_WORK_GROUPS" dimY="1" dimZ="1"/>
 			</pass>
+			<pass class="compute" name="ZeroBuffers">
+				
+				<material name="ZeroBuffers" fromLibrary="particleLib" dimX="NUMBER_OF_WORK_GROUPS_HASH" dimY="1" dimZ="1"/>
+			</pass>
+			
+			<pass class="compute" name="ComputeTemps">
+				
+				<material name="ComputeTemps" fromLibrary="particleLib" dimX="NUMBER_OF_WORK_GROUPS" dimY="1" dimZ="1"/>
+			</pass>
+
 			<pass class="compute" name="UpdateHash">
-				<material name="UpdateHash" fromLibrary="particleLib" dimX="1" dimY="1" dimZ="1"/>
+
+				<material name="UpdateHash" fromLibrary="particleLib" dimX="NUMBER_OF_WORK_GROUPS" dimY="1" dimZ="1"/>
 			</pass>
+
+			<pass class="compute" name="ComputeOffsets">
+				
+				<material name="ComputeOffsets" fromLibrary="particleLib" dimX="NUMBER_OF_WORK_GROUPS_HASH" dimY="1" dimZ="1"/>
+			</pass>
+			
 			
 			<pass class="default" name="background">
 				<scenes>

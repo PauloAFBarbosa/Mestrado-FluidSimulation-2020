@@ -79,6 +79,17 @@
 			<shader name="UpdateHash" 			
 					cs="shaders/updateHash.comp"
 			/>
+			<shader name="ComputeOffsets" 			
+					cs="shaders/computeOffsets.comp"
+			/>
+			<shader name="ComputeTemps" 			
+					cs="shaders/computeTemps.comp"
+			/>
+			
+
+			<shader name="ZeroBuffers" 			
+					cs="shaders/zeroBuffers.comp"
+			/>
 			 	
             <shader name="density_pressure" 	
 					cs="shaders/density_pressure.comp"
@@ -218,6 +229,13 @@
 			<DIM x="NUMBER_OF_PARTICLES" y="1" z="1" />
 			<structure>
 				<field value="VEC4" />
+			</structure>
+			<CLEAR value="NEVER" />
+		</buffer>
+		<buffer name="TempBucketSizes">
+			<DIM x="HASH_SIZE" y="1" z="1" />
+			<structure>
+				<field value="INT" />
 			</structure>
 			<CLEAR value="NEVER" />
 		</buffer>
@@ -715,6 +733,81 @@
 						<TYPE value="SHADER_STORAGE" />
 						<BINDING_POINT value="13" />
 					</buffer>
+					<buffer name="TempBucketSizes">
+						<TYPE value="SHADER_STORAGE" />
+						<BINDING_POINT value="14" />
+					</buffer>
+						
+		        </buffers>
+		</material>
+		<material name="ZeroBuffers" 			>
+		    <shader name="ZeroBuffers" 		>
+		        <values>
+					<valueof uniform="m_model" 			type="RENDERER" 		context="CURRENT" 		component="MODEL" />
+					<valueof uniform="Number_Particles" type="RENDERER" 		context="CURRENT" 		component="Number_Particles" />
+				</values>
+		    </shader>
+			<buffers>
+					<buffer name="BucketSizes">
+						<TYPE value="SHADER_STORAGE" />
+						<BINDING_POINT value="0" />
+					</buffer>
+					<buffer name="TempBucketSizes">
+						<TYPE value="SHADER_STORAGE" />
+						<BINDING_POINT value="1" />
+					</buffer>
+						
+		        </buffers>
+		</material>
+		<material name="ComputeOffsets" 			>
+		    <shader name="ComputeOffsets" 		>
+		        <values>
+					<valueof uniform="m_model" 			type="RENDERER" 		context="CURRENT" 		component="MODEL" />
+					<valueof uniform="Number_Particles" type="RENDERER" 		context="CURRENT" 		component="Number_Particles" />
+				</values>
+		    </shader>
+			<buffers>
+					<buffer name="BucketSizes">
+						<TYPE value="SHADER_STORAGE" />
+						<BINDING_POINT value="0" />
+					</buffer>
+					<buffer name="Offsets">
+						<TYPE value="SHADER_STORAGE" />
+						<BINDING_POINT value="1" />
+					</buffer>
+						
+		        </buffers>
+		</material>
+		<material name="ComputeTemps" 			>
+		    <shader name="ComputeTemps" 		>
+		        <values>
+					<valueof uniform="m_model" 			type="RENDERER" 		context="CURRENT" 		component="MODEL" />
+					<valueof uniform="Number_Particles" type="RENDERER" 		context="CURRENT" 		component="Number_Particles" />
+					<valueof uniform="H" 				type="RENDERER" 		context="CURRENT" 		component="H" />
+				</values>
+		    </shader>
+			<buffers>
+					<buffer name="Position" >
+						<TYPE value="SHADER_STORAGE" />
+						<BINDING_POINT value="0" />
+					</buffer>
+					<buffer name="TempPosition">
+						<TYPE value="SHADER_STORAGE" />
+						<BINDING_POINT value="1" />
+					</buffer>
+					<buffer name="Velocity" >
+						<TYPE value="SHADER_STORAGE" />
+						<BINDING_POINT value="2" />
+					</buffer>
+					<buffer name="TempVelocity">
+						<TYPE value="SHADER_STORAGE" />
+						<BINDING_POINT value="3" />
+					</buffer>
+					<buffer name="TempBucketSizes">
+						<TYPE value="SHADER_STORAGE" />
+						<BINDING_POINT value="4" />
+					</buffer>
+					
 						
 		        </buffers>
 		</material>

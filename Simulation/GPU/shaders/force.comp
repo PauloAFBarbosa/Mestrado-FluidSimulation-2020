@@ -20,7 +20,7 @@
 
 #version 460
 
-#define WORK_GROUP_SIZE 1
+#define WORK_GROUP_SIZE 25
 
 layout (local_size_x = WORK_GROUP_SIZE) in;
 
@@ -108,49 +108,21 @@ layout(std430, binding = 12) buffer Offsets
     int offsets[];
 };
 
-float length(float vec[3]) {
-    return (sqrt(pow(vec[0],2)+ pow(vec[1], 2)+ pow(vec[2], 2)));
-}
 
-float lengthVec(vec4 vec) {
-    return (sqrt(pow(vec.x,2)+ pow(vec.y, 2)+ pow(vec.z, 2)));
-}
-
-void normalize(float i[3], out float o[3]) {
-    
-    float len = length(i);
-    o[0] = i[0] / len;
-    o[1] = i[1] / len;
-    o[2] = i[2] / len;
-    
-}
-
-void normalizeVec(vec4 i, out float o[3]) {
-    
-    float len = lengthVec(i);
-    o[0] = i.x / len;
-    o[1] = i.y / len;
-    o[2] = i.z / len;
-    
-}
-
-void usePressureKernel_gradient(float distVector[3], float supportRadius, out float ret[3]) {
+void usePressureKernel_gradient(vec4 distVector, float supportRadius, out vec4 ret) {
     float dist = length(distVector);
     if (dist > supportRadius) {
         
-        ret[0] = 0.0;
-        ret[1] = 0.0;
-        ret[2] = 0.0;
+        ret = vec4(0);
         
     }
     else
     {
         
-        float normalized[3];
-        normalize(distVector,normalized);
-        ret[0]= -(normalized[0] * (45 / (PI_FLOAT * pow(supportRadius, 6.0f))) * pow(supportRadius - dist, 2.0f));
-        ret[1] = -(normalized[1] * (45 / (PI_FLOAT * pow(supportRadius, 6.0f))) * pow(supportRadius - dist, 2.0f));
-        ret[2] = -(normalized[2] * (45 / (PI_FLOAT * pow(supportRadius, 6.0f))) * pow(supportRadius - dist, 2.0f));
+        vec4 normalized;
+        normalized=normalize(distVector);
+
+        ret= -(normalized * (45 / (PI_FLOAT * pow(supportRadius, 6.0f))) * pow(supportRadius - dist, 2.0f));
         
     }
 }
@@ -458,7 +430,7 @@ int getAdj(vec4 pos, float H, out uint ret[27]) {
     
 }
 
-float useViscosityKernel_laplacian(float distVector[3], float supportRadius) {
+float useViscosityKernel_laplacian(vec4 distVector, float supportRadius) {
     float dist = length(distVector);
     if (dist > supportRadius)
         return 0.0f;
@@ -466,21 +438,17 @@ float useViscosityKernel_laplacian(float distVector[3], float supportRadius) {
         return (45 / (PI_FLOAT * pow(supportRadius, 6.0f))) * (supportRadius - dist);
 }
 
-void useDefaultKernel_gradient(float distVector[3], float supportRadius,out float ret[3]) {
+void useDefaultKernel_gradient(vec4 distVector, float supportRadius,out vec4 ret) {
     float dist = length(distVector);
     if (dist > supportRadius) {
-        ret[0] = 0;
-        ret[1] = 0;
-        ret[2] = 0;
+        ret = vec4(0);
     }
     else {
-        ret[0] = -(distVector[0] * (945 / (32 * PI_FLOAT * pow(supportRadius, 9.0f))) * pow(supportRadius * supportRadius - dist * dist, 2.0f));
-        ret[1] = -(distVector[1] * (945 / (32 * PI_FLOAT * pow(supportRadius, 9.0f))) * pow(supportRadius * supportRadius - dist * dist, 2.0f));
-        ret[2] = -(distVector[2] * (945 / (32 * PI_FLOAT * pow(supportRadius, 9.0f))) * pow(supportRadius * supportRadius - dist * dist, 2.0f));
+        ret = -(distVector * (945 / (32 * PI_FLOAT * pow(supportRadius, 9.0f))) * pow(supportRadius * supportRadius - dist * dist, 2.0f));
     }
 }
 
-float useDefaultKernel_laplacian(float distVector[3], float supportRadius) {
+float useDefaultKernel_laplacian(vec4 distVector, float supportRadius) {
     float dist = length(distVector);
     if (dist > supportRadius)
         return 0.0f;
@@ -498,9 +466,9 @@ void main()
     int retSize=0;
     retSize=getAdj(position[index], H, ret);
 
-    float sumViscosity[3] = { 0,0,0 };
+    vec4 sumViscosity = vec4(0);
     vec4 sumForce = vec4(0);
-    float sumSurfaceNormal[3] = { 0,0,0 };
+    vec4 sumSurfaceNormal= vec4(0);
     float sum =0;
 
     
@@ -521,62 +489,41 @@ void main()
 
             
             //Viscosity
-            float arg[3];
-            arg[0] = position[index].x - position[offset + i].x;
-            arg[1] = position[index].y - position[offset + i].y;
-            arg[2] = position[index].z - position[offset + i].z;
+            vec4 arg;
+            arg = position[index] - position[offset + i];
 
-            sumViscosity[0] += (velocity[offset + i].x - velocity[index].x) * (MASS / density[offset + i]) * useViscosityKernel_laplacian(arg, H);
-            sumViscosity[1] += (velocity[offset + i].y - velocity[index].y) * (MASS / density[offset + i]) * useViscosityKernel_laplacian(arg, H);
-            sumViscosity[2] += (velocity[offset + i].z - velocity[index].z) * (MASS / density[offset + i]) * useViscosityKernel_laplacian(arg, H);
+            sumViscosity += (velocity[offset + i] - velocity[index]) * (MASS / density[offset + i]) * useViscosityKernel_laplacian(arg, H);
 
             //Force
-            float ret_kernel[3]= {0,0,0};
-            arg[0] = position[index].x - position[offset + i].x;
-            arg[1] = position[index].y - position[offset + i].y;
-            arg[2] = position[index].z - position[offset + i].z;
+            vec4 ret_kernel = vec4(0);
+            arg = position[index] - position[offset + i];
             
             usePressureKernel_gradient(arg, H, ret_kernel);
             
-            sumForce[0] += ret_kernel[0] * (pressure[index] / (density[index] * density[index]) + pressure[offset + i] / (density[offset + i] * density[offset + i])) * MASS;
-            sumForce[1] += ret_kernel[1] * (pressure[index] / (density[index] * density[index]) + pressure[offset + i] / (density[offset + i] * density[offset + i])) * MASS;
-            sumForce[2] += ret_kernel[2] * (pressure[index] / (density[index] * density[index]) + pressure[offset + i] / (density[offset + i] * density[offset + i])) * MASS;
+            sumForce += ret_kernel * (pressure[index] / (density[index] * density[index]) + pressure[offset + i] / (density[offset + i] * density[offset + i])) * MASS;
             
             //SurfaceNormal
-            float ret2[3] = { 0,0,0 };
+            vec4 ret2 = vec4(0);
             
-            arg[0] = position[index].x - position[offset + i].x;
-            arg[1] = position[index].y - position[offset + i].y;
-            arg[2] = position[index].z - position[offset + i].z;
+            arg = position[index]- position[offset + i];
+            
             useDefaultKernel_gradient(arg, H, ret2);
-            sumSurfaceNormal[0] += ret2[0] * (MASS / density[offset + i]);
-            sumSurfaceNormal[1] += ret2[1] * (MASS / density[offset + i]);
-            sumSurfaceNormal[2] += ret2[2] * (MASS / density[offset + i]);
+            sumSurfaceNormal += ret2 * (MASS / density[offset + i]);
         }
     }
 
     
-    viscosity[index].x= sumViscosity[0] * VISCOSITY;
-    viscosity[index].y= sumViscosity[1] * VISCOSITY;
-    viscosity[index].z= sumViscosity[2] * VISCOSITY;
+    viscosity[index]= sumViscosity * VISCOSITY;
     
-
-    
-    force[index].x= -(sumForce[0]*density[index]);
-    force[index].y= -(sumForce[1]*density[index]);
-    force[index].z= -(sumForce[2]*density[index]);
+    force[index]= -(sumForce*density[index]);
 
     //tempPosition[index]=vec4(sumForce[0],sumForce[1],sumForce[2 ],0);
 
-    surfaceNormal[index].x = sumSurfaceNormal[0];
-    surfaceNormal[index].y = sumSurfaceNormal[1];
-    surfaceNormal[index].z = sumSurfaceNormal[2];
+    surfaceNormal[index] = sumSurfaceNormal;
 
-    gravity[index].x = GRAVITY.x * density[index];
-    gravity[index].y = GRAVITY.y * density[index];
-    gravity[index].z = GRAVITY.z * density[index];
+    gravity[index] = GRAVITY * density[index];
 
-    if (lengthVec(surfaceNormal[index]) >= THRESHOLD) {
+    if (length(surfaceNormal[index]) >= THRESHOLD) {
             
             
             uint ret[27];
@@ -590,18 +537,17 @@ void main()
                 int bucketSize = bucketSizes[bucket];
                 for (uint i = 0; i < bucketSize; i++)
                 {
-                    float arg[3];
-                    arg[0] = position[index].x - position[offset + i].x;
-                    arg[1] = position[index].y - position[offset + i].y;
-                    arg[2] = position[index].z - position[offset + i].z;
+                    vec4 arg;
+                    arg = position[index] - position[offset + i];
                     sum += (MASS / density[offset + i]) * useDefaultKernel_laplacian(arg, H);
                 }
-            }    
-            float surfaceNormalNormalized[3];
-            normalizeVec(surfaceNormal[index], surfaceNormalNormalized);  
-            surfaceTension[index].x= -(surfaceNormalNormalized[0] * SURFACETENSION * sum);
-            surfaceTension[index].y= -(surfaceNormalNormalized[0] * SURFACETENSION * sum);
-            surfaceTension[index].z= -(surfaceNormalNormalized[0] * SURFACETENSION * sum);
+            }
+
+            vec4 surfaceNormalNormalized;
+
+            surfaceNormalNormalized=normalize(surfaceNormal[index]);
+            
+            surfaceTension[index]= -(surfaceNormalNormalized * SURFACETENSION * sum);
 
         }
         else {

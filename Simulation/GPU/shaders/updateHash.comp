@@ -1,6 +1,6 @@
 #version 460
 
-#define WORK_GROUP_SIZE 1
+#define WORK_GROUP_SIZE 25
 
 layout (local_size_x = WORK_GROUP_SIZE) in;
 
@@ -85,6 +85,10 @@ layout(std430, binding = 13) buffer TempVelocity
     vec4 tempvelocity[];
 };
 
+layout(std430, binding = 14) buffer TempBucketSizes
+{
+    int tempBucketSizes[];
+};
 
 
 float rand(vec2 co){
@@ -109,63 +113,30 @@ uint hashFunction(vec4 pos,double H,int size) {
 void main()
 {
     
-    int tempBucketSizes[1000];
     
-    for (int i = 0; i < 1000; i++)
-    {
-        tempBucketSizes[i] = 0;
-        bucketSizes[i] = 0;
-    }
-    
-
-    for (int i = 0; i < Number_Particles; i++)
-    {
-        tempPosition[i] = position[i];
-        
-        uint newbucket =hashFunction(tempPosition[i], H,1000); 
-        
-        tempBucketSizes[newbucket]++;
-
-        tempvelocity[i]= velocity[i];
-        force[i]=vec4(0);
-        density[i]=0.0;
-        pressure[i]=0.0;
-        acceleration[i]=vec4(0);
-        gravity[i]=vec4(0);
-        surfaceNormal[i]=vec4(0);
-        surfaceTension[i]=vec4(0);
-        viscosity[i]=vec4(0);
-    }
+    uint index = gl_GlobalInvocationID.x;
 
     //Agora vai correr todas as particulas de novo e vai adicionar ao hashmap
     // e no final vai hazer o compute dos offsets
-    for (int i =0 ; i < Number_Particles ; i ++)
+    
+
+    uint bucket = hashFunction(tempPosition[index], H, 1000);
+    int bucketSize= atomicAdd(bucketSizes[bucket],1);
+    int offset = 0;
+    //vai correr o array com os tamanhos dos buckets até chegar ao bucket atual
+    for (int j = 0; j < bucket; j++)
     {
-
-        uint bucket = hashFunction(tempPosition[i], H, 1000);
-        int offset = 0;
-        //vai correr o array com os tamanhos dos buckets até chegar ao bucket atual
-        for (int j = 0; j < bucket; j++)
-        {
-            //exemplo, se tivermos um array com [p1,p2,p3,p4]
-            //p1 e p2 sao do bucket 0 e p3 e p4 do bucket 1
-            //o bucket 1 começa no indice 2 que é o bucketsize do bucket 0
-            offset += tempBucketSizes[j];
-        }
-
-        position[offset+bucketSizes[bucket]] = tempPosition[i];
-        velocity[offset+bucketSizes[bucket]] = tempvelocity[i];
-        bucketSizes[bucket]++;
-
+        //exemplo, se tivermos um array com [p1,p2,p3,p4]
+        //p1 e p2 sao do bucket 0 e p3 e p4 do bucket 1
+        //o bucket 1 começa no indice 2 que é o bucketsize do bucket 0
+        offset += tempBucketSizes[j];
     }
 
-    //Calcula os offsets
-    offsets[0] = 0;
+    position[offset+bucketSize] = tempPosition[index];
+    velocity[offset+bucketSize] = tempvelocity[index];
+        
 
-    for (int i = 1; i < HASHSIZE; i++)
-    {
-        offsets[i] = offsets[i - 1] + bucketSizes[i - 1];
-    }
+    
 
 
 }

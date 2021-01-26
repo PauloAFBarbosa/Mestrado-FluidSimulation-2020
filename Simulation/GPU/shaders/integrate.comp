@@ -20,7 +20,7 @@
 
 #version 460
 
-#define WORK_GROUP_SIZE 1
+#define WORK_GROUP_SIZE 25
 
 layout (local_size_x = WORK_GROUP_SIZE) in;
 
@@ -111,31 +111,10 @@ layout(std430, binding = 12) buffer Offsets
     int offsets[];
 };
 
-float length(float vec[3]) {
-    return (sqrt(pow(vec[0],2)+ pow(vec[1], 2)+ pow(vec[2], 2)));
-}
 
-float lengthVec(vec4 vec) {
-    return (sqrt(pow(vec.x,2)+ pow(vec.y, 2)+ pow(vec.z, 2)));
-}
-void normalize(float i[3], out float o[3]) {
-    
-    float len = length(i);
-    o[0] = i[0] / len;
-    o[1] = i[1] / len;
-    o[2] = i[2] / len;
-    
-}
 
-float dot(float v1[3], float v2[3]) {
-    return v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2];
-}
 
-float dotVec(float v1[3], vec4 v2) {
-    return v1[0] * v2.x + v1[1] * v2.y + v1[2] * v2.z;
-}
-
-bool detectCollision(vec4 pos, out float contactPoint[3], out float unitSurfaceNormal[3]) {
+bool detectCollision(vec4 pos, out vec4 contactPoint, out vec4 unitSurfaceNormal) {
     //o cubo esta centrado em 0,0,0
     float newx = pos.x + XMAX;
     float temp = (XMAX + XMAX) - newx;
@@ -163,97 +142,76 @@ bool detectCollision(vec4 pos, out float contactPoint[3], out float unitSurfaceN
     switch (maxComponent) {
     case 0:
         if (pos.x < XMIN) {
-            contactPoint[0] = XMIN;
-            contactPoint[1] = pos.y; 
-            contactPoint[2] = pos.z;
-
-            if (pos.y < newy)     contactPoint[1] = newy;
-            else if (pos.y > YMAX) contactPoint[1] = YMAX;
-            if (pos.z < ZMIN)     contactPoint[2] = ZMIN;
-            else if (pos.z > ZMAX) contactPoint[2] = ZMAX;
+            contactPoint = vec4(XMIN,pos.y,pos.z,0) ;
             
-            unitSurfaceNormal[0] = 1;
-            unitSurfaceNormal[1] = 0;
-            unitSurfaceNormal[2] = 0;
+            if (pos.y < newy)     contactPoint.y = newy;
+            else if (pos.y > YMAX) contactPoint.y = YMAX;
+            if (pos.z < ZMIN)     contactPoint.z = ZMIN;
+            else if (pos.z > ZMAX) contactPoint.z = ZMAX;
+            
+            unitSurfaceNormal = vec4(1,0,0,0);
+            
             
         }
         else if (pos.x > XMAX) {
-            contactPoint[0] = XMAX;
-            contactPoint[1] = pos.y;
-            contactPoint[2] = pos.z;
+            contactPoint = vec4 (XMAX,pos.y,pos.z,0);
 
-            if (pos.y < newy)     contactPoint[1] = newy;
-            else if (pos.y > YMAX) contactPoint[1] = YMAX;
-            if (pos.z < ZMIN)     contactPoint[2] = ZMIN;
-            else if (pos.z > ZMAX) contactPoint[2] = ZMAX;
+            if (pos.y < newy)     contactPoint.y = newy;
+            else if (pos.y > YMAX) contactPoint.y = YMAX;
+            if (pos.z < ZMIN)     contactPoint.z = ZMIN;
+            else if (pos.z > ZMAX) contactPoint.z = ZMAX;
             
-            unitSurfaceNormal[0] = -1;
-            unitSurfaceNormal[1] = 0;
-            unitSurfaceNormal[2] = 0;
+            unitSurfaceNormal = vec4(-1,0,0,0);
             
 
         }
         break;
     case 1:
         if (pos.y < newy) {
-            contactPoint[0] = pos.x;
-            contactPoint[1] = newy;
-            contactPoint[2] = pos.z;
+            contactPoint = vec4(pos.x,newy,pos.z,0);
 
-            if (pos.x < XMIN)     contactPoint[0] = XMIN;
-            else if (pos.x > XMAX) contactPoint[0] = XMAX;
-            if (pos.z < ZMIN)     contactPoint[2] = ZMIN;
-            else if (pos.z > ZMAX) contactPoint[2] = ZMAX;
+            if (pos.x < XMIN)     contactPoint.x = XMIN;
+            else if (pos.x > XMAX) contactPoint.x = XMAX;
+            if (pos.z < ZMIN)     contactPoint.z = ZMIN;
+            else if (pos.z > ZMAX) contactPoint.z = ZMAX;
 
-            unitSurfaceNormal[0] = DECLIVE;
-            unitSurfaceNormal[1] = 1-DECLIVE;
-            unitSurfaceNormal[2] = 0;
+            unitSurfaceNormal = vec4(DECLIVE,1-DECLIVE,0,0);
             
         }
         else if (pos.y > YMAX) {
-            contactPoint[0] = pos.x;
-            contactPoint[1] = YMAX;
-            contactPoint[2] = pos.z;
+            contactPoint = vec4(pos.x,YMAX,pos.z,0);
 
-            if (pos.x < XMIN)     contactPoint[0] = XMIN;
-            else if (pos.x > XMAX) contactPoint[0] = XMAX;
-            if (pos.z < ZMIN)     contactPoint[2] = ZMIN;
-            else if (pos.z > ZMAX) contactPoint[2] = ZMAX;
+            if (pos.x < XMIN)     contactPoint.x = XMIN;
+            else if (pos.x > XMAX) contactPoint.x = XMAX;
+            if (pos.z < ZMIN)     contactPoint.z = ZMIN;
+            else if (pos.z > ZMAX) contactPoint.z = ZMAX;
 
-            unitSurfaceNormal[0] = 0;
-            unitSurfaceNormal[1] = -1;
-            unitSurfaceNormal[2] = 0;
+            unitSurfaceNormal = vec4(0,-1,0,0);
             
         }
         break;
     case 2:
         if (pos.z < ZMIN) {
-            contactPoint[0] = pos.x;
-            contactPoint[1] = pos.y;
-            contactPoint[2] = ZMIN;
 
-            if (pos.x < XMIN)     contactPoint[0] = XMIN;
-            else if (pos.x > XMAX) contactPoint[0] = XMAX;
-            if (pos.y < newy)     contactPoint[1] = newy;
-            else if (pos.y > YMAX) contactPoint[1] = YMAX;
-            unitSurfaceNormal[0] = 0;
-            unitSurfaceNormal[1] = 0;
-            unitSurfaceNormal[2] = 1;
+            contactPoint=vec4(pos.x,pos.y,ZMIN,0);
+
+            if (pos.x < XMIN)     contactPoint.x = XMIN;
+            else if (pos.x > XMAX) contactPoint.x = XMAX;
+            if (pos.y < newy)     contactPoint.y = newy;
+            else if (pos.y > YMAX) contactPoint.y = YMAX;
+            unitSurfaceNormal = vec4(0,0,1,0);
+            
             
         }
         else if (pos.z > ZMAX) {
-            contactPoint[0] = pos.x;
-            contactPoint[1] = pos.y;
-            contactPoint[2] = ZMAX;
+            contactPoint = vec4(pos.x,pos.y,ZMAX,0);
 
-            if (pos.x < XMIN)     contactPoint[0] = XMIN;
-            else if (pos.x > XMAX) contactPoint[0] = XMAX;
-            if (pos.y < newy)     contactPoint[1] = newy;
-            else if (pos.y > YMAX) contactPoint[1] = YMAX;
-            unitSurfaceNormal[0] = 0;
-            unitSurfaceNormal[1] = 0;
-            unitSurfaceNormal[2] = -1;
-            
+            if (pos.x < XMIN)     contactPoint.x = XMIN;
+            else if (pos.x > XMAX) contactPoint.x = XMAX;
+            if (pos.y < newy)     contactPoint.y = newy;
+            else if (pos.y > YMAX) contactPoint.y = YMAX;
+            unitSurfaceNormal = vec4(0,0,-1,0);
+               
         }
         break;
     }
@@ -262,12 +220,10 @@ bool detectCollision(vec4 pos, out float contactPoint[3], out float unitSurfaceN
     return true;
 }
 
-void updateVelocity(vec4 velocity, float unitSurfaceNormal[3], float penetrationDepth, out float ret[3]) {
+void updateVelocity(vec4 velocity, vec4 unitSurfaceNormal, float penetrationDepth, out vec4 ret) {
     //ret = velocity - unitSurfaceNormal * (1 + RESTITUTION * penetrationDepth / (TIMESTEP * glm::length(velocity))) * glm::dot(velocity, unitSurfaceNormal);
     
-    ret[0] = velocity.x - unitSurfaceNormal[0] * (1 + RESTITUTION * penetrationDepth / (TIMESTEP * lengthVec(velocity))) * dotVec(unitSurfaceNormal, velocity);
-    ret[1] = velocity.y - unitSurfaceNormal[1] * (1 + RESTITUTION * penetrationDepth / (TIMESTEP * lengthVec(velocity))) * dotVec(unitSurfaceNormal, velocity);
-    ret[2] = velocity.z - unitSurfaceNormal[2] * (1 + RESTITUTION * penetrationDepth / (TIMESTEP * lengthVec(velocity))) * dotVec(unitSurfaceNormal, velocity);
+    ret= velocity - unitSurfaceNormal * (1 + RESTITUTION * penetrationDepth / (TIMESTEP * length(velocity))) * dot(unitSurfaceNormal, velocity);
 }
 
 void main()
@@ -276,31 +232,21 @@ void main()
         return;
     uint index = gl_GlobalInvocationID.x;
 
-    float totalForce[3] = { 0,0,0 };
+    vec4 totalForce= vec4(0);
 
-    totalForce[0] = force[index].x + viscosity[index].x + gravity[index].x + surfaceTension[index].x;
-    totalForce[1] = force[index].y + viscosity[index].y + gravity[index].y + surfaceTension[index].y;
-    totalForce[2] = force[index].z + viscosity[index].z + gravity[index].z + surfaceTension[index].z;
+    totalForce = force[index] + viscosity[index] + gravity[index] + surfaceTension[index];
 
     
 
     //employEulerIntegrator
-    acceleration[index].x = totalForce[0] / density[index];
-    acceleration[index].y = totalForce[1] / density[index];
-    acceleration[index].z = totalForce[2] / density[index];
+    acceleration[index] = totalForce / density[index];
 
-    velocity[index].x = velocity[index].x + acceleration[index].x * TIMESTEP;
-    velocity[index].y = velocity[index].y + acceleration[index].y * TIMESTEP;
-    velocity[index].z = velocity[index].z + acceleration[index].z * TIMESTEP;
+    velocity[index] = velocity[index] + acceleration[index] * TIMESTEP;
     
+    position[index] = position[index] + velocity[index] * TIMESTEP;
 
-
-    position[index].x = position[index].x + velocity[index].x * TIMESTEP;
-    position[index].y = position[index].y + velocity[index].y * TIMESTEP;
-    position[index].z = position[index].z + velocity[index].z * TIMESTEP;
-
-    float contactPoint[3] = { 0,0,0 };
-    float unitSurfaceNormal[3] = { 0,0,0 };
+    vec4 contactPoint= vec4(0);
+    vec4 unitSurfaceNormal= vec4(0);
     
     bool retcolision = detectCollision(position[index], contactPoint, unitSurfaceNormal);
     
@@ -308,22 +254,16 @@ void main()
 
     if (retcolision) {
         
-        float ret[3] = { 0,0,0 };
-        float arg[3];
+        vec4 ret;
+        vec4 arg;
         
-        arg[0] = position[index].x - contactPoint[0];
-        arg[1] = position[index].y - contactPoint[1];
-        arg[2] = position[index].z - contactPoint[2];
+        arg = position[index] - contactPoint;
 
         updateVelocity(velocity[index], unitSurfaceNormal, length(arg), ret);
         
-        velocity[index].x = ret[0];
-        velocity[index].y = ret[1];
-        velocity[index].z = ret[2];
+        velocity[index] = ret;
         
 
-        position[index].x = contactPoint[0];
-        position[index].y = contactPoint[1];
-        position[index].z = contactPoint[2];
+        position[index]= contactPoint;
     }
 }

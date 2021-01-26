@@ -20,7 +20,7 @@
 
 #version 460
 
-#define WORK_GROUP_SIZE 1
+#define WORK_GROUP_SIZE 25
 
 layout (local_size_x = WORK_GROUP_SIZE) in;
 
@@ -411,11 +411,7 @@ int getAdj(vec4 pos, float H, out uint ret[27]) {
     
 }
 
-float length(float vec[3]) {
-    return (sqrt(pow(vec[0],2)+ pow(vec[1], 2)+ pow(vec[2], 2)));
-}
-
-float useDefaultKernel(float distVector[3], float supportRadius) {
+float useDefaultKernel(vec4 distVector, float supportRadius) {
     float dist = length(distVector);
     
     if (dist > supportRadius) {
@@ -453,10 +449,8 @@ void main()
             for (uint i = 0; i < bucketSize; i++)
             {
 
-                float arg[3];
-                arg[0] = position[index].x - position[offset + i].x;
-                arg[1] = position[index].y - position[offset + i].y;
-                arg[2] = position[index].z - position[offset + i].z;
+                vec4 arg;
+                arg = position[index] - position[offset + i];
                 
                 float ker_res = useDefaultKernel(arg, H);
 
