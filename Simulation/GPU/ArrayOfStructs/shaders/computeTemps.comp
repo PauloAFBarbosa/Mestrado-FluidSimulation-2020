@@ -1,0 +1,86 @@
+#version 460
+
+#define WORK_GROUP_SIZE 25
+
+layout (local_size_x = WORK_GROUP_SIZE) in;
+
+#define PARTICLE_RADIUS 0.005f
+
+uniform int Number_Particles;
+uniform mat4 m_model;
+
+uniform float H;
+uniform int HASHSIZE;
+
+
+struct MyParticle
+{
+    vec4 position;
+    vec4 velocity;
+    vec4 Force;
+    vec4 acceleration;
+    vec4 gravity;
+    vec4 SurfaceNormal;
+    vec4 SurfaceTension;
+    vec4 viscosity;
+    float density;
+    float pressure;
+    float pad1;
+    float pad2;
+};
+
+layout(std430, binding = 0) buffer Particle
+{
+    MyParticle particles[];
+};
+
+layout(std430, binding = 1) buffer ParticleTemp
+{
+    MyParticle tempParticles[];
+};
+
+
+
+
+layout(std430, binding = 2) buffer TempBucketSizes
+{
+    int tempBucketSizes[];
+};
+
+
+uint hashFunction(vec4 pos,double H,int size) {
+    
+    int p1 = 2693;
+    int p2 = 3163;
+    int p3 = 4091;
+
+    int part1 = (int((pos.x / H)) * p1);
+    int part2 = (int((pos.y / H)) * p2);
+    int part3 = (int ((pos.z / H)) * p3);
+    
+    uint ret = uint((part1 ^ part2 ^ part3) % size);
+    
+    return ret;
+}
+
+void main()
+{
+    
+    uint index = gl_GlobalInvocationID.x;
+
+    if (index > Number_Particles)
+        return;
+
+    tempParticles[index].position = particles[index].position;
+        
+    uint newbucket =hashFunction(tempParticles[index].position, H,HASHSIZE); 
+    
+    
+    atomicAdd(tempBucketSizes[newbucket],1);
+    
+
+    tempParticles[index].velocity= particles[index].velocity;
+
+
+
+}
