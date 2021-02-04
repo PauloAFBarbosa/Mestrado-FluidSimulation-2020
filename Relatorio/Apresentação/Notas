@@ -1,0 +1,73 @@
+
+Slide 2
+
+Um fluido é uma substância que se deforma continuamente quando submetida a uma tensão. Os fluidos incluem os líquidos, os gases, os plasmas e, de certa maneira, os sólidos plásticos.
+
+Imcompressivel - Um fluido incompressível é qualquer fluido cuja densidade sempre permanece constante com o tempo, e tem a capacidade de opor-se à compressão do mesmo sob qualquer condição
+
+				all flows are compressible, flows are usually treated as being incompressible when the Mach number (the ratio of the speed of the flow to the speed of sound) is smaller than 0.3 (since the density change due to velocity is about 5% in that case).[1] The study of compressible flow is relevant to high-speed aircraft, jet engines, rocket motors, high-speed entry into a planetary atmosphere, gas pipelines, commercial applications such as abrasive blasting, and many other fields.
+slide 3 (navier stokes)
+
+aceleração convectiva - representa o fato de que a velocidade do fluido pode variar devido ao movimento de uma partícula de um ponto a outro do espaço
+
+delta p -> como o gradiente aponta para o local de maior crescimento, - delta significa que as particulas vão se mover para o local de menos pressão (vai de onde tem mais pressao para onde tem menos)
+
+Explicar que esta equação vai ser mais transformada (é feita a derivada material - derivada tomada ao longo de um caminho movendo-se com velocidade v-, e depois e calculada a formula para uma particula) mas não se vai entrar em mais detalhe na apresentação
+
+slide 4 (sph)
+
+De modo a resolver as equações de navier stokes surgiu o SPH. Craido em 1977 com o ambito de simular a formação de galaxias. É um modelo baseado em particulas, ou seja, o modelo usa particulas para discretizar as funções de navier stokes e com isso gera aproximações as mesmas. Ao contratio dos modelos baseados em grids, que fazem as discretizações nos vertices das grids, este vai fazer nas particulas.
+
+Fundamentalmente o sph é um metodo de interpolação que permite interpolar qualquer função com base nos valores de um conjunto de particulas. 
+
+Dizer que o sph tem várias formulas e que em todas elas, ou quase todas, esta presente o kernel W (r-r',h), isto é o kernel de suavização que faz com que particulas mais distantes tenham menos influencia. Estes kernels afetas bastante o resultado da simulação, e alguns kernels são mais apropriados para umas equações e outros para outras
+
+slide 6  PCISPH
+
+
+predictive-corrective incompressible sph
+
+é um modelo que vai tentar melhorar a regra de imcompressibilidade fazendo uma previsão da pressão da particula. Isto é um processo iterativo que vai fazer previsões da pressão até que o erro da previsão deja menor do que um determinado threshhold.
+
+1- pressao a 0
+2-  enquanto erro for grande faz
+2.1 - preve velocidade, posição, densidade, variação da densidade (que é o erro)
+2.2 - atualiza a pressão 
+
+repete até sair do ciclo 2
+
+slide 7 adaptative time step
+
+Dizer que o time step é o tempo para qual a simulação vai calcular as coisas, ou seja, se tivermos no tempo t, e o time step for meio segundo, entao o proximo passo vai dar o resultado de como a simulação irá estar daqui a meio segundo. Infelizmente o time step tem de ser um valor muito mais pequeno e normalmente tem de ser escolhido por trial and error (maus time steps poe a simulação a dar maus resultados). Com este metodo o time step vai se adaptando sozinho. Quando este for grande de mais acontece o que eles chamam de choque e o time step é diminuido. Para evitar grandes problemas o time step é aumentado de pouco em pouco (aumenta apenas 0.2% a cada iteração).
+
+Assim podemos ter uma simulação a correr com um time step maior sempre que for possivel (mais rapida) e quando necessario esse time step vai diminuir.
+
+slide 8
+
+tensao superficial é a força que faz com que o fluido se comporte como uma membrana. Podemos ver isto quando alguns insetos estão pousados em cima da agua.
+
+Este modelo usa as forças de cohesao (força que as particulas do fluido exercem entre si) e da curvatura para chegar a força de tensao superficial.
+
+slide 9 estrutura de dados
+
+dizer começamos por usar um array, que comparava cada particulas com todas as outras, (90% das particulas nao afeta a atual). 
+
+Visto que tinha muitas comparações desnecessárias usaram-se octrees para conseguir ir buscar as particulas vizinhas de cada particula, assim diminui-se o numero de comparações.
+
+Por fim usou-se um hashmap para guardar as particulas.
+
+A mudança de octree para hashmap deve-se ao facto de um hash map permitir uma simulação sem qualquer tipo de volume a restringir.
+
+Explicar a nossa estrutura de dados.
+
+slide 10 -
+
+Dizer que temos a simulação a correr em cpu e GPU, a de cpu usa-se para debug, e a de gpu consegue correr 64 mil particulas em tempo real.
+
+slide 11 
+
+
+
+----------------------
+
+dificuldades -> Arranjar uma estrurura de dados que seja rapida o suficiente.

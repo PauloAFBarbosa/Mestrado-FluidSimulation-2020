@@ -9,6 +9,11 @@
 #include "../glm/gtx/norm.hpp"
 #include "../AntTweakBar/include/AntTweakBar.h"
 
+#include <iostream>
+#include <fstream>
+#include <iomanip> 
+using namespace std;
+
 #endif
 
 #define _USE_MATH_DEFINES
@@ -41,7 +46,7 @@ float ZMIN = 0, ZMAX = 200;
 const float fluidVolume = 1000 * MASS / RESTDENSITY;
 const float particleDiameter = powf(fluidVolume, 1.0f / 3.0f) / 10;
 const float particleRadius = particleDiameter / 2;
-int const hashSize = 1000; //o cubo tem 0.4 de lado, e o h tem 0.04.. isto da 8 divisões por cada lado, arredondo para 10, por isso fica 10*10*10
+int const hashSize = 3000; //o cubo tem 0.4 de lado, e o h tem 0.04.. isto da 8 divisões por cada lado, arredondo para 10, por isso fica 10*10*10
 //------------
 
 //usado para determinar quando começar a simular
@@ -50,7 +55,7 @@ bool simulateFrame = false; //usado para simular apenas um frame
 int framesSimulated = 0;
 
 //Particulas por lado do cubo, ou seja, particulas total é 7^3
-int pontos_lado = 24;
+int pontos_lado = 40;
 int countPoints = 0;
 //usado para inserir multiplos batches de pontos
 int pontos_inseridos = 0;
@@ -119,7 +124,7 @@ void restart() {
 	int x_pontos = 0;
 	int y_pontos = 0;
 	int z_pontos = 0;
-	int const hashSize = 1000; //o cubo tem 0.4 de lado, e o h tem 0.04.. isto da 8 divisões por cada lado, arredondo para 10, por isso fica 10*10*10
+	
 
 	int bucketSizes[hashSize];
 
@@ -178,6 +183,8 @@ void restart() {
 }
 
 void processKeys(unsigned char c, int xx, int yy) {
+	ofstream hashSizeFile;
+	ofstream positionFile;
 	float step = 1.0;
 	
 	int x_pontos = 0;
@@ -284,6 +291,28 @@ void processKeys(unsigned char c, int xx, int yy) {
 		}
 		
 		h->computeOffsets();
+
+		
+		hashSizeFile.open("hashSizeFile.txt");
+		for (int i = 0; i < hashSize; i++)
+		{
+			
+			hashSizeFile << h->bucketSizes[i]<<"\n";
+		}
+		hashSizeFile.close();
+
+		printf("Criou o ficheiro hashsizefile\n");
+		
+		positionFile.open("positionFile.txt");
+		positionFile << setprecision(10)<<fixed;
+		for (int i = 0; i < countPoints; i++)
+		{
+
+			positionFile << h->particles[i].pos[0] <<" "<< h->particles[i].pos[1] << " "<<h->particles[i].pos[2] <<" 0.0"<<"\n";
+		}
+		positionFile.close();
+
+		printf("Criou o ficheiro positionfile\n");
 
 		end = std::chrono::steady_clock::now();
 		
@@ -425,7 +454,7 @@ void updatePoints() {
 	y = o->pos[1];
 	z = o->pos[2];
 	delete o;
-	o = new Octree(x, y, z, size, max_points, max_depth);
+	o = new Octree(x, y, z, 0, max_points, max_depth);
 	for (size_t i = 0; i < points.size(); i++)
 	{
 		//points.at(i)->force[0] = 0;
@@ -1293,7 +1322,7 @@ void renderScene(void) {
 
 void SetupNormal() {
 	//definir o volume da simulação
-	float side = 0.5;
+	float side = 2.5;
 	XMIN = -side;
 	XMAX = side;
 	YMIN = -side;
