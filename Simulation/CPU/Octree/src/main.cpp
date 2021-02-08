@@ -46,7 +46,7 @@ float ZMIN = 0, ZMAX = 200;
 const float fluidVolume = 1000 * MASS / RESTDENSITY;
 const float particleDiameter = powf(fluidVolume, 1.0f / 3.0f) / 10;
 const float particleRadius = particleDiameter / 2;
-int const hashSize = 3000; //o cubo tem 0.4 de lado, e o h tem 0.04.. isto da 8 divisões por cada lado, arredondo para 10, por isso fica 10*10*10
+int const hashSize = 90000; //o cubo tem 0.4 de lado, e o h tem 0.04.. isto da 8 divisões por cada lado, arredondo para 10, por isso fica 10*10*10
 //------------
 
 //usado para determinar quando começar a simular
@@ -55,7 +55,7 @@ bool simulateFrame = false; //usado para simular apenas um frame
 int framesSimulated = 0;
 
 //Particulas por lado do cubo, ou seja, particulas total é 7^3
-int pontos_lado = 40;
+int pontos_lado = 150;
 int countPoints = 0;
 //usado para inserir multiplos batches de pontos
 int pontos_inseridos = 0;

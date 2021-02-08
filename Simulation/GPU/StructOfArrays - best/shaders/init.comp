@@ -47,7 +47,7 @@ float rand(vec2 co){
     return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
 }
 
-uint hashFunction(vec4 pos,double H,int size) {
+uint hashFunction(vec4 pos,double H,int size,int index) {
     
     int p1 = 2693;
     int p2 = 3163;
@@ -102,7 +102,7 @@ void main()
                 for (float z = -particleRadius * PONTOS_LADO, z_pontos = 0; z_pontos < PONTOS_LADO; z += particleDiameter, z_pontos++) {
                     tempPosition[inseridos] = vec4(x,y,z,0);
                     inseridos++;
-                    tempBucketSizes[ hashFunction(vec4(x,y,z,0),H,HASHSIZE)]++;
+                    tempBucketSizes[ hashFunction(vec4(x,y,z,0),H,HASHSIZE,-1)]++;
                     
             }
         }
@@ -117,19 +117,7 @@ void main()
     }
 
     
-    //Poe as particulas no hashmap e ja poe o bucketsize correto
-    for (int i =0 ; i < Number_Particles ; i++){
-        vec4 newpos = tempPosition[i];
-        uint bucket = hashFunction(newpos, H,HASHSIZE);
-
-        int bucketSize = bucketSizes[bucket];
-        int offset = offsets[bucket];
-       
-		position[offset+bucketSize] = newpos;
-        bucketSizes[bucket]++;
-        
-        
-    }
+    
 
     
 

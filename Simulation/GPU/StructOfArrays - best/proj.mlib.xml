@@ -70,6 +70,10 @@
 					cs="shaders/init.comp"
 			/>
 			
+			<shader name="Populate" 	 			
+					cs="shaders/populate.comp"
+			/>
+
 			<shader name="force" 	 			
 					cs="shaders/force.comp"
 			/> 	
@@ -596,6 +600,49 @@
 		
 		<material name="UpdateHash" 			>
 		    <shader name="UpdateHash" 		>
+		        <values>
+					<valueof uniform="m_model" 			type="RENDERER" 		context="CURRENT" 		component="MODEL" />
+					<valueof uniform="Number_Particles" type="RENDERER" 		context="CURRENT" 		component="Number_Particles" />
+					<valueof uniform="MASS" 			type="RENDERER" 		context="CURRENT" 		component="MASS" />
+					<valueof uniform="RESTDENSITY" 		type="RENDERER" 		context="CURRENT" 		component="RESTDENSITY" />
+					<valueof uniform="HASHSIZE" 		type="RENDERER" 		context="CURRENT" 		component="HASHSIZE" />
+					<valueof uniform="PONTOS_LADO" 		type="RENDERER" 		context="CURRENT" 		component="PONTOS_LADO" />
+					<valueof uniform="H" 		type="RENDERER" 		context="CURRENT" 		component="H" />
+				</values>
+		    </shader>
+			<buffers>
+					<buffer name="Position" >
+						<TYPE value="SHADER_STORAGE" />
+						<BINDING_POINT value="0" />
+					</buffer>
+					<buffer name="Velocity" >
+						<TYPE value="SHADER_STORAGE" />
+						<BINDING_POINT value="1" />
+					</buffer>
+					
+					<buffer name="TempPosition">
+						<TYPE value="SHADER_STORAGE" />
+						<BINDING_POINT value="2" />
+					</buffer>
+					<buffer name="BucketSizes">
+						<TYPE value="SHADER_STORAGE" />
+						<BINDING_POINT value="3" />
+					</buffer>
+					
+					<!--AQUI -->
+					<buffer name="TempVelocity" >
+						<TYPE value="SHADER_STORAGE" />
+						<BINDING_POINT value="4" />
+					</buffer>
+					<buffer name="TempBucketSizes">
+						<TYPE value="SHADER_STORAGE" />
+						<BINDING_POINT value="5" />
+					</buffer>
+						
+		        </buffers>
+		</material>
+		<material name="Populate" 			>
+		    <shader name="Populate" 		>
 		        <values>
 					<valueof uniform="m_model" 			type="RENDERER" 		context="CURRENT" 		component="MODEL" />
 					<valueof uniform="Number_Particles" type="RENDERER" 		context="CURRENT" 		component="Number_Particles" />
