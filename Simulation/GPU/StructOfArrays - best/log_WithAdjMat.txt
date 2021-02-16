@@ -1,0 +1,194 @@
+Name                                        #c  CPU(ms)  GPU(ms)       wt
+----                                  ------------------------------------
+ Nau                                         1    57.40              0.00
+  Main cicle                                 1    57.39              0.00
+    Pipeline execute                         1     2.12              0.00
+      pip#DensityPressure                    1     0.15              0.00
+        Buffers                              1     0.01              0.00
+        State                                1     0.02              0.00
+        Color                                1     0.02              0.00
+        Texture                              1     0.00              0.00
+        Image Textures                       1     0.00              0.00
+        Shaders                              1     0.04              0.00
+          Set Uniforms                       1     0.02     0.00     0.02
+          Set Blocks                         1     0.00     0.00     0.00
+        Pre Process List                     1     0.00     0.00     0.00
+        Compute shader                       1     0.04    26.12     0.00
+        Post Process List                    1     0.00     0.00     0.00
+      pip#Force                              1     0.12              0.00
+        Buffers                              1     0.01              0.00
+        State                                1     0.01              0.00
+        Color                                1     0.00              0.00
+        Texture                              1     0.00              0.00
+        Image Textures                       1     0.00              0.00
+        Shaders                              1     0.05              0.00
+          Set Uniforms                       1     0.03     0.00     0.01
+          Set Blocks                         1     0.00     0.00     0.00
+        Pre Process List                     1     0.00     0.00     0.01
+        Compute shader                       1     0.00    16.85     0.01
+        Post Process List                    1     0.00     0.00     0.00
+      pip#Integrate                          1     0.09              0.00
+        Buffers                              1     0.00              0.00
+        State                                1     0.00              0.00
+        Color                                1     0.00              0.00
+        Texture                              1     0.00              0.00
+        Image Textures                       1     0.00              0.00
+        Shaders                              1     0.03              0.00
+          Set Uniforms                       1     0.02     0.00     0.00
+          Set Blocks                         1     0.00     0.00     0.01
+        Pre Process List                     1     0.00     0.00     0.01
+        Compute shader                       1     0.00     0.33     0.01
+        Post Process List                    1     0.00     0.00     0.00
+      pip#ZeroBuffers                        1     0.06              0.00
+        Buffers                              1     0.00              0.00
+        State                                1     0.00              0.00
+        Color                                1     0.00              0.00
+        Texture                              1     0.00              0.00
+        Image Textures                       1     0.00              0.00
+        Shaders                              1     0.02              0.00
+          Set Uniforms                       1     0.00     0.00     0.00
+          Set Blocks                         1     0.00     0.00     0.00
+        Pre Process List                     1     0.00     0.00     0.01
+        Compute shader                       1     0.00     0.01     0.01
+        Post Process List                    1     0.00     0.00     0.00
+      pip#ComputeTemps                       1     0.10              0.00
+        Buffers                              1     0.00              0.00
+        State                                1     0.00              0.00
+        Color                                1     0.01              0.00
+        Texture                              1     0.00              0.00
+        Image Textures                       1     0.00              0.01
+        Shaders                              1     0.04              0.00
+          Set Uniforms                       1     0.01     0.00     0.01
+          Set Blocks                         1     0.00     0.00     0.01
+        Pre Process List                     1     0.00     0.00     0.00
+        Compute shader                       1     0.00     0.29     0.01
+        Post Process List                    1     0.00     0.00     0.00
+      pip#ComputeOffsets                     1     0.07              0.00
+        Buffers                              1     0.00              0.00
+        State                                1     0.00              0.00
+        Color                                1     0.00              0.00
+        Texture                              1     0.00              0.01
+        Image Textures                       1     0.00              0.00
+        Shaders                              1     0.04              0.00
+          Set Uniforms                       1     0.00     0.00     0.01
+          Set Blocks                         1     0.00     0.00     0.01
+        Pre Process List                     1     0.00     0.00     0.00
+        Compute shader                       1     0.00     7.20     0.00
+        Post Process List                    1     0.00     0.00     0.00
+      pip#UpdateHash                         1     0.10              0.00
+        Buffers                              1     0.01              0.00
+        State                                1     0.01              0.00
+        Color                                1     0.01              0.00
+        Texture                              1     0.00              0.00
+        Image Textures                       1     0.00              0.00
+        Shaders                              1     0.02              0.00
+          Set Uniforms                       1     0.01     0.00     0.00
+          Set Blocks                         1     0.00     0.00     0.00
+        Pre Process List                     1     0.00     0.00     0.01
+        Compute shader                       1     0.01     0.29     0.00
+        Post Process List                    1     0.00     0.00     0.01
+      pip#background                         1     0.39              0.00
+        Pre Process List                     1     0.00     0.00     0.01
+        View Frustum Culling                 1     0.00              0.00
+        Queue add                            1     0.02              0.00
+          Get material                       1     0.00              0.00
+        Process queue                        1     0.12              0.00
+          Material prepare                   1     0.07              0.00
+            Buffers                          1     0.00              0.00
+            State                            1     0.01              0.00
+            Color                            1     0.00              0.00
+            Texture                          1     0.01              0.00
+            Image Textures                   1     0.00              0.00
+            Shaders                          1     0.04              0.00
+              Set Uniforms                   1     0.02     0.00     0.01
+              Set Blocks                     1     0.00     0.00     0.00
+          Geometry rendering                 1     0.05              0.00
+            Draw                             1     0.05              0.00
+              Bindings                       1     0.00              0.00
+              Draw elements                  1     0.04     0.42     0.00
+              Get Tessellation Query         1     0.00              0.00
+        Post Process List                    1     0.00     0.00     0.01
+      pip#sceneRender                        1     0.29              0.00
+        Pre Process List                     1     0.00     0.00     0.00
+        View Frustum Culling                 1     0.00              0.00
+        Queue add                            1     0.00              0.00
+          Get material                       1     0.00              0.00
+        Process queue                        1     0.14              0.00
+          Material prepare                   1     0.06              0.00
+            Buffers                          1     0.00              0.00
+            State                            1     0.01              0.00
+            Color                            1     0.00              0.00
+            Texture                          1     0.01              0.00
+            Image Textures                   1     0.00              0.00
+            Shaders                          1     0.03              0.00
+              Set Uniforms                   1     0.01     0.00     0.01
+              Set Blocks                     1     0.00     0.00     0.00
+          Geometry rendering                 1     0.07              0.00
+            Draw                             1     0.07              0.00
+              Bindings                       1     0.00              0.00
+              Draw elements                  1     0.06     2.81     0.00
+              Get Tessellation Query         1     0.00              0.00
+        Post Process List                    1     0.00     0.00     0.00
+      pip#DepthRender                        1     0.25              0.00
+        Pre Process List                     1     0.00     0.00     0.01
+        View Frustum Culling                 1     0.00              0.00
+        Queue add                            1     0.00              0.00
+          Get material                       1     0.00              0.00
+        Process queue                        1     0.13              0.00
+          Material prepare                   1     0.08              0.00
+            Buffers                          1     0.00              0.00
+            State                            1     0.01              0.00
+            Color                            1     0.01              0.00
+            Texture                          1     0.01              0.00
+            Image Textures                   1     0.00              0.00
+            Shaders                          1     0.06              0.00
+              Set Uniforms                   1     0.03     0.00     0.01
+              Set Blocks                     1     0.00     0.00     0.00
+          Geometry rendering                 1     0.04              0.00
+            Draw                             1     0.04              0.00
+              Bindings                       1     0.00              0.00
+              Draw elements                  1     0.02     1.02     0.01
+              Get Tessellation Query         1     0.00              0.00
+        Post Process List                    1     0.00     0.00     0.01
+      pip#NormalRender                       1     0.25              0.01
+        Pre Process List                     1     0.00     0.00     0.01
+        View Frustum Culling                 1     0.00              0.00
+        Queue add                            1     0.01              0.01
+          Get material                       1     0.00              0.00
+        Process queue                        1     0.14              0.00
+          Material prepare                   1     0.07              0.00
+            Buffers                          1     0.00              0.00
+            State                            1     0.00              0.00
+            Color                            1     0.01              0.00
+            Texture                          1     0.00              0.00
+            Image Textures                   1     0.00              0.00
+            Shaders                          1     0.05              0.00
+              Set Uniforms                   1     0.03     0.00     0.01
+              Set Blocks                     1     0.00     0.00     0.00
+          Geometry rendering                 1     0.05              0.00
+            Draw                             1     0.05              0.00
+              Bindings                       1     0.00              0.00
+              Draw elements                  1     0.04     1.13     0.00
+              Get Tessellation Query         1     0.00              0.00
+        Post Process List                    1     0.00     0.00     0.00
+      pip#particlesQuad                      1     0.17              0.00
+        Pre Process List                     1     0.00     0.00     0.01
+        Queue add                            1     0.01              0.00
+          Get material                       1     0.00              0.00
+        Process queue                        1     0.10              0.00
+          Material prepare                   1     0.06              0.00
+            Buffers                          1     0.00              0.00
+            State                            1     0.00              0.00
+            Color                            1     0.01              0.00
+            Texture                          1     0.01              0.00
+            Image Textures                   1     0.00              0.00
+            Shaders                          1     0.04              0.00
+              Set Uniforms                   1     0.02     0.00     0.01
+              Set Blocks                     1     0.00     0.00     0.00
+          Geometry rendering                 1     0.03              0.00
+            Draw                             1     0.03              0.00
+              Bindings                       1     0.00              0.00
+              Draw elements                  1     0.02     0.51     0.00
+              Get Tessellation Query         1     0.00              0.00
+        Post Process List                    1     0.00     0.00     0.01
+    Zi swap                                  1    54.62              0.00

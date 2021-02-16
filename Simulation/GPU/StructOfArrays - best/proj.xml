@@ -2,13 +2,13 @@
 <project name="Particles" width = "1280" height = "720">
 	<assets>
 		<constants>
-			<constant name="NUMBER_OF_PARTICLES" value="3375000" />
+			<constant name="NUMBER_OF_PARTICLES" value="216000" />
 
 			<!-- Lança com 625 workgroups. Cada workgroup vai ter 25 threads-->
-			<constant name="NUMBER_OF_WORK_GROUPS" value="135000" />
+			<constant name="NUMBER_OF_WORK_GROUPS" value="6750" />
 
 			<!-- Lança com 100 workgroups. Cada workgroup vai ter 10 threads-->
-			<constant name="NUMBER_OF_WORK_GROUPS_HASH" value="2000" />
+			<constant name="NUMBER_OF_WORK_GROUPS_HASH" value="625" />
 
 			<constant name="HASH_SIZE" value="20000" />
 		</constants>
@@ -22,9 +22,9 @@
 			<attribute name="External_Force" 			data="VEC3" 	type="RENDERER" x="0" y="0.0" z="0.0" />
 			<attribute name="Viscosity"					data="FLOAT" 	type="RENDERER" value="3000" />
 			<attribute name="ETA"						data="FLOAT" 	type="RENDERER" value="1.1" />
-			<attribute name="Pause"						data="INT" 	type="RENDERER" value="1" />
-			<attribute name="Blur"						data="INT" 	type="RENDERER" value="0" />
-			<attribute name="WhiteParticles"			data="INT" 	type="RENDERER" value="1" />
+			<attribute name="Pause"						data="INT" 		type="RENDERER" value="1" />
+			<attribute name="Blur"						data="INT" 		type="RENDERER" value="0" />
+			<attribute name="WhiteParticles"			data="INT" 		type="RENDERER" value="1" />
 			<attribute name="Particle_alpha"			data="FLOAT" 	type="RENDERER" value="0.1" />
 			<attribute name="Alpha_Threshold"			data="FLOAT" 	type="RENDERER" value="0.1" />
 			<attribute name="Particle_Size"				data="VEC2" 	type="RENDERER" x="0.03" y="0.015" />
@@ -43,7 +43,7 @@
 			<attribute name="VISCOSITY" 				data="FLOAT" type="RENDERER" value = "3.5" />
 			<attribute name="GRAVITY" 					data="VEC4" type="RENDERER" x = "0" y = "-9.8" z = "0" w="0" />
 
-			<attribute name="PONTOS_LADO" 				data="INT" 		type="RENDERER" value="150"/>
+			<attribute name="PONTOS_LADO" 				data="INT" 		type="RENDERER" value="60"/>
 			<attribute name="HASHSIZE" 					data="INT" 		type="RENDERER" value="HASH_SIZE"/>
 			<!--Usado para definir o volume onde vai ser feita a simulação-->
 			<attribute name="XMIN" 						data="FLOAT" 		type="RENDERER" value="-2"/>
@@ -129,15 +129,17 @@
 				<material name="ComputeTemps" fromLibrary="particleLib" dimX="NUMBER_OF_WORK_GROUPS" dimY="1" dimZ="1"/>
 			</pass>
 
+			<pass class="compute" name="ComputeOffsets">
+				
+				<material name="ComputeOffsets" fromLibrary="particleLib" dimX="NUMBER_OF_WORK_GROUPS_HASH" dimY="1" dimZ="1"/>
+			</pass>
+
 			<pass class="compute" name="UpdateHash">
 
 				<material name="UpdateHash" fromLibrary="particleLib" dimX="NUMBER_OF_WORK_GROUPS" dimY="1" dimZ="1"/>
 			</pass>
 
-			<pass class="compute" name="ComputeOffsets">
-				
-				<material name="ComputeOffsets" fromLibrary="particleLib" dimX="NUMBER_OF_WORK_GROUPS_HASH" dimY="1" dimZ="1"/>
-			</pass>
+			
 			
 			
 			<pass class="default" name="background">
@@ -236,6 +238,7 @@
 			<var label="RESTDENSITY" 		type="RENDERER" context="CURRENT" component="RESTDENSITY" def="min=100 max=10000 step=100"/>
 			<var label="VISCOSITY" 			type="RENDERER" context="CURRENT" component="VISCOSITY" def="min=3 max=25 step=0.1"/>
 			<var label="GRAVITY" 			type="RENDERER" context="CURRENT" component="GRAVITY" def="min=-200 max=200 step=1"/>
+			<var label="RESTITUTION" 			type="RENDERER" context="CURRENT" component="RESTITUTION" def="min=-10 max=10 step=0.1"/>
         </window>
     </interface>
 	 

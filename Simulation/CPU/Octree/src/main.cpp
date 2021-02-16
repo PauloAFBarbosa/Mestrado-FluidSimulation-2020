@@ -46,7 +46,7 @@ float ZMIN = 0, ZMAX = 200;
 const float fluidVolume = 1000 * MASS / RESTDENSITY;
 const float particleDiameter = powf(fluidVolume, 1.0f / 3.0f) / 10;
 const float particleRadius = particleDiameter / 2;
-int const hashSize = 90000; //o cubo tem 0.4 de lado, e o h tem 0.04.. isto da 8 divisões por cada lado, arredondo para 10, por isso fica 10*10*10
+int const hashSize = 1000; //o cubo tem 0.4 de lado, e o h tem 0.04.. isto da 8 divisões por cada lado, arredondo para 10, por isso fica 10*10*10
 //------------
 
 //usado para determinar quando começar a simular
@@ -55,7 +55,7 @@ bool simulateFrame = false; //usado para simular apenas um frame
 int framesSimulated = 0;
 
 //Particulas por lado do cubo, ou seja, particulas total é 7^3
-int pontos_lado = 150;
+int pontos_lado = 10;
 int countPoints = 0;
 //usado para inserir multiplos batches de pontos
 int pontos_inseridos = 0;
@@ -567,7 +567,8 @@ float computeDensity(float position[3],int query) {
 		retSize=h->getAdj(position, H, ret);
 
 		int count = 0;
-		
+		int dentroDoBucket = 0;
+		int dentroDoBucketNaoAfeta = 0;
 		for (int j = 0; j < retSize; j++)
 		{
 			unsigned int bucket = ret[j];
@@ -584,6 +585,14 @@ float computeDensity(float position[3],int query) {
 				
 				float ker_res = useDefaultKernel(arg, H);
 
+				if (ker_res != 0) {
+					dentroDoBucket++;
+				}
+				else
+				{
+					dentroDoBucketNaoAfeta ++ ;
+				}
+
 				sum += MASS * ker_res;
 
 				//if (length(arg) <= H){
@@ -593,7 +602,11 @@ float computeDensity(float position[3],int query) {
 				
 				count++;
 			}
+			printf("Dentro do bucket %d encontrou %d particulas que afetam e %d que nao afetam\n", bucket, dentroDoBucket, dentroDoBucketNaoAfeta);
+			dentroDoBucketNaoAfeta = 0;
+			dentroDoBucket = 0;
 		}
+		printf("Fim de uma particula\n");
 		//printf("Com o meu getadj encontrou %d particulas mas apenas %d realmente importaram\n-------\n", count,realcount);
 	}
 	

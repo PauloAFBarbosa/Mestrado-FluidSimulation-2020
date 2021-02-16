@@ -20,7 +20,7 @@
 
 #version 460
 
-#define WORK_GROUP_SIZE 25
+#define WORK_GROUP_SIZE 32
 
 layout (local_size_x = WORK_GROUP_SIZE) in;
 
@@ -29,6 +29,7 @@ layout (local_size_x = WORK_GROUP_SIZE) in;
 #define PI_FLOAT 3.1415927410125732421875f
 #define PARTICLE_RADIUS 0.005f
 #define PARTICLE_RESTING_DENSITY 4000
+#define MAXADJ 500
 // Mass = Density * Volume
 #define PARTICLE_MASS 0.02
 #define SMOOTHING_LENGTH (4 * PARTICLE_RADIUS)
@@ -69,6 +70,16 @@ layout(std430, binding = 3) buffer BucketSizes
 layout(std430, binding = 4) buffer Offsets
 {
     int offsets[];
+};
+
+layout(std430, binding = 5) buffer Debug
+{
+    vec4 debug[];
+};
+
+layout(std430, binding = 6) buffer Adj
+{
+    int adj[];
 };
 
 
@@ -403,11 +414,18 @@ uint hashFunction(vec4 pos,double H,int size) {
     return ret;
 }
 
+float random (vec2 uv)
+{
+    return fract(sin(dot(uv,vec2(12.9898,78.233)))*43758.5453123);
+}
+
 void main()
 {
     if (Pause == 1)
         return;
 
+    int conta=0;
+    
     uint index = gl_GlobalInvocationID.x;
 
     if (index > Number_Particles)
@@ -417,15 +435,16 @@ void main()
     uint ret[27];
     int retSize=0;
 
-    //uint b  = hashFunction(position[index],H,HASHSIZE);
     
-    //retSize = adjMat[(28*b)+0] ;
 
     retSize=getAdj(position[index], H, ret);
     // compute density
     float sum=1;
 
-    
+    //mudar isto para um var local
+    //adj[index*MAXADJ ]=0;
+
+    int vizinhos=0;
 
     for (int j = 0; j < retSize; j++)
         {
@@ -434,7 +453,7 @@ void main()
     
             int offset = offsets[bucket];
             int bucketSize = bucketSizes[bucket];
-            for (uint i = 0; i < bucketSize; i++)
+            for (int i = 0; i < bucketSize; i++)
             {
 
                 vec4 arg;
@@ -443,11 +462,26 @@ void main()
                 float ker_res = useDefaultKernel(arg, H);
 
                 sum += MASS * ker_res;
+
+                if (ker_res!=0 ){
+                	
+                	conta++;
+                	//int vizinhos = adj[index*MAXADJ];
+                	//Aqui é MAXADJ porque no maximo vai dar para guardar 99 vizinhos mais 1 posição para dizer quantos vizinhos se guardou
+                	adj[index*MAXADJ + vizinhos + 1]= offset + i;
+                	//adj[index*MAXADJ ]++;
+                	vizinhos++;
+                }
                 
             }
         }
+    
+    adj[index*MAXADJ]=vizinhos;
 
+    //debug[index] = vec4(sim,0,0,nao);
     density[index] = sum;
     // compute pressure
     pressure[index] = STIFF * (sum - RESTDENSITY);
+
+    
 }

@@ -1,6 +1,6 @@
 #version 460
 
-#define WORK_GROUP_SIZE 10
+#define WORK_GROUP_SIZE 32
 
 layout (local_size_x = WORK_GROUP_SIZE) in;
 

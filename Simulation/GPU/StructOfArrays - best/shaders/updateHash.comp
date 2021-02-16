@@ -1,6 +1,6 @@
 #version 460
 
-#define WORK_GROUP_SIZE 25
+#define WORK_GROUP_SIZE 32
 
 layout (local_size_x = WORK_GROUP_SIZE) in;
 
@@ -49,6 +49,11 @@ layout(std430, binding = 5) buffer TempBucketSizes
     int tempBucketSizes[];
 };
 
+layout(std430, binding = 6) buffer Offsets
+{
+    int offsets[];
+};
+
 
 float rand(vec2 co){
     return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
@@ -75,8 +80,7 @@ void main()
     
     uint index = gl_GlobalInvocationID.x;
 
-    if (index > Number_Particles)
-        return;
+
 
     //Agora vai correr todas as particulas de novo e vai adicionar ao hashmap
     // e no final vai hazer o compute dos offsets
@@ -84,15 +88,9 @@ void main()
 
     uint bucket = hashFunction(tempPosition[index], H, HASHSIZE);
     int bucketSize= atomicAdd(bucketSizes[bucket],1);
-    int offset = 0;
+    int offset = offsets[bucket];
     //vai correr o array com os tamanhos dos buckets até chegar ao bucket atual
-    for (int j = 0; j < bucket; j++)
-    {
-        //exemplo, se tivermos um array com [p1,p2,p3,p4]
-        //p1 e p2 sao do bucket 0 e p3 e p4 do bucket 1
-        //o bucket 1 começa no indice 2 que é o bucketsize do bucket 0
-        offset += tempBucketSizes[j];
-    }
+    
 
     position[offset+bucketSize] = tempPosition[index];
     velocity[offset+bucketSize] = tempvelocity[index];

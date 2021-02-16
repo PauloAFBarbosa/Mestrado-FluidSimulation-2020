@@ -20,7 +20,7 @@
 
 #version 460
 
-#define WORK_GROUP_SIZE 25
+#define WORK_GROUP_SIZE 32
 
 layout (local_size_x = WORK_GROUP_SIZE) in;
 
@@ -29,9 +29,11 @@ layout (local_size_x = WORK_GROUP_SIZE) in;
 #define PI_FLOAT 3.1415927410125732421875f
 #define PARTICLE_RADIUS 0.005f
 #define PARTICLE_RESTING_DENSITY 4000
+#define UM_SOBRE_H 21.881838074398249452954048140044
 // Mass = Density * Volume
 #define PARTICLE_MASS 0.02
 #define SMOOTHING_LENGTH (4 * PARTICLE_RADIUS)
+#define MAXADJ 500
 
 uniform float THRESHOLD;
 uniform float SURFACETENSION;
@@ -109,6 +111,11 @@ layout(std430, binding = 11) buffer Debug
     vec4 debug[];
 };
 
+layout(std430, binding = 12) buffer Adj
+{
+    int adj[];
+};
+
 
 void usePressureKernel_gradient(vec4 distVector, float supportRadius, out vec4 ret) {
     float dist = length(distVector);
@@ -133,8 +140,8 @@ bool contains(uint arr[27], int size, uint member) {
 
     for (int i = 0; i < size; i++)
     {
-        if (arr[i] == member)
-            ret = true;
+        ret= (arr[i] == member) || ret; 
+        
     }
     return ret;
 }
@@ -146,9 +153,9 @@ int getAdj(vec4 pos, float H, out uint ret[27]) {
     int p3 = 4091;
     int part1, part2, part3;
     int cell[3];
-    cell[0] = int(pos.x / H);
-    cell[1] = int(pos.y / H);
-    cell[2] = int(pos.z / H);
+    cell[0] = int(pos.x * UM_SOBRE_H);
+    cell[1] = int(pos.y * UM_SOBRE_H);
+    cell[2] = int(pos.z * UM_SOBRE_H);
 
     uint tempBucket;
     int retSize = 0;
@@ -483,10 +490,6 @@ void main()
     uint ret[27];
     int retSize=0;
 
-    //uint b  = hashFunction(position[index],H,HASHSIZE);
-    
-    //retSize = adjMat[(28*b)+0] ; 
-
     retSize=getAdj(position[index], H, ret);
 
     vec4 sumViscosity = vec4(0);
@@ -497,45 +500,37 @@ void main()
     
     int count;
     count=0;
-    for (int j = 0; j < retSize; j++)
-    {
-        uint bucket = ret[j];
-        //uint bucket = uint(adjMat[(28*b)+(j+1)]) ;
 
-        //debug[index]= vec4(b,adjMat[(28*b)+(0)],adjMat[(28*b)+(1)],adjMat[(28*b)+(2)]);
+    int vizinhos= adj[index*MAXADJ];
 
-        int offset = offsets[bucket];
-        int bucketSize = bucketSizes[bucket];
-        
-        for (uint i = 0; i < bucketSize; i++)
-        {
-            if (position[index].x == position[offset + i].x && position[index].y == position[offset + i].y && position[index].z == position[offset + i].z)
+    for (int i = 0 ; i< vizinhos ; i ++){
+        //Viscosity
+
+        if (position[index].x == position[adj[index*MAXADJ + i + 1]].x && position[index].y == position[adj[index*MAXADJ + i + 1]].y && position[index].z == position[adj[index*MAXADJ + i + 1]].z)
                 continue;
-
-            
-            //Viscosity
             vec4 arg;
-            arg = position[index] - position[offset + i];
+            arg = position[index] - position[adj[index*MAXADJ + i + 1]];
 
-            sumViscosity += (velocity[offset + i] - velocity[index]) * (MASS / density[offset + i]) * useViscosityKernel_laplacian(arg, H);
+            sumViscosity += useViscosityKernel_laplacian(arg, H) * (velocity[adj[index*MAXADJ + i + 1]] - velocity[index]) * (MASS / density[adj[index*MAXADJ + i + 1]]) ;
 
             //Force
             vec4 ret_kernel = vec4(0);
-            arg = position[index] - position[offset + i];
+            arg = position[index] - position[adj[index*MAXADJ + i + 1]];
             
             usePressureKernel_gradient(arg, H, ret_kernel);
             
-            sumForce += ret_kernel * (pressure[index] / (density[index] * density[index]) + pressure[offset + i] / (density[offset + i] * density[offset + i])) * MASS;
+            sumForce += ret_kernel * (pressure[index] / (density[index] * density[index]) + pressure[adj[index*MAXADJ + i + 1]] / (density[adj[index*MAXADJ + i + 1]] * density[adj[index*MAXADJ + i + 1]])) * MASS;
             
             //SurfaceNormal
             vec4 ret2 = vec4(0);
             
-            arg = position[index]- position[offset + i];
+            arg = position[index]- position[adj[index*MAXADJ + i + 1]];
             
             useDefaultKernel_gradient(arg, H, ret2);
-            sumSurfaceNormal += ret2 * (MASS / density[offset + i]);
-        }
+            sumSurfaceNormal += ret2 * (MASS / density[adj[index*MAXADJ + i + 1]]);
     }
+
+    
 
     
     viscosity[index]= sumViscosity * VISCOSITY;
@@ -549,24 +544,17 @@ void main()
     gravity[index] = GRAVITY * density[index];
 
     if (length(surfaceNormal[index]) >= THRESHOLD) {
+
+        for (int i = 0 ; i< vizinhos ; i ++){
+            if (position[index].x == position[adj[index*MAXADJ + i + 1]].x && position[index].y == position[adj[index*MAXADJ + i + 1]].y && position[index].z == position[adj[index*MAXADJ + i + 1]].z)
+                continue;
+            vec4 arg;
+            arg = position[index] - position[adj[index*MAXADJ+i+1]];
+            sum += (MASS / density[adj[index*MAXADJ+i+1]]) * useDefaultKernel_laplacian(arg, H);
+        }
             
             
-            uint ret[27];
-            int retSize;
-            //printf("vou mandar a posicao %f %f %f\n", position[0], position[1], position[2]);
-            retSize = getAdj(position[index], H, ret);
-            for (int j = 0; j < retSize; j++)
-            {
-                uint bucket = ret[j];
-                int offset = offsets[bucket];
-                int bucketSize = bucketSizes[bucket];
-                for (uint i = 0; i < bucketSize; i++)
-                {
-                    vec4 arg;
-                    arg = position[index] - position[offset + i];
-                    sum += (MASS / density[offset + i]) * useDefaultKernel_laplacian(arg, H);
-                }
-            }
+           
 
             vec4 surfaceNormalNormalized;
 

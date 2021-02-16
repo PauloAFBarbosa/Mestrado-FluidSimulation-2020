@@ -20,7 +20,7 @@
 
 #version 460
 
-#define WORK_GROUP_SIZE 25
+#define WORK_GROUP_SIZE 32
 
 layout (local_size_x = WORK_GROUP_SIZE) in;
 
@@ -158,6 +158,7 @@ bool detectCollision(vec4 pos, out vec4 contactPoint, out vec4 unitSurfaceNormal
             if (pos.z < ZMIN)     contactPoint.z = ZMIN;
             else if (pos.z > ZMAX) contactPoint.z = ZMAX;
 
+            //unitSurfaceNormal = vec4(DECLIVE,1-DECLIVE,0,0);
             unitSurfaceNormal = vec4(DECLIVE,1-DECLIVE,0,0);
             
         }
@@ -247,7 +248,10 @@ void main()
 
         updateVelocity(velocity[index], unitSurfaceNormal, length(arg), ret);
         
-        velocity[index] = ret;
+        velocity[index] = ret*0.998;
+
+        if (length(velocity[index])<0.01)
+        	velocity[index]=vec4(0,0,0,0);
         
 
         position[index]= contactPoint;
