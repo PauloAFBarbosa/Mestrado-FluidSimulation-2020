@@ -2,8 +2,9 @@
 
 #include "../toolkits/glut/GL/glut.h"
 
-Point::Point(float x, float y, float z,int id)
+Point::Point(float x, float y, float z,int id,unsigned int mortonCell)
 {
+	this->mortonCell = mortonCell;
 	this->id = id;
 	this->originalPos[0] = x;
 	this->originalPos[1] = y;

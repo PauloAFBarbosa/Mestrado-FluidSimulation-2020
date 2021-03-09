@@ -1,0 +1,112 @@
+
+#version 460
+
+#define WORK_GROUP_SIZE 32
+
+layout (local_size_x = WORK_GROUP_SIZE) in;
+
+#define PARTICLE_RADIUS 0.005f
+
+uniform int Number_Particles;
+uniform mat4 m_model;
+uniform int Pause;
+uniform float MASS;
+uniform float RESTDENSITY;
+uniform int HASHSIZE;
+uniform int PONTOS_LADO;
+uniform float H;
+
+layout(std430, binding = 0) buffer Position
+{
+    vec4 position[];
+};
+
+
+
+layout(std430, binding = 1) buffer TempPosition
+{
+    vec4 tempPosition[];
+};
+
+layout(std430, binding = 2) buffer Index
+{
+    uint bufferIndex[];
+};
+
+layout(std430, binding = 3) buffer Exp
+{
+    uint exp[];
+};
+
+layout(std430, binding = 4) buffer UseTemp
+{
+    uint useTemp[];
+};
+
+
+
+//Morton code --------------------------------------------
+
+
+
+uint part1by2(uint n) {
+    n &= 0x000003ff;
+    n = (n ^ (n << 16)) & 0xff0000ff;
+    n = (n ^ (n << 8)) & 0x0300f00f;
+    n = (n ^ (n << 4)) & 0x030c30c3;
+    n = (n ^ (n << 2)) & 0x09249249;
+    return n;
+}
+
+
+uint unpart1by2(uint n) {
+    n &= 0x09249249;
+    n = (n ^ (n >> 2)) & 0x030c30c3;
+    n = (n ^ (n >> 4)) & 0x0300f00f;
+    n = (n ^ (n >> 8)) & 0xff0000ff;
+    n = (n ^ (n >> 16)) & 0x000003ff;
+    return n;
+}
+
+
+uint  interleave3(uint x, uint y, uint z) {
+    return part1by2(x) | (part1by2(y) << 1) | (part1by2(z) << 2);
+}
+
+
+void deinterleave3(uint n, uint x, uint y, uint z) {
+    x = unpart1by2(n);
+    y = unpart1by2(n >> 1);
+    z = unpart1by2(n >> 2);
+}
+
+//Morton code --------------------------------------------
+
+
+void main()
+{
+    
+    if (Pause == 1)
+        return;
+   
+    exp[0]=1;
+    useTemp[0]=0;
+
+    uint index = gl_GlobalInvocationID.x;
+
+    uint offset=43;
+
+    uint morton_x = uint((position[index].x / H) +offset);
+    uint morton_y = uint((position[index].y / H) +offset);
+    uint morton_z = uint((position[index].z / H) +offset);
+    uint morton_cell = interleave3(morton_x, morton_y, morton_z);
+
+    bufferIndex[index] = morton_cell;
+
+    
+
+    
+
+    
+
+}

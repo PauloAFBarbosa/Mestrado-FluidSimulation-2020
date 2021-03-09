@@ -23,10 +23,12 @@ public:
 	
 	float viscosity[3];
 
+	unsigned int mortonCell;
+
 	
 
 	//Cria um ponto na posição xyz, sem qualquer força aplicada ao mesmo
-	Point(float x, float y, float z,int id);
+	Point(float x, float y, float z,int id,unsigned int morton_cell);
 	~Point();
 	void draw(float r);
 private:

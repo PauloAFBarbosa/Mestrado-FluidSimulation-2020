@@ -108,7 +108,7 @@
 				<material name="Populate" fromLibrary="particleLib" dimX="NUMBER_OF_WORK_GROUPS" dimY="1" dimZ="1"/>
 			</pass >
 			<pass class="compute" name="DensityPressure">
-				
+				<mode value="RUN_ONCE"/>
 				<material name="density_pressure" fromLibrary="particleLib" dimX="NUMBER_OF_WORK_GROUPS" dimY="1" dimZ="1"/>
 			</pass>
 			<pass class="compute" name="Force">

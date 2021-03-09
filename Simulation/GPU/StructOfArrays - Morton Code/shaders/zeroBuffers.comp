@@ -1,0 +1,34 @@
+#version 460
+
+#define WORK_GROUP_SIZE 32
+
+layout (local_size_x = WORK_GROUP_SIZE) in;
+
+#define PARTICLE_RADIUS 0.005f
+
+uniform int Number_Particles;
+uniform mat4 m_model;
+
+
+
+
+layout(std430, binding = 0) buffer BucketSizes
+{
+    int bucketSizes[];
+};
+
+layout(std430, binding = 1) buffer TempBucketSizes
+{
+    int tempBucketSizes[];
+};
+
+void main()
+{
+    
+    uint index = gl_GlobalInvocationID.x;
+    
+    tempBucketSizes[index] = 0;
+    bucketSizes[index] = 0;
+
+
+}

@@ -12,6 +12,7 @@
 #include <iostream>
 #include <fstream>
 #include <iomanip> 
+#include <algorithm>   
 using namespace std;
 
 #endif
@@ -23,6 +24,8 @@ using namespace std;
 
 #define NOQUERY 0
 #define QUERYV1 1
+
+bool mortonCode = true;
 
 float RESTITUTION=0.5;
 float TIMESTEP=0.01;
@@ -55,7 +58,7 @@ bool simulateFrame = false; //usado para simular apenas um frame
 int framesSimulated = 0;
 
 //Particulas por lado do cubo, ou seja, particulas total é 7^3
-int pontos_lado = 10;
+int pontos_lado = 15;
 int countPoints = 0;
 //usado para inserir multiplos batches de pontos
 int pontos_inseridos = 0;
@@ -84,14 +87,46 @@ float camX = (XMIN+XMAX)/2, camY = 0, camZ = (ZMIN + ZMAX) / 2;
 float rot = 0;
 int winid = 0;
 
-//Da maneira que fiz agora ele verifica 1734 pontos. Em vez de 10 000 pontos.
+
+//Morton code --------------------------------------------
 
 
 
-/**
- * @brief calculates the cam values (used in GluLookAt function) from the alteration of alfa, beta and radius
- *
- */
+unsigned int part1by2(unsigned int n) {
+	n &= 0x000003ff;
+	n = (n ^ (n << 16)) & 0xff0000ff;
+	n = (n ^ (n << 8)) & 0x0300f00f;
+	n = (n ^ (n << 4)) & 0x030c30c3;
+	n = (n ^ (n << 2)) & 0x09249249;
+	return n;
+}
+
+
+unsigned int unpart1by2(unsigned int n) {
+	n &= 0x09249249;
+	n = (n ^ (n >> 2)) & 0x030c30c3;
+	n = (n ^ (n >> 4)) & 0x0300f00f;
+	n = (n ^ (n >> 8)) & 0xff0000ff;
+	n = (n ^ (n >> 16)) & 0x000003ff;
+	return n;
+}
+
+
+unsigned int  interleave3(unsigned int x, unsigned int y, unsigned int z) {
+	return part1by2(x) | (part1by2(y) << 1) | (part1by2(z) << 2);
+}
+
+
+void deinterleave3(unsigned int n, unsigned int x, unsigned int y, unsigned int z) {
+	x = unpart1by2(n);
+	y = unpart1by2(n >> 1);
+	z = unpart1by2(n >> 2);
+}
+
+//Morton code --------------------------------------------
+
+
+
 
 float length(float vec[3]) {
 	return (sqrt(pow(vec[0],2)+ pow(vec[1], 2)+ pow(vec[2], 2)));
@@ -141,7 +176,7 @@ void restart() {
 	for (float x = -particleRadius * pontos_lado; x_pontos < pontos_lado; x += particleDiameter, x_pontos++) {
 		for (float y = -particleRadius * pontos_lado, y_pontos = 0; y_pontos < pontos_lado; y += particleDiameter, y_pontos++) {
 			for (float z = -particleRadius * pontos_lado, z_pontos = 0; z_pontos < pontos_lado; z += particleDiameter, z_pontos++) {
-				p = new Point(x, y, z, countPoints);
+				p = new Point(x, y, z, countPoints,0);
 				points.push_back(p);
 				bucketSizes[h->hashFunction(p->pos, H, hashSize)]++;
 				
@@ -190,6 +225,11 @@ void processKeys(unsigned char c, int xx, int yy) {
 	int x_pontos = 0;
 	int y_pontos = 0;
 	int z_pontos = 0;
+
+	unsigned int morton_x;
+	unsigned int morton_y;
+	unsigned int morton_z;
+	unsigned int morton_cell;
 	
 	std::chrono::steady_clock::time_point begin, end;
 	Point* p;
@@ -248,76 +288,107 @@ void processKeys(unsigned char c, int xx, int yy) {
 		simulateFrame = true;
 		break;
 	case 'p':
-		countPoints = 0;
-		
-		for (float x = -particleRadius * pontos_lado; x_pontos < pontos_lado ; x += particleDiameter,x_pontos++) {
-			for (float y = -particleRadius * pontos_lado, y_pontos = 0; y_pontos < pontos_lado; y += particleDiameter, y_pontos++) {
-				for (float z = -particleRadius * pontos_lado, z_pontos = 0; z_pontos < pontos_lado; z += particleDiameter, z_pontos++) {
-					p = new Point(x, y, z, countPoints);
-					//printf("positions %f %f %f \n", x, y, z);
-					points.push_back(p);
-					bucketSizes[ h->hashFunction(p->pos,H,hashSize)]++;
-					total++;
-					countPoints++;
+
+		if (mortonCode == true) {
+
+			h = new HashMap(2, hashSize, pontos_lado* pontos_lado* pontos_lado);
+
+			for (float x = -particleRadius * pontos_lado; x_pontos < pontos_lado; x += particleDiameter, x_pontos++) {
+				for (float y = -particleRadius * pontos_lado, y_pontos = 0; y_pontos < pontos_lado; y += particleDiameter, y_pontos++) {
+					for (float z = -particleRadius * pontos_lado, z_pontos = 0; z_pontos < pontos_lado; z += particleDiameter, z_pontos++) {
+						//quando estamos no -2,5 temos cell -54,7 -> -54
+						//Assim fazemos um offset de 54
+
+						//morton cell vai de 0 até 2068416
+						morton_x = (unsigned int)((x / H) +54);
+						morton_y = (unsigned int)((y / H) +54);
+						morton_z = (unsigned int)((z / H) +54);
+						morton_cell = interleave3(morton_x, morton_y, morton_z);
+						//printf("com a pos %f %f %f deu cell %d %d %d e morton cell %d \n", x, y, z, morton_x, morton_y, morton_z,morton_cell);
+						
+						p = new Point(x, y, z, countPoints,morton_cell);
+						
+						h->addParticleMorton(p, countPoints);
+
+						//std::sort(h->particles)
+						
+						countPoints++;
+					}
 				}
 			}
 		}
-		
-		printf("Criei %d pontos\n", countPoints);
+		else {
+			countPoints = 0;
 
-		h = new HashMap(2, hashSize, countPoints);
-		
-
-		begin = std::chrono::steady_clock::now();
-		for each (Point * p in points)
-		{
-			float pos[3];
-			pos[0]=p->pos[0];
-			pos[1] = p->pos[1];
-			pos[2] = p->pos[2];
-			unsigned int bucket = h->hashFunction(pos, H,hashSize);
-			int offset = 0;
-			//vai correr o array com os tamanhos dos buckets até chegar ao bucket atual
-			for (int j = 0; j < bucket; j++)
-			{
-				//exemplo, se tivermos um array com [p1,p2,p3,p4]
-				//p1 e p2 sao do bucket 0 e p3 e p4 do bucket 1
-				//o bucket 1 começa no indice 2 que é o bucketsize do bucket 0
-				offset += bucketSizes[j];
+			for (float x = -particleRadius * pontos_lado; x_pontos < pontos_lado; x += particleDiameter, x_pontos++) {
+				for (float y = -particleRadius * pontos_lado, y_pontos = 0; y_pontos < pontos_lado; y += particleDiameter, y_pontos++) {
+					for (float z = -particleRadius * pontos_lado, z_pontos = 0; z_pontos < pontos_lado; z += particleDiameter, z_pontos++) {
+						p = new Point(x, y, z, countPoints,0);
+						//printf("positions %f %f %f \n", x, y, z);
+						points.push_back(p);
+						bucketSizes[h->hashFunction(p->pos, H, hashSize)]++;
+						total++;
+						countPoints++;
+					}
+				}
 			}
 
-			h->addParticle(p, H, offset);
-			
+			printf("Criei %d pontos\n", countPoints);
+
+			h = new HashMap(2, hashSize, countPoints);
+
+
+			begin = std::chrono::steady_clock::now();
+			for each (Point * p in points)
+			{
+				float pos[3];
+				pos[0] = p->pos[0];
+				pos[1] = p->pos[1];
+				pos[2] = p->pos[2];
+				unsigned int bucket = h->hashFunction(pos, H, hashSize);
+				int offset = 0;
+				//vai correr o array com os tamanhos dos buckets até chegar ao bucket atual
+				for (int j = 0; j < bucket; j++)
+				{
+					//exemplo, se tivermos um array com [p1,p2,p3,p4]
+					//p1 e p2 sao do bucket 0 e p3 e p4 do bucket 1
+					//o bucket 1 começa no indice 2 que é o bucketsize do bucket 0
+					offset += bucketSizes[j];
+				}
+
+				h->addParticle(p, H, offset);
+
+			}
+
+			h->computeOffsets();
+
+
+			hashSizeFile.open("hashSizeFile.txt");
+			for (int i = 0; i < hashSize; i++)
+			{
+
+				hashSizeFile << h->bucketSizes[i] << "\n";
+			}
+			hashSizeFile.close();
+
+			printf("Criou o ficheiro hashsizefile\n");
+
+			positionFile.open("positionFile.txt");
+			positionFile << setprecision(10) << fixed;
+			for (int i = 0; i < countPoints; i++)
+			{
+
+				positionFile << h->particles[i].pos[0] << " " << h->particles[i].pos[1] << " " << h->particles[i].pos[2] << " 0.0" << "\n";
+			}
+			positionFile.close();
+
+			printf("Criou o ficheiro positionfile\n");
+
+			end = std::chrono::steady_clock::now();
+
+			std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() << "[micro s]" << std::endl;
+			std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::nanoseconds> (end - begin).count() << "[nano s]" << std::endl;
 		}
-		
-		h->computeOffsets();
-
-		
-		hashSizeFile.open("hashSizeFile.txt");
-		for (int i = 0; i < hashSize; i++)
-		{
-			
-			hashSizeFile << h->bucketSizes[i]<<"\n";
-		}
-		hashSizeFile.close();
-
-		printf("Criou o ficheiro hashsizefile\n");
-		
-		positionFile.open("positionFile.txt");
-		positionFile << setprecision(10)<<fixed;
-		for (int i = 0; i < countPoints; i++)
-		{
-
-			positionFile << h->particles[i].pos[0] <<" "<< h->particles[i].pos[1] << " "<<h->particles[i].pos[2] <<" 0.0"<<"\n";
-		}
-		positionFile.close();
-
-		printf("Criou o ficheiro positionfile\n");
-
-		end = std::chrono::steady_clock::now();
-		
-		std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() << "[micro s]" << std::endl;
-		std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::nanoseconds> (end - begin).count() << "[nano s]" << std::endl;
 
 		break;
 	default:
@@ -602,11 +673,11 @@ float computeDensity(float position[3],int query) {
 				
 				count++;
 			}
-			printf("Dentro do bucket %d encontrou %d particulas que afetam e %d que nao afetam\n", bucket, dentroDoBucket, dentroDoBucketNaoAfeta);
+			//printf("Dentro do bucket %d encontrou %d particulas que afetam e %d que nao afetam\n", bucket, dentroDoBucket, dentroDoBucketNaoAfeta);
 			dentroDoBucketNaoAfeta = 0;
 			dentroDoBucket = 0;
 		}
-		printf("Fim de uma particula\n");
+		//printf("Fim de uma particula\n");
 		//printf("Com o meu getadj encontrou %d particulas mas apenas %d realmente importaram\n-------\n", count,realcount);
 	}
 	
@@ -1372,8 +1443,313 @@ void setLighting(void) {
 	glMaterialfv(GL_FRONT, GL_SHININESS, matShi);
 }
 
+
+
+
+
+// A utility function to get maximum value in arr[] 
+int getMax(int arr[], int n)
+{
+	int mx = arr[0];
+	for (int i = 1; i < n; i++)
+		if (arr[i] > mx)
+			mx = arr[i];
+	return mx;
+}
+
+// A function to do counting sort of arr[] according to 
+// the digit represented by exp. 
+void countSort(int arr[], int n, int exp)
+{
+	int output[7]; // output array 
+	int i, count[10] = { 0 };
+
+	// Store count of occurrences in count[] 
+	for (i = 0; i < n; i++)
+		count[(arr[i] / exp) % 10]++;
+
+	// Change count[i] so that count[i] now contains actual 
+	//  position of this digit in output[] 
+	for (i = 1; i < 10; i++)
+		count[i] += count[i - 1];
+
+	// Build the output array 
+	for (i = n - 1; i >= 0; i--) {
+		output[count[(arr[i] / exp) % 10] - 1] = arr[i];
+		count[(arr[i] / exp) % 10]--;
+	}
+
+	// Copy the output array to arr[], so that arr[] now 
+	// contains sorted numbers according to current digit 
+	for (i = 0; i < n; i++)
+		arr[i] = output[i];
+}
+
+// The main function to that sorts arr[] of size n using 
+// Radix Sort 
+void radixsort(int arr[], int n)
+{
+	// Find the maximum number to know number of digits 
+	int m = getMax(arr, n);
+
+	// Do counting sort for every digit. Note that instead 
+	// of passing digit number, exp is passed. exp is 10^i 
+	// where i is current digit number 
+	for (int exp = 1; m / exp > 0; exp *= 10)
+		countSort(arr, n, exp);
+}
+
+
+
+int getAdjv2(float pos[4], float H, unsigned int ret[27]) {
+
+	int retSize = 0;
+	unsigned int offset = 43;
+	unsigned int morton_x = (unsigned int)((pos[0] / H) + offset);
+	unsigned int morton_y = (unsigned int)((pos[1] / H) + offset);
+	unsigned int morton_z = (unsigned int)((pos[2] / H) + offset);
+
+	unsigned int morton_cell;
+
+	if (morton_x > 0 && morton_y > 0 && morton_z > 0) {
+		morton_cell = interleave3(morton_x - 1, morton_y - 1, morton_z - 1);
+		ret[retSize] = morton_cell;
+		retSize++;
+	}
+	if (morton_y > 0 && morton_z > 0) {
+		morton_cell = interleave3(morton_x, morton_y - 1, morton_z - 1);
+		ret[retSize] = morton_cell;
+		retSize++;
+	}
+	if (morton_x > 0 && morton_z > 0) {
+		morton_cell = interleave3(morton_x - 1, morton_y, morton_z - 1);
+		ret[retSize] = morton_cell;
+		retSize++;
+	}
+	if (morton_z > 0) {
+		morton_cell = interleave3(morton_x, morton_y, morton_z - 1);
+		ret[retSize] = morton_cell;
+		retSize++;
+	}
+	if (morton_x > 0 && morton_y > 0) {
+		morton_cell = interleave3(morton_x - 1, morton_y - 1, morton_z);
+		ret[retSize] = morton_cell;
+		retSize++;
+	}
+	if (morton_y > 0) {
+		morton_cell = interleave3(morton_x, morton_y - 1, morton_z);
+		ret[retSize] = morton_cell;
+		retSize++;
+	}
+	if (morton_x > 0) {
+		morton_cell = interleave3(morton_x - 1, morton_y, morton_z);
+		ret[retSize] = morton_cell;
+		retSize++;
+	}
+
+	morton_cell = interleave3(morton_x, morton_y, morton_z);
+	ret[retSize] = morton_cell;
+	retSize++;
+
+	//1864184 é o numero maximo que o morton code pode devolver num cubo de -2 a 2 
+	if (morton_x < 1864184 && morton_y > 0 && morton_z > 0) {
+		morton_cell = interleave3(morton_x + 1, morton_y - 1, morton_z - 1);
+		ret[retSize] = morton_cell;
+		retSize++;
+	}
+	if (morton_x < 1864184 && morton_z > 0) {
+		morton_cell = interleave3(morton_x + 1, morton_y, morton_z - 1);
+		ret[retSize] = morton_cell;
+		retSize++;
+	}
+	if (morton_x < 1864184 && morton_y > 0) {
+		morton_cell = interleave3(morton_x + 1, morton_y - 1, morton_z);
+		ret[retSize] = morton_cell;
+		retSize++;
+	}
+
+	if (morton_x < 1864184) {
+		morton_cell = interleave3(morton_x + 1, morton_y, morton_z);
+		ret[retSize] = morton_cell;
+		retSize++;
+	}
+
+	if (morton_x > 0 && morton_y < 1864184 && morton_z > 0) {
+		morton_cell = interleave3(morton_x - 1, morton_y + 1, morton_z - 1);
+		ret[retSize] = morton_cell;
+		retSize++;
+	}
+
+	if (morton_y < 1864184 && morton_z > 0) {
+		morton_cell = interleave3(morton_x, morton_y + 1, morton_z - 1);
+		ret[retSize] = morton_cell;
+		retSize++;
+	}
+
+	if (morton_y < 1864184 && morton_x > 0) {
+		morton_cell = interleave3(morton_x - 1, morton_y + 1, morton_z);
+		ret[retSize] = morton_cell;
+		retSize++;
+	}
+	if (morton_y < 1864184) {
+		morton_cell = interleave3(morton_x, morton_y + 1, morton_z);
+		ret[retSize] = morton_cell;
+		retSize++;
+	}
+
+	if (morton_x < 1864184 && morton_y < 1864184 && morton_z > 0) {
+		morton_cell = interleave3(morton_x + 1, morton_y + 1, morton_z - 1);
+		ret[retSize] = morton_cell;
+		retSize++;
+	}
+
+	if (morton_x < 1864184 && morton_y < 1864184) {
+		morton_cell = interleave3(morton_x + 1, morton_y + 1, morton_z);
+		ret[retSize] = morton_cell;
+		retSize++;
+	}
+
+	if (morton_x > 0 && morton_y > 0 && morton_z < 1864184) {
+		morton_cell = interleave3(morton_x - 1, morton_y - 1, morton_z + 1);
+		ret[retSize] = morton_cell;
+		retSize++;
+	}
+	if (morton_y > 0 && morton_z < 1864184) {
+		morton_cell = interleave3(morton_x, morton_y - 1, morton_z + 1);
+		ret[retSize] = morton_cell;
+		retSize++;
+	}
+	if (morton_x > 0 && morton_z < 1864184) {
+		morton_cell = interleave3(morton_x - 1, morton_y, morton_z + 1);
+		ret[retSize] = morton_cell;
+		retSize++;
+	}
+
+	if (morton_z < 1864184) {
+		morton_cell = interleave3(morton_x, morton_y, morton_z + 1);
+		ret[retSize] = morton_cell;
+		retSize++;
+	}
+
+	if (morton_x < 1864184 && morton_y >0 && morton_z < 1864184) {
+		morton_cell = interleave3(morton_x + 1, morton_y - 1, morton_z + 1);
+		ret[retSize] = morton_cell;
+		retSize++;
+	}
+	if (morton_x < 1864184 && morton_z < 1864184) {
+		morton_cell = interleave3(morton_x + 1, morton_y, morton_z + 1);
+		ret[retSize] = morton_cell;
+		retSize++;
+	}
+
+	if (morton_x > 0 && morton_y < 1864184 && morton_z < 1864184) {
+		morton_cell = interleave3(morton_x - 1, morton_y + 1, morton_z + 1);
+		ret[retSize] = morton_cell;
+		retSize++;
+	}
+
+	if (morton_y < 1864184 && morton_z < 1864184) {
+		morton_cell = interleave3(morton_x, morton_y + 1, morton_z + 1);
+		ret[retSize] = morton_cell;
+		retSize++;
+	}
+
+	if (morton_x < 1864184 && morton_y < 1864184 && morton_z < 1864184) {
+		morton_cell = interleave3(morton_x + 1, morton_y + 1, morton_z + 1);
+		ret[retSize] = morton_cell;
+		retSize++;
+	}
+
+	return retSize;
+
+}
+
+
 int main(int argc, char** argv) {
-	HashMap * h2;
+	
+
+	float pos1[4] = { 0,0,0,0 };
+	int retsize;
+	unsigned int ret[27];
+
+	retsize = getAdjv2(pos1, H, ret);
+
+	for (size_t i = 0; i < retsize; i++)
+	{
+		printf("vizinho %d \n", ret[i]);
+	}
+
+	float x2 = 0.00+H;
+	float y2 = 0.00;
+	float z2 = 0.00;
+
+	unsigned int intx = 0/ H + 43;
+	unsigned int inty = 0 / H + 43;
+	unsigned int intz = 0 / H + 43;
+
+	unsigned int intx2 = x2 / H + 43;
+	unsigned int inty2 = y2 / H + 43;
+	unsigned int intz2 = z2 / H + 43;
+
+	
+	printf("pos %f %f %f cell %d %d %d morton %d\n",0,0,0,intx, inty, intz, interleave3(intx, inty, intz)) ;
+	printf("pos %f %f %f cell %d %d %d morton %d\n", x2, y2, z2, intx2, inty2, intz2, interleave3(intx2, inty2, intz2));
+	
+	
+
+	 unsigned int countRadix[10];
+	 unsigned int radixIndex[7] = { 7,6,5,4,3,2,1 };
+	 unsigned int tempIndex[7];
+
+	 unsigned int max=0;
+
+	 for (int i = 0; i < 7; i++)
+	 {
+		 if (radixIndex[i] > max)
+			 max = radixIndex[i];
+	 }
+
+	for (int exp = 1; max / exp > 0; exp *= 10){
+		for (int j = 0; j < 10; j++) {
+			countRadix[j] = 0;
+		}
+			
+
+		for (int j = 0; j < 7; j++) {
+			countRadix[ (radixIndex[j]/exp) %10 ]++;
+			//countRadix[unsigned int(radixIndex[j]/pow(10, shift))%10]++;
+			//printf("%d vai incrementar\n ", (radixIndex[j] / exp) % 10);
+		}
+
+		for (int j = 1; j < 10; j++)
+			countRadix[j] += countRadix[j - 1];
+
+		for (int j = 7 - 1; j >= 0; j--) {
+
+			unsigned int idx = (radixIndex[j] / exp) % 10;
+			
+			unsigned int original = countRadix[idx] - 1;
+			tempIndex[original] = radixIndex[j];
+			
+			
+			
+			countRadix[idx]= original;
+
+			
+			
+		}
+
+		for (size_t i = 0; i < 7; i++)
+		{
+			radixIndex[i] = tempIndex[i];
+			printf("index %d\n", tempIndex[i]);
+		}
+
+		printf("-----------\n");
+	}
+
+	
+
 	//SetupDualWave();
 	SetupNormal();
 

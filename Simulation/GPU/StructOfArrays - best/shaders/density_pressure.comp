@@ -478,7 +478,7 @@ void main()
     
     adj[index*MAXADJ]=vizinhos;
 
-    //debug[index] = vec4(sim,0,0,nao);
+    debug[index] = vec4(vizinhos);
     density[index] = sum;
     // compute pressure
     pressure[index] = STIFF * (sum - RESTDENSITY);

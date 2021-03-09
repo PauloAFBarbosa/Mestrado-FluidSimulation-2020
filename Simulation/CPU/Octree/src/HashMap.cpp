@@ -719,6 +719,68 @@ void HashMap::addParticle(Point* p,float H,int offset) {
 
 }
 
+void HashMap::addParticleMorton(Point* p,int index) {
+	float density;
+	float pressure;
+
+	//[offset + bucket_size]
+	//bucket_size dentro do h conta quantos elementos tem atualmente dentro do bucket
+	//printf("offset %d bucketSizes %d bucket %d\n", offset, h->bucketSizes[bucket],bucket);
+	this->particles[index].id = p->id;
+	//pos
+	this->particles[index].pos[0] = p->pos[0];
+	this->particles[index].pos[1] = p->pos[1];
+	this->particles[index].pos[2] = p->pos[2];
+
+	//originalPos
+	this->particles[index].originalPos[0] = p->originalPos[0];
+	this->particles[index].originalPos[1] = p->originalPos[1];
+	this->particles[index].originalPos[2] = p->originalPos[2];
+
+	//color
+	this->particles[index].color[0] = p->color[0];
+	this->particles[index].color[1] = p->color[1];
+	this->particles[index].color[2] = p->color[2];
+
+	this->particles[index].force[0] = p->force[0];
+	this->particles[index].force[1] = p->force[1];
+	this->particles[index].force[2] = p->force[2];
+
+	this->particles[index].velocity[0] = p->velocity[0];
+	this->particles[index].velocity[1] = p->velocity[1];
+	this->particles[index].velocity[2] = p->velocity[2];
+
+	this->particles[index].velocityEval[0] = p->velocityEval[0];
+	this->particles[index].velocityEval[1] = p->velocityEval[1];
+	this->particles[index].velocityEval[2] = p->velocityEval[2];
+
+	this->particles[index].acceleration[0] = p->acceleration[0];
+	this->particles[index].acceleration[1] = p->acceleration[1];
+	this->particles[index].acceleration[2] = p->acceleration[2];
+
+	this->particles[index].gravity[0] = p->gravity[0];
+	this->particles[index].gravity[1] = p->gravity[1];
+	this->particles[index].gravity[2] = p->gravity[2];
+
+	this->particles[index].surfaceNormal[0] = p->surfaceNormal[0];
+	this->particles[index].surfaceNormal[1] = p->surfaceNormal[1];
+	this->particles[index].surfaceNormal[2] = p->surfaceNormal[2];
+
+	this->particles[index].surfaceTension[0] = p->surfaceTension[0];
+	this->particles[index].surfaceTension[1] = p->surfaceTension[1];
+	this->particles[index].surfaceTension[2] = p->surfaceTension[2];
+
+	this->particles[index].viscosity[0] = p->viscosity[0];
+	this->particles[index].viscosity[1] = p->viscosity[1];
+	this->particles[index].viscosity[2] = p->viscosity[2];
+
+	this->particles[index].density = p->density;
+	this->particles[index].pressure = p->pressure;
+
+	
+
+}
+
 void HashMap::updateHashMap(float H) {
 	
 	int * bucketSizes  = new int[this->size];

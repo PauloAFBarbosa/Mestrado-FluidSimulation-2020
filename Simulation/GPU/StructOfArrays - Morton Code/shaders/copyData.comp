@@ -1,0 +1,108 @@
+#version 460
+
+#define WORK_GROUP_SIZE 30
+
+layout (local_size_x = WORK_GROUP_SIZE) in;
+
+#define PARTICLE_RADIUS 0.005f
+#define TILE_SIZE 100
+
+
+
+uniform int Number_Particles;
+uniform mat4 m_model;
+
+
+
+
+layout(std430, binding = 0) buffer Index
+{
+    uint bufferIndex[];
+};
+layout(std430, binding = 1) buffer TempIndex
+{
+    uint tempIndex[];
+};
+layout(std430, binding = 2) buffer PrefixSum
+{
+    int prefixSum[];
+};
+
+layout(std430, binding = 3) buffer Exp
+{
+    uint exp[];
+};
+
+layout(std430, binding = 4) buffer UseTemp
+{
+    int useTemp[];
+};
+
+layout(std430, binding = 5) buffer CellStart
+{
+    int cellStart[];
+};
+layout(std430, binding = 6) buffer CellEnd
+{
+    int cellEnd[];
+};
+
+layout(std430, binding = 7) buffer Position
+{
+    vec4 position[];
+};
+
+layout(std430, binding = 8) buffer TempPosition
+{
+    vec4 tempPosition[];
+};
+
+layout(std430, binding = 9) buffer Velocity
+{
+    vec4 velocity[];
+};
+
+layout(std430, binding = 10) buffer TempVelocity
+{
+    vec4 tempVelocity[];
+};
+
+
+
+void main()
+{
+    
+    
+    uint index = gl_GlobalInvocationID.x;
+
+    
+
+    for (int i = (int(index) * TILE_SIZE) + (TILE_SIZE-1) ; i >= ((int(index)*TILE_SIZE) );i--){
+
+        if (useTemp[0]==0){
+            uint digit =uint(mod((bufferIndex[i]/exp[0]),10));
+
+            uint index_output=prefixSum[index*10 + digit];
+
+            prefixSum[index*10 + digit]--;
+
+            tempIndex[index_output-1] = bufferIndex[i];
+            tempPosition[index_output-1] = position[i];
+            tempVelocity[index_output-1] = velocity[i];
+        }
+        else{
+            uint digit =uint(mod((tempIndex[i]/exp[0]),10));
+
+            uint index_output=prefixSum[index*10 + digit];
+
+            prefixSum[index*10 + digit]--;
+
+            bufferIndex[index_output-1] = tempIndex[i];
+            position[index_output-1] = tempPosition[i];
+            velocity[index_output-1] = tempVelocity[i];
+        }
+        
+        
+    }
+
+}
