@@ -126,7 +126,6 @@ endif(WIN32)
 
 add_subdirectory(nau)
 add_subdirectory(plugins/passDepthMap)
-add_subdirectory(plugins/passSort)
 if (CUDA_FOUND)
 	add_subdirectory(plugins/passCuda)
 endif (CUDA_FOUND)

@@ -79,28 +79,34 @@ PAssCudaPI::~PAssCudaPI(void) {
 
 }
 
-#include <thrust/sort.h>
-
+#include "mySort.h"
 void
 PAssCudaPI::prepare (void) {
 
-	CUcontext cuContext;
-	CUdevice   device;
+	//vou buscar o identificador do buffer
+	IBuffer* b = RESOURCEMANAGER->getBuffer("particleLib::Index");
 
-	cuInit(0);
-	cuDeviceGet(&device, 0);
+	int buffId = b->getPropi(IBuffer::ID);
 
-	const int N = 6;
+	struct cudaGraphicsResource* cuda_ssbo_resource;
 
-	int A[N] = { 1, 4, 2, 8, 5, 7 };
+	void* d_ssbo_buffer = NULL;
 
-	printf("Vai começar\n");
+	// register this buffer object with CUDA
+	cudaGraphicsGLRegisterBuffer(&cuda_ssbo_resource, buffId, cudaGraphicsMapFlagsNone);
 
-	thrust::stable_sort(A, A + N);
+	// map OpenGL buffer object for writing from CUDA
+	int* dptrssbo;
 
+	cudaGraphicsMapResources(1, &cuda_ssbo_resource, 0);
 
+	size_t num_bytesssbo;
 
-	printf("Acabou\n");
+	cudaGraphicsResourceGetMappedPointer((void**)&dptrssbo, &num_bytesssbo, cuda_ssbo_resource);
+
+	mysort(&dptrssbo);
+
+	cudaGraphicsUnmapResources(0, &cuda_ssbo_resource, 0);
 
 }
 

@@ -1,4 +1,4 @@
-file(GLOB sources src/*.cpp)
+file(GLOB sources src/*.cpp src/*.cu)
 file(GLOB headers src/*.h)
 
 add_library(nauPassCuda SHARED
