@@ -79,34 +79,71 @@ PAssCudaPI::~PAssCudaPI(void) {
 
 }
 
+int first = 0;
+
+struct cudaGraphicsResource* cuda_ssbo_Index;
+struct cudaGraphicsResource* cuda_ssbo_TempIndex;
+struct cudaGraphicsResource* cuda_ssbo_Position;
+struct cudaGraphicsResource* cuda_ssbo_Velocity;
+
 #include "mySort.h"
 void
 PAssCudaPI::prepare (void) {
 
 	//vou buscar o identificador do buffer
-	IBuffer* b = RESOURCEMANAGER->getBuffer("particleLib::Index");
+	//preciso do Index,Position
+	//preciso do TempIndex,Velocity
+	if (first == 0) {
+		//index
+		IBuffer* bIndex = RESOURCEMANAGER->getBuffer("particleLib::Index");
+		int buffIdIndex = bIndex->getPropi(IBuffer::ID);
+		//Position
+		IBuffer* bPosition = RESOURCEMANAGER->getBuffer("particleLib::Position");
+		int buffIdPosition = bPosition->getPropi(IBuffer::ID);
+		//TempIndex
+		IBuffer* bTempIndex = RESOURCEMANAGER->getBuffer("particleLib::TempIndex");
+		int buffIdTempIndex = bTempIndex->getPropi(IBuffer::ID);
+		//Velocity
+		IBuffer* bVelocity = RESOURCEMANAGER->getBuffer("particleLib::Velocity");
+		int buffIdVelocity = bVelocity->getPropi(IBuffer::ID);
 
-	int buffId = b->getPropi(IBuffer::ID);
-
-	struct cudaGraphicsResource* cuda_ssbo_resource;
-
-	void* d_ssbo_buffer = NULL;
-
-	// register this buffer object with CUDA
-	cudaGraphicsGLRegisterBuffer(&cuda_ssbo_resource, buffId, cudaGraphicsMapFlagsNone);
+		// register this buffer object with CUDA
+		//So devia chamar isto uma vez
+		cudaGraphicsGLRegisterBuffer(&cuda_ssbo_Index, buffIdIndex, cudaGraphicsMapFlagsNone);
+		cudaGraphicsGLRegisterBuffer(&cuda_ssbo_TempIndex, buffIdTempIndex, cudaGraphicsMapFlagsNone);
+		cudaGraphicsGLRegisterBuffer(&cuda_ssbo_Position, buffIdPosition, cudaGraphicsMapFlagsNone);
+		cudaGraphicsGLRegisterBuffer(&cuda_ssbo_Velocity, buffIdVelocity, cudaGraphicsMapFlagsNone);
+		first = 1;
+	}
+	
 
 	// map OpenGL buffer object for writing from CUDA
-	int* dptrssbo;
+	int* dptrssboIndex;
+	int* dptrssboTempIndex;
+	float4 * dptrssboPosition;
+	float4 * dptrssboVelocity;
 
-	cudaGraphicsMapResources(1, &cuda_ssbo_resource, 0);
+	cudaGraphicsMapResources(1, &cuda_ssbo_Index, 0);
+	cudaGraphicsMapResources(1, &cuda_ssbo_TempIndex, 0);
+	cudaGraphicsMapResources(1, &cuda_ssbo_Position, 0);
+	cudaGraphicsMapResources(1, &cuda_ssbo_Velocity, 0);
 
-	size_t num_bytesssbo;
+	size_t num_bytesssbo_Index;
+	size_t num_bytesssbo_TempIndex;
+	size_t num_bytesssbo_Position;
+	size_t num_bytesssbo_Velocity;
 
-	cudaGraphicsResourceGetMappedPointer((void**)&dptrssbo, &num_bytesssbo, cuda_ssbo_resource);
+	cudaGraphicsResourceGetMappedPointer((void**)&dptrssboIndex, &num_bytesssbo_Index, cuda_ssbo_Index);
+	cudaGraphicsResourceGetMappedPointer((void**)&dptrssboTempIndex, &num_bytesssbo_TempIndex, cuda_ssbo_TempIndex);
+	cudaGraphicsResourceGetMappedPointer((void**)&dptrssboPosition, &num_bytesssbo_Position, cuda_ssbo_Position);
+	cudaGraphicsResourceGetMappedPointer((void**)&dptrssboVelocity, &num_bytesssbo_Velocity, cuda_ssbo_Velocity);
 
-	mysort(&dptrssbo);
+	mysort(&dptrssboIndex,&dptrssboPosition, &dptrssboTempIndex, &dptrssboVelocity,216000);
 
-	cudaGraphicsUnmapResources(0, &cuda_ssbo_resource, 0);
+	cudaGraphicsUnmapResources(1, &cuda_ssbo_Index, 0);
+	cudaGraphicsUnmapResources(1, &cuda_ssbo_TempIndex, 0);
+	cudaGraphicsUnmapResources(1, &cuda_ssbo_Position, 0);
+	cudaGraphicsUnmapResources(1, &cuda_ssbo_Velocity, 0);
 
 }
 

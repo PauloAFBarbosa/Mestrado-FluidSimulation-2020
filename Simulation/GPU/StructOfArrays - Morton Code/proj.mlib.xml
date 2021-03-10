@@ -517,6 +517,10 @@
 						<TYPE value="SHADER_STORAGE" />
 						<BINDING_POINT value="4" />
 					</buffer>
+					<buffer name="TempIndex">
+						<TYPE value="SHADER_STORAGE" />
+						<BINDING_POINT value="5" />
+					</buffer>
 					
 								
 		        </buffers>
@@ -1168,6 +1172,26 @@
 					
 						
 		        </buffers>
+		</material>
+		<material name="MyNewSort">
+			<buffers>
+				<buffer name="Index" >
+					<TYPE value="SHADER_STORAGE" />
+					<BINDING_POINT value="0" />
+				</buffer>
+				<buffer name="TempIndex" >
+					<TYPE value="SHADER_STORAGE" />
+					<BINDING_POINT value="1" />
+				</buffer>
+				<buffer name="Position" >
+					<TYPE value="SHADER_STORAGE" />
+					<BINDING_POINT value="2" />
+				</buffer>
+				<buffer name="Velocity" >
+					<TYPE value="SHADER_STORAGE" />
+					<BINDING_POINT value="3" />
+				</buffer>
+			</buffers>
 		</material>
 	</materials>
 </materialLib>

@@ -43,6 +43,11 @@ layout(std430, binding = 4) buffer UseTemp
     uint useTemp[];
 };
 
+layout(std430, binding = 5) buffer TempIndex
+{
+    uint tempIndex[];
+};
+
 
 
 //Morton code --------------------------------------------
@@ -118,6 +123,7 @@ void main()
                     
                     //tempPosition agora vai guardar o index do codigo morton e o position guarda a posição normal
                     index[inseridos] = morton_cell;
+                    tempIndex[inseridos] = morton_cell;
                     position[inseridos] = vec4(x,y,z,0);
                     inseridos++;
                    
