@@ -1,0 +1,558 @@
+<?xml version="1.0" ?>
+<materialLib name="simulationLib">
+	<shaders>
+            <shader name="init" 	 			
+					cs="shaders/simul/init.comp"
+			/>
+			<shader name="Populate" 	 			
+					cs="shaders/simul/populate.comp"
+			/>
+
+			<shader name="force" 	 			
+					cs="shaders/simul/force.comp"
+			/> 	
+            <shader name="integrate" 			
+					cs="shaders/simul/integrate.comp"
+			/>
+			<shader name="UpdateHash" 			
+					cs="shaders/simul/updateHash.comp"
+			/>
+			<shader name="ComputeOffsets" 			
+					cs="shaders/simul/computeOffsets.comp"
+			/>
+			<shader name="ComputeTemps" 			
+					cs="shaders/simul/computeTemps.comp"
+			/>
+			<shader name="ZeroBuffers" 			
+					cs="shaders/simul/zeroBuffers.comp"
+			/>	
+            <shader name="density_pressure" 	
+					cs="shaders/simul/density_pressure.comp"
+			/> 	
+	</shaders>
+	
+
+	<buffers>
+		<buffer name="Position">
+			<DIM x="NUMBER_OF_PARTICLES" y="1" z="1" />
+			<structure>
+				<field value="VEC4" />
+			</structure>
+			<!--file name="positionFile.txt"/-->
+			<CLEAR value="NEVER" />
+		</buffer>
+		<buffer name="Velocity">
+			<DIM x="NUMBER_OF_PARTICLES" y="1" z="1" />
+			<structure>
+				<field value="VEC4" />
+			</structure>
+			<CLEAR value="NEVER" />
+		</buffer>
+		<buffer name="Force">
+			<DIM x="NUMBER_OF_PARTICLES" y="1" z="1" />
+			<structure>
+				<field value="VEC4" />
+			</structure>
+			<CLEAR value="NEVER" />
+		</buffer>
+		<buffer name="Density">
+			<DIM x="NUMBER_OF_PARTICLES" y="1" z="1" />
+			<structure>
+				<field value="FLOAT" />
+			</structure>
+			<CLEAR value="NEVER" />
+		</buffer>
+		<buffer name="Pressure">
+			<DIM x="NUMBER_OF_PARTICLES" y="1" z="1" />
+			<structure>
+				<field value="FLOAT" />
+			</structure>
+			<CLEAR value="NEVER" />
+		</buffer>
+
+		<buffer name="Acceleration">
+			<DIM x="NUMBER_OF_PARTICLES" y="1" z="1" />
+			<structure>
+				<field value="VEC4" />
+			</structure>
+			<CLEAR value="NEVER" />
+		</buffer>
+
+		<buffer name="Gravity">
+			<DIM x="NUMBER_OF_PARTICLES" y="1" z="1" />
+			<structure>
+				<field value="VEC4" />
+			</structure>
+			<CLEAR value="NEVER" />
+		</buffer>
+
+		<buffer name="SurfaceNormal">
+			<DIM x="NUMBER_OF_PARTICLES" y="1" z="1" />
+			<structure>
+				<field value="VEC4" />
+			</structure>
+			<CLEAR value="NEVER" />
+		</buffer>
+
+		<buffer name="SurfaceTension">
+			<DIM x="NUMBER_OF_PARTICLES" y="1" z="1" />
+			<structure>
+				<field value="VEC4" />
+			</structure>
+			<CLEAR value="NEVER" />
+		</buffer>
+
+		<buffer name="Viscosity">
+			<DIM x="NUMBER_OF_PARTICLES" y="1" z="1" />
+			<structure>
+				<field value="VEC4" />
+			</structure>
+			<CLEAR value="NEVER" />
+		</buffer>
+		<buffer name="BucketSizes">
+			<DIM x="HASH_SIZE" y="1" z="1" />
+			<structure>
+				<field value="INT" />
+			</structure>
+			<!--file name ="hashSizeFile.txt" /-->
+			<CLEAR value="NEVER" />
+		</buffer>
+		<buffer name="Offsets">
+			<DIM x="HASH_SIZE" y="1" z="1" />
+			<structure>
+				<field value="INT" />
+			</structure>
+			<CLEAR value="NEVER" />
+		</buffer>
+		<buffer name="TempPosition">
+			<DIM x="NUMBER_OF_PARTICLES" y="1" z="1" />
+			<structure>
+				<field value="VEC4" />
+			</structure>
+			<CLEAR value="NEVER" />
+		</buffer>
+		<buffer name="TempVelocity">
+			<DIM x="NUMBER_OF_PARTICLES" y="1" z="1" />
+			<structure>
+				<field value="VEC4" />
+			</structure>
+			<CLEAR value="NEVER" />
+		</buffer>
+		<buffer name="TempBucketSizes">
+			<DIM x="HASH_SIZE" y="1" z="1" />
+			<structure>
+				<field value="INT" />
+			</structure>
+			<CLEAR value="NEVER" />
+		</buffer>
+
+		
+		<buffer name="Debug">
+			<DIM x="NUMBER_OF_PARTICLES" y="1" z="1" />
+			<structure>
+				<field value="VEC4" />
+			</structure>
+			<CLEAR value="NEVER" />
+		</buffer>
+
+		<buffer name="Adj">
+			<!-- NUMBER_OF_PARTICLES*100 216000 -->
+			<DIM x="216000" y="500" z="1" />
+			<structure>
+				<field value="INT" />
+			</structure>
+			<CLEAR value="NEVER" />
+		</buffer>
+
+	</buffers>
+	
+	<materials>		
+		<material name="Init" 			>
+		    <shader name="init" 		>
+		        <values>
+					<valueof uniform="m_model" 			type="RENDERER" 		context="CURRENT" 		component="MODEL" />
+					<valueof uniform="Number_Particles" type="RENDERER" 		context="CURRENT" 		component="Number_Particles" />
+					<valueof uniform="MASS" 			type="RENDERER" 		context="CURRENT" 		component="MASS" />
+					<valueof uniform="RESTDENSITY" 		type="RENDERER" 		context="CURRENT" 		component="RESTDENSITY" />
+					<valueof uniform="HASHSIZE" 		type="RENDERER" 		context="CURRENT" 		component="HASHSIZE" />
+					<valueof uniform="PONTOS_LADO" 		type="RENDERER" 		context="CURRENT" 		component="PONTOS_LADO" />
+					<valueof uniform="H" 		type="RENDERER" 		context="CURRENT" 		component="H" />
+				</values>
+		    </shader>
+			<buffers>
+					<buffer name="Position" >
+						<TYPE value="SHADER_STORAGE" />
+						<BINDING_POINT value="0" />
+					</buffer>
+					
+					<buffer name="TempPosition">
+						<TYPE value="SHADER_STORAGE" />
+						<BINDING_POINT value="1" />
+					</buffer>
+					<buffer name="BucketSizes">
+						<TYPE value="SHADER_STORAGE" />
+						<BINDING_POINT value="2" />
+					</buffer>
+					<buffer name="Offsets">
+						<TYPE value="SHADER_STORAGE" />
+						<BINDING_POINT value="3" />
+					</buffer>
+					<buffer name="TempBucketSizes">
+						<TYPE value="SHADER_STORAGE" />
+						<BINDING_POINT value="4" />
+					</buffer>
+								
+		        </buffers>
+		</material>
+		<material name="force" 	 			>
+		    <shader name="force" 	 		>
+		        <values>		
+					<valueof uniform="Particle_Radius" type="RENDERER" context="CURRENT" component="Particle_Radius"/>
+					<valueof uniform="Particle_Resting_Density" type="RENDERER" context="CURRENT" component="Particle_Resting_Density"/>
+					<valueof uniform="Particle_Mass" type="RENDERER" context="CURRENT" component="Particle_Mass"/>
+					<valueof uniform="Particle_Stiffness" type="RENDERER" context="CURRENT" component="Particle_Stiffness"/>
+					<valueof uniform="Number_Particles" type="RENDERER" 		context="CURRENT" 		component="Number_Particles" />
+					<valueof uniform="External_Force" 			type="RENDERER"			context="CURRENT" 		component="External_Force" />
+					<valueof uniform="VISCOSITY" 		type="RENDERER" 		context="CURRENT" 		component="VISCOSITY" />
+					<valueof uniform="HASHSIZE" 		type="RENDERER" 		context="CURRENT" 		component="HASHSIZE" />
+					<valueof uniform="Pause" 			type="RENDERER" 		context="CURRENT" 		component="Pause" />
+					<valueof uniform="H" 		type="RENDERER" 		context="CURRENT" 		component="H" />
+					<valueof uniform="MASS" 		type="RENDERER" 		context="CURRENT" 		component="MASS" />
+					<valueof uniform="GRAVITY" 		type="RENDERER" 		context="CURRENT" 		component="GRAVITY" />
+					<valueof uniform="THRESHOLD" 		type="RENDERER" 		context="CURRENT" 		component="THRESHOLD" />
+					<valueof uniform="SURFACETENSION" 		type="RENDERER" 		context="CURRENT" 		component="SURFACETENSION" />
+					
+					
+				</values>
+		    </shader>
+			<buffers>
+					<buffer name="Position" >
+						<TYPE value="SHADER_STORAGE" />
+						<BINDING_POINT value="0" />
+					</buffer>
+					<buffer name="Velocity" >
+						<TYPE value="SHADER_STORAGE" />
+						<BINDING_POINT value="1" />
+					</buffer>
+					<buffer name="Force" >
+						<TYPE value="SHADER_STORAGE" />
+						<BINDING_POINT value="2" />
+					</buffer>	
+					<buffer name="Density" >
+						<TYPE value="SHADER_STORAGE" />
+						<BINDING_POINT value="3" />
+					</buffer>	
+					<buffer name="Pressure" >
+						<TYPE value="SHADER_STORAGE" />
+						<BINDING_POINT value="4" />
+					</buffer>
+					<!-- Os meus buffers -->
+					
+					<buffer name="Gravity" >
+						<TYPE value="SHADER_STORAGE" />
+						<BINDING_POINT value="5" />
+					</buffer>
+					<buffer name="SurfaceNormal" >
+						<TYPE value="SHADER_STORAGE" />
+						<BINDING_POINT value="6" />
+					</buffer>
+					<buffer name="SurfaceTension" >
+						<TYPE value="SHADER_STORAGE" />
+						<BINDING_POINT value="7" />
+					</buffer>
+					<buffer name="Viscosity" >
+						<TYPE value="SHADER_STORAGE" />
+						<BINDING_POINT value="8" />
+					</buffer>
+					
+					<buffer name="BucketSizes">
+						<TYPE value="SHADER_STORAGE" />
+						<BINDING_POINT value="9" />
+					</buffer>
+					<buffer name="Offsets">
+						<TYPE value="SHADER_STORAGE" />
+						<BINDING_POINT value="10" />
+					</buffer>
+					
+					<buffer name="Debug">
+						<TYPE value="SHADER_STORAGE" />
+						<BINDING_POINT value="11" />
+					</buffer>
+					<buffer name="Adj">
+						<TYPE value="SHADER_STORAGE" />
+						<BINDING_POINT value="12" />
+					</buffer>					
+		        </buffers>
+		</material> 	
+		<material name="integrate" 			>
+		    <shader name="integrate" 		>
+		        <values>
+					<valueof uniform="Number_Particles" type="RENDERER" 		context="CURRENT" 		component="Number_Particles" />
+					<valueof uniform="time" type="RENDERER" 		context="CURRENT" 		component="TIMER" />
+					<valueof uniform="Pause" 			type="RENDERER" 		context="CURRENT" 		component="Pause" />
+					<valueof uniform="TIMESTEP" 		type="RENDERER" 		context="CURRENT" 		component="TIMESTEP" />
+					<valueof uniform="XMAX" 		type="RENDERER" 		context="CURRENT" 		component="XMAX" />
+					<valueof uniform="YMAX" 		type="RENDERER" 		context="CURRENT" 		component="YMAX" />
+					<valueof uniform="ZMAX" 		type="RENDERER" 		context="CURRENT" 		component="ZMAX" />
+					<valueof uniform="XMIN" 		type="RENDERER" 		context="CURRENT" 		component="XMIN" />
+					<valueof uniform="YMIN" 		type="RENDERER" 		context="CURRENT" 		component="YMIN" />
+					<valueof uniform="ZMIN" 		type="RENDERER" 		context="CURRENT" 		component="ZMIN" />
+					<valueof uniform="DECLIVE" 		type="RENDERER" 		context="CURRENT" 		component="DECLIVE" />
+					<valueof uniform="RESTITUTION" 		type="RENDERER" 		context="CURRENT" 		component="RESTITUTION" />
+				</values>
+		    </shader>
+			<buffers>
+				<buffer name="Position" >
+						<TYPE value="SHADER_STORAGE" />
+						<BINDING_POINT value="0" />
+					</buffer>
+					<buffer name="Velocity" >
+						<TYPE value="SHADER_STORAGE" />
+						<BINDING_POINT value="1" />
+					</buffer>
+					<buffer name="Force" >
+						<TYPE value="SHADER_STORAGE" />
+						<BINDING_POINT value="2" />
+					</buffer>	
+					<buffer name="Density" >
+						<TYPE value="SHADER_STORAGE" />
+						<BINDING_POINT value="3" />
+					</buffer>	
+					
+					<!-- Os meus buffers -->
+					<buffer name="Acceleration" >
+						<TYPE value="SHADER_STORAGE" />
+						<BINDING_POINT value="4" />
+					</buffer>
+					<buffer name="Gravity" >
+						<TYPE value="SHADER_STORAGE" />
+						<BINDING_POINT value="5" />
+					</buffer>
+					
+					<buffer name="SurfaceTension" >
+						<TYPE value="SHADER_STORAGE" />
+						<BINDING_POINT value="6" />
+					</buffer>
+					<buffer name="Viscosity" >
+						<TYPE value="SHADER_STORAGE" />
+						<BINDING_POINT value="7" />
+					</buffer>
+					
+			</buffers>
+		</material> 	
+		<material name="density_pressure" 	>
+		    <shader name="density_pressure" >
+		        <values>
+					<valueof uniform="Number_Particles" type="RENDERER" 		context="CURRENT" 		component="Number_Particles" />		        
+					<valueof uniform="Pause" 			type="RENDERER" 		context="CURRENT" 		component="Pause" />
+					<valueof uniform="HASHSIZE" 		type="RENDERER" 		context="CURRENT" 		component="HASHSIZE" />
+					<valueof uniform="RESTDENSITY" 		type="RENDERER" 		context="CURRENT" 		component="RESTDENSITY" />
+					<valueof uniform="H" 		type="RENDERER" 		context="CURRENT" 		component="H" />
+					<valueof uniform="MASS" 		type="RENDERER" 		context="CURRENT" 		component="MASS" />
+					<valueof uniform="STIFF" 		type="RENDERER" 		context="CURRENT" 		component="STIFF" />
+				</values>
+		    </shader>
+			<buffers>
+				<buffer name="Position" >
+						<TYPE value="SHADER_STORAGE" />
+						<BINDING_POINT value="0" />
+					</buffer>
+						
+					<buffer name="Density" >
+						<TYPE value="SHADER_STORAGE" />
+						<BINDING_POINT value="1" />
+					</buffer>	
+					<buffer name="Pressure" >
+						<TYPE value="SHADER_STORAGE" />
+						<BINDING_POINT value="2" />
+					</buffer>
+					<!-- Os meus buffers -->
+					
+					<buffer name="BucketSizes">
+						<TYPE value="SHADER_STORAGE" />
+						<BINDING_POINT value="3" />
+					</buffer>
+					<buffer name="Offsets">
+						<TYPE value="SHADER_STORAGE" />
+						<BINDING_POINT value="4" />
+					</buffer>
+					<buffer name="Debug">
+						<TYPE value="SHADER_STORAGE" />
+						<BINDING_POINT value="5" />
+					</buffer>
+					<buffer name="Adj">
+						<TYPE value="SHADER_STORAGE" />
+						<BINDING_POINT value="6" />
+					</buffer>
+									
+			</buffers>
+		</material>
+		
+		<material name="UpdateHash" 			>
+		    <shader name="UpdateHash" 		>
+		        <values>
+					<valueof uniform="m_model" 			type="RENDERER" 		context="CURRENT" 		component="MODEL" />
+					<valueof uniform="Number_Particles" type="RENDERER" 		context="CURRENT" 		component="Number_Particles" />
+					<valueof uniform="MASS" 			type="RENDERER" 		context="CURRENT" 		component="MASS" />
+					<valueof uniform="RESTDENSITY" 		type="RENDERER" 		context="CURRENT" 		component="RESTDENSITY" />
+					<valueof uniform="HASHSIZE" 		type="RENDERER" 		context="CURRENT" 		component="HASHSIZE" />
+					<valueof uniform="PONTOS_LADO" 		type="RENDERER" 		context="CURRENT" 		component="PONTOS_LADO" />
+					<valueof uniform="H" 		type="RENDERER" 		context="CURRENT" 		component="H" />
+				</values>
+		    </shader>
+			<buffers>
+					<buffer name="Position" >
+						<TYPE value="SHADER_STORAGE" />
+						<BINDING_POINT value="0" />
+					</buffer>
+					<buffer name="Velocity" >
+						<TYPE value="SHADER_STORAGE" />
+						<BINDING_POINT value="1" />
+					</buffer>
+					
+					<buffer name="TempPosition">
+						<TYPE value="SHADER_STORAGE" />
+						<BINDING_POINT value="2" />
+					</buffer>
+					<buffer name="BucketSizes">
+						<TYPE value="SHADER_STORAGE" />
+						<BINDING_POINT value="3" />
+					</buffer>
+					
+					<!--AQUI -->
+					<buffer name="TempVelocity" >
+						<TYPE value="SHADER_STORAGE" />
+						<BINDING_POINT value="4" />
+					</buffer>
+					<buffer name="TempBucketSizes">
+						<TYPE value="SHADER_STORAGE" />
+						<BINDING_POINT value="5" />
+					</buffer>
+					<buffer name="Offsets">
+						<TYPE value="SHADER_STORAGE" />
+						<BINDING_POINT value="6" />
+					</buffer>
+						
+		        </buffers>
+		</material>
+		<material name="Populate" 			>
+		    <shader name="Populate" 		>
+		        <values>
+					<valueof uniform="m_model" 			type="RENDERER" 		context="CURRENT" 		component="MODEL" />
+					<valueof uniform="Number_Particles" type="RENDERER" 		context="CURRENT" 		component="Number_Particles" />
+					<valueof uniform="MASS" 			type="RENDERER" 		context="CURRENT" 		component="MASS" />
+					<valueof uniform="RESTDENSITY" 		type="RENDERER" 		context="CURRENT" 		component="RESTDENSITY" />
+					<valueof uniform="HASHSIZE" 		type="RENDERER" 		context="CURRENT" 		component="HASHSIZE" />
+					<valueof uniform="PONTOS_LADO" 		type="RENDERER" 		context="CURRENT" 		component="PONTOS_LADO" />
+					<valueof uniform="H" 		type="RENDERER" 		context="CURRENT" 		component="H" />
+				</values>
+		    </shader>
+			<buffers>
+					<buffer name="Position" >
+						<TYPE value="SHADER_STORAGE" />
+						<BINDING_POINT value="0" />
+					</buffer>
+					<buffer name="Velocity" >
+						<TYPE value="SHADER_STORAGE" />
+						<BINDING_POINT value="1" />
+					</buffer>
+					
+					<buffer name="TempPosition">
+						<TYPE value="SHADER_STORAGE" />
+						<BINDING_POINT value="2" />
+					</buffer>
+					<buffer name="BucketSizes">
+						<TYPE value="SHADER_STORAGE" />
+						<BINDING_POINT value="3" />
+					</buffer>
+					
+					<!--AQUI -->
+					<buffer name="TempVelocity" >
+						<TYPE value="SHADER_STORAGE" />
+						<BINDING_POINT value="4" />
+					</buffer>
+					<buffer name="TempBucketSizes">
+						<TYPE value="SHADER_STORAGE" />
+						<BINDING_POINT value="5" />
+					</buffer>
+						
+		        </buffers>
+		</material>
+		<material name="ZeroBuffers" 			>
+		    <shader name="ZeroBuffers" 		>
+		        <values>
+					<valueof uniform="m_model" 			type="RENDERER" 		context="CURRENT" 		component="MODEL" />
+					<valueof uniform="Number_Particles" type="RENDERER" 		context="CURRENT" 		component="Number_Particles" />
+				</values>
+		    </shader>
+			<buffers>
+					<buffer name="BucketSizes">
+						<TYPE value="SHADER_STORAGE" />
+						<BINDING_POINT value="0" />
+					</buffer>
+					<buffer name="TempBucketSizes">
+						<TYPE value="SHADER_STORAGE" />
+						<BINDING_POINT value="1" />
+					</buffer>
+						
+		        </buffers>
+		</material>
+		<material name="ComputeOffsets" 			>
+		    <shader name="ComputeOffsets" 		>
+		        <values>
+					<valueof uniform="m_model" 			type="RENDERER" 		context="CURRENT" 		component="MODEL" />
+					<valueof uniform="Number_Particles" type="RENDERER" 		context="CURRENT" 		component="Number_Particles" />
+				</values>
+		    </shader>
+			<buffers>
+					<buffer name="BucketSizes">
+						<TYPE value="SHADER_STORAGE" />
+						<BINDING_POINT value="0" />
+					</buffer>
+					<buffer name="Offsets">
+						<TYPE value="SHADER_STORAGE" />
+						<BINDING_POINT value="1" />
+					</buffer>
+					<buffer name="TempBucketSizes">
+						<TYPE value="SHADER_STORAGE" />
+						<BINDING_POINT value="2" />
+					</buffer>
+						
+		        </buffers>
+		</material>
+		<material name="ComputeTemps" 			>
+		    <shader name="ComputeTemps" 		>
+		        <values>
+					<valueof uniform="m_model" 			type="RENDERER" 		context="CURRENT" 		component="MODEL" />
+					<valueof uniform="Number_Particles" type="RENDERER" 		context="CURRENT" 		component="Number_Particles" />
+					<valueof uniform="H" 				type="RENDERER" 		context="CURRENT" 		component="H" />
+					<valueof uniform="HASHSIZE" 		type="RENDERER" 		context="CURRENT" 		component="HASHSIZE" />
+				</values>
+		    </shader>
+			<buffers>
+					<buffer name="Position" >
+						<TYPE value="SHADER_STORAGE" />
+						<BINDING_POINT value="0" />
+					</buffer>
+					<buffer name="TempPosition">
+						<TYPE value="SHADER_STORAGE" />
+						<BINDING_POINT value="1" />
+					</buffer>
+					<buffer name="Velocity" >
+						<TYPE value="SHADER_STORAGE" />
+						<BINDING_POINT value="2" />
+					</buffer>
+					<buffer name="TempVelocity">
+						<TYPE value="SHADER_STORAGE" />
+						<BINDING_POINT value="3" />
+					</buffer>
+					<buffer name="TempBucketSizes">
+						<TYPE value="SHADER_STORAGE" />
+						<BINDING_POINT value="4" />
+					</buffer>
+					
+						
+		        </buffers>
+		</material>
+	</materials>
+</materialLib>

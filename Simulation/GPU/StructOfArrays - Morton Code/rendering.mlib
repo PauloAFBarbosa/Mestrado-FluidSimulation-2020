@@ -1,0 +1,450 @@
+<?xml version="1.0" ?>
+<materialLib name="renderingLib">
+	<textures>
+		<texture name="sphereNormal" filename="textures/sphereNormal.png" mipmap="true"/>
+		<cubeMap name="CMHouse" 
+			filePosX="TextureCubeMaps/Street/px.png"
+			fileNegX="TextureCubeMaps/Street/nx.png"
+			filePosY="TextureCubeMaps/Street/ny.png"
+			fileNegY="TextureCubeMaps/Street/py.png"
+			filePosZ="TextureCubeMaps/Street/pz.png"
+			fileNegZ="TextureCubeMaps/Street/nz.png"	
+		/>
+	<texture name="imageUnit">
+			<WIDTH  value="FLUID_RES_W" />
+			<HEIGHT value="FLUID_RES_H" />
+			<INTERNAL_FORMAT value="RGBA32F" />
+		</texture>    
+		<texture name="imageAux">
+			<WIDTH  value="FLUID_RES_W" />
+			<HEIGHT value="FLUID_RES_H" />
+			<INTERNAL_FORMAT value="RGBA32F" />
+		</texture>    
+	</textures>
+
+	<renderTargets>
+		<renderTarget name ="Background">
+			<SIZE width="1920" height="1080" />
+			<!--CLEAR_VALUES r="0.8" g="1.0" b="0.7" /-->
+			<colors>
+				<color name="backgroundTex" internalFormat="RGBA32F" />
+			</colors>
+			<depth name="texRenderZ" internalFormat="DEPTH_COMPONENT32F" />
+		</renderTarget>
+		
+	    <renderTarget name ="Render">
+			<SIZE width="FLUID_RES_W" height="FLUID_RES_H" />
+			<!--CLEAR_VALUES r="0.8" g="1.0" b="0.7" /-->
+			<colors>
+				<color name="fluidColor" internalFormat="RGBA32F" />
+			</colors>
+			<depth name="texRenderZ" internalFormat="DEPTH_COMPONENT32F" />
+		</renderTarget>
+
+		<renderTarget name="deferred_particles">
+			<SIZE width="FLUID_RES_W" height="FLUID_RES_H" />
+			<colors>
+				<color name="front_depth" 		internalFormat="RGBA32F" />
+				<color name="back_depth" 		internalFormat="RGBA32F" />
+			</colors>
+			<depth name="depth_particles" internalFormat="DEPTH_COMPONENT32F"/>
+		</renderTarget>
+
+		<renderTarget name="Smoothing_Init">
+			<SIZE width="FLUID_RES_W" height="FLUID_RES_H" />
+				<colors>
+					<color name="blur_depth_front"	 	internalFormat="RGBA32F" />
+					<color name="blur_depth_back"	 	internalFormat="RGBA32F" />
+					<color name="blur_thick" 		internalFormat="RGBA32F" />
+				</colors>
+			<depth name="placeholder" internalFormat="DEPTH_COMPONENT32F"/>
+
+		</renderTarget>
+		<renderTarget name="Smoothing_Ping">
+			<SIZE width="FLUID_RES_W" height="FLUID_RES_H" />
+				<colors>
+					<color name="blur_depth_front_aux"	 	internalFormat="RGBA32F" />
+					<color name="blur_depth_back_aux"	 	internalFormat="RGBA32F" />
+					<color name="blur_thick_aux" 		internalFormat="RGBA32F" />
+				</colors>
+			<depth name="placeholder" internalFormat="DEPTH_COMPONENT32F"/>
+
+		</renderTarget>
+		<renderTarget name="Smoothing_Pong">
+			<SIZE width="FLUID_RES_W" height="FLUID_RES_H" />
+				<colors>
+					<color name="blur_depth_front"	 	internalFormat="RGBA32F" />
+					<color name="blur_depth_back"	 	internalFormat="RGBA32F" />
+					<color name="blur_thick" 		internalFormat="RGBA32F" />
+				</colors>
+			<depth name="placeholder" internalFormat="DEPTH_COMPONENT32F"/>
+
+		</renderTarget>
+    </renderTargets>
+
+    
+
+	<shaders>
+		<!-- RENDERING SHADERS-->
+		<shader name = "SmoothDepth"
+			vs = "shaders/render/quad.vert"
+			ps = "shaders/render/depthSmooth.frag" />
+		<shader name = "FinalStep"
+				vs = "shaders/render/quad.vert"
+				ps = "shaders/render/color.frag" />
+		<shader name = "shader_skybox"
+				vs = "shaders/render/skybox.vert"
+				ps = "shaders/render/skybox.frag" />
+		<shader name="SmoothComp" 
+			cs="shaders/render/smooth.comp" />
+		<shader name="deferred_particles"
+			vs="shaders/render/orientedquad.vert"
+			ps="shaders/render/deferred.frag"
+		/>
+		<shader name="thickness"
+			vs="shaders/render/orientedquad.vert"
+			ps="shaders/render/thickness.frag"
+		/>
+	</shaders>
+
+	<buffers>
+		<buffer name="ParticleTriangles">
+			<DIM x="NUMBER_OF_VERTICES" y="1" z="1" />
+			<structure>
+				<field value="VEC4" />
+			</structure>
+			<!--file name="positionFile.txt"/-->
+			<CLEAR value="NEVER" />
+		</buffer>
+	</buffers>
+
+	<states>
+		<state name="blendpar">
+			<ORDER value="2" />
+			<DEPTH_MASK value="FALSE"/>
+			<BLEND value="TRUE" />
+			<BLEND_SRC value="SRC_ALPHA" />
+			<BLEND_DST value="ONE_MINUS_SRC_ALPHA" />
+		</state>
+		<state name="DepthPeeling">
+			<ORDER value="2" />
+			<DEPTH_MASK value="FALSE"/>
+			<BLEND value="TRUE" />
+			<BLEND_SRC value="SRC_ALPHA" />
+			<BLEND_DST value="DST_ALPHA" />
+			<BLEND_EQUATION value="MAX" />
+		</state>
+		<state name="blendAlt_">
+			<ORDER value="2" />
+			<DEPTH_MASK value="FALSE"/>
+			<BLEND value="TRUE" />
+			<BLEND_SRC value="SRC_ALPHA" />
+			<BLEND_DST value="ONE_MINUS_SRC_ALPHA" />
+		</state>
+		<state name="blendAlt">
+			
+			<DEPTH_FUNC value="LEQUAL"/>
+			<DEPTH_MASK value="TRUE"/>
+		</state>
+		<state name="cull">
+			<DEPTH_FUNC value="LEQUAL" />
+			<CULL_TYPE value="FRONT" />
+		</state>
+	</states>
+
+
+	<materials>		
+		<material name="Deferred_Particles">
+			<shader name="deferred_particles">
+				<values>
+					<valueof uniform="PROJECTION_VIEW" 		type="RENDERER" 		context="CURRENT" 		component="PROJECTION_VIEW" />
+					<valueof uniform="m_model" 			type="RENDERER" 		context="CURRENT" 		component="MODEL" />
+					<valueof uniform="m_nright"			type="CAMERA" 			context="CURRENT" 		component="NORMALIZED_RIGHT" />
+					<valueof uniform="m_nup" 			type="CAMERA" 			context="CURRENT" 		component="NORMALIZED_UP" />
+					<valueof uniform="m_campos" 		type="CAMERA" 			context="CURRENT" 		component="POSITION" />
+					<valueof uniform="m_pv" 			type="RENDERER" 		context="CURRENT" 		component="PROJECTION_VIEW" />
+					<valueof uniform="lightDir"			type="LIGHT" 			context="Sun" 			component="DIRECTION" />
+					<valueof uniform="normalMatrix" 	type="RENDERER" 		context="CURRENT" 		component="NORMAL" />
+					<valueof uniform="sphereNormal"		type="TEXTURE_BINDING" 	context="CURRENT" 		component="UNIT" id="0" />
+					<valueof uniform="Particle_alpha" 		type="RENDERER" 		context="CURRENT" 		component="Particle_alpha" />
+					<valueof uniform="Particle_Size" 		type="RENDERER" 		context="CURRENT" 		component="Particle_Size" />
+				</values>
+			</shader>
+			<state name="DepthPeeling"/>
+			<buffers>
+				<buffer name="simulationLib::Position" >
+					<TYPE value="SHADER_STORAGE" />
+					<BINDING_POINT value="0" />
+				</buffer>
+			</buffers>
+		</material>
+		<material name="Thickness">
+			<shader name="thickness">
+				<values>
+					<valueof uniform="PROJECTION_VIEW" 		type="RENDERER" 		context="CURRENT" 		component="PROJECTION_VIEW" />
+					<valueof uniform="m_model" 			type="RENDERER" 		context="CURRENT" 		component="MODEL" />
+					<valueof uniform="m_nright"			type="CAMERA" 			context="CURRENT" 		component="NORMALIZED_RIGHT" />
+					<valueof uniform="m_nup" 			type="CAMERA" 			context="CURRENT" 		component="NORMALIZED_UP" />
+					<valueof uniform="m_campos" 		type="CAMERA" 			context="CURRENT" 		component="POSITION" />
+					<valueof uniform="m_pv" 			type="RENDERER" 		context="CURRENT" 		component="PROJECTION_VIEW" />
+					<valueof uniform="lightDir"			type="LIGHT" 			context="Sun" 			component="DIRECTION" />
+					<valueof uniform="normalMatrix" 	type="RENDERER" 		context="CURRENT" 		component="NORMAL" />
+					<valueof uniform="sphereNormal"		type="TEXTURE_BINDING" 	context="CURRENT" 		component="UNIT" id="0" />
+					<valueof uniform="Particle_alpha" 		type="RENDERER" 		context="CURRENT" 		component="Particle_alpha" />
+					<valueof uniform="Particle_Size" 		type="RENDERER" 		context="CURRENT" 		component="Particle_Size" />
+				</values>
+			</shader>
+			<state name="blendpar"/>
+			<buffers>
+				<buffer name="simulationLib::Position" >
+					<TYPE value="SHADER_STORAGE" />
+					<BINDING_POINT value="0" />
+				</buffer>
+			</buffers>
+		</material>
+		<material name="FinalStep">
+			<shader name="FinalStep">
+				<values>
+					<valueof uniform="m_campos" 			type="CAMERA" 			context="CURRENT" 		component="POSITION" />
+					<valueof uniform="m_inv_proj" 			type="CAMERA" 			context="CURRENT" 		component="PROJECTION_INVERSE_MATRIX" />
+					<valueof uniform="m_inv_view" 			type="CAMERA" 			context="CURRENT" 		component="VIEW_INVERSE_MATRIX" />
+					<valueof uniform="backgroundTex"		type="TEXTURE_BINDING" 	context="CURRENT" 		component="UNIT" id="2" />
+					<valueof uniform="fluidColor"			type="TEXTURE_BINDING" 	context="CURRENT" 		component="UNIT" id="0" />
+					<valueof uniform="lightDir"				type="LIGHT" 			context="Sun" 			component="DIRECTION" />
+					<valueof uniform="texUnit"				type="TEXTURE_BINDING" 	context="CURRENT" 		component="UNIT" id="4" />
+					<valueof uniform="depthMap"				type="TEXTURE_BINDING" 	context="CURRENT" 		component="UNIT" id="5" />
+					<valueof uniform="front_depth"			type="TEXTURE_BINDING" 	context="CURRENT" 		component="UNIT" id="1" />
+					<valueof uniform="back_depth"			type="TEXTURE_BINDING" 	context="CURRENT" 		component="UNIT" id="3" />
+					<valueof uniform="eta" 	    			type="RENDERER" 		context="CURRENT" 		component="ETA" />
+					<valueof uniform="Particle_Color" 		type="RENDERER" 		context="CURRENT" 		component="Particle_Color" />
+					<valueof uniform="Particle_alpha" 		type="RENDERER" 		context="CURRENT" 		component="Particle_alpha" />
+					<valueof uniform="Thin_Color"	 		type="RENDERER" 		context="CURRENT" 		component="Thin_Color" />
+					<valueof uniform="DebugParticles" 		type="RENDERER" 		context="CURRENT" 		component="DebugParticles" />
+					<valueof uniform="resolution" 			type="RENDERER" 		context="CURRENT" 		component="FLUID_RES" />
+					<valueof uniform="thicktype" 		type="RENDERER" 		context="CURRENT" 			component="ThickType" />
+					<valueof uniform="Surface_Num" 		type="RENDERER" 		context="CURRENT" 		component="Surface_Num" />
+				</values>
+			</shader>
+			<textures>
+				<texture name="blur_thick" UNIT="0"/>
+				<texture name="backgroundTex" UNIT="2"/>
+				<texture name="blur_depth_front" UNIT="1"/>
+				<texture name="blur_depth_back" UNIT="3"/>
+				<texture name="CMHouse" UNIT="4"/>
+				<texture name="blur_depth_front" UNIT="5"/>
+			</textures>
+		</material>
+		
+
+		<material name="CompSmooth">
+			<shader name="SmoothComp">
+				<values>
+					<valueof uniform="imageUnit" 		type="TEXTURE_BINDING" 		context="CURRENT" 		component="UNIT" id="0" />
+					<valueof uniform="imageAux" 		type="TEXTURE_BINDING" 		context="CURRENT" 		component="UNIT" id="1" />
+					<valueof uniform="depthMap" 		type="TEXTURE_BINDING" 		context="CURRENT" 		component="UNIT" id="2" />
+					<valueof uniform="thickness" 		type="TEXTURE_BINDING" 		context="CURRENT" 		component="UNIT" id="3" />
+					<valueof uniform="Blur" 				type="RENDERER" 		context="CURRENT" 		component="Blur" />
+					<valueof uniform="Blur_Size" 			type="RENDERER" 		context="CURRENT" 		component="Blur_Size" />
+					<valueof uniform="Blur_Quality" 		type="RENDERER" 		context="CURRENT" 		component="Blur_Quality" />
+					<valueof uniform="resolution" 			type="RENDERER" 		context="CURRENT" 		component="FLUID_RES" />
+
+				</values>
+			</shader>
+			<textures>
+				<texture name="depth_particles" UNIT="2"/>
+				<texture name="fluidColor"		UNIT="3"/>
+			</textures>
+			<imageTextures>
+				<imageTexture UNIT="0" texture="imageUnit" >
+					<ACCESS value="READ_WRITE" />
+					<LEVEL value="0" />
+					<CLEAR value="true" />
+				</imageTexture>
+				<imageTexture UNIT="1" texture="imageAux" >
+					<ACCESS value="READ_WRITE" />
+					<LEVEL value="0" />
+					<CLEAR value="true" />
+				</imageTexture>
+			</imageTextures>
+		</material>
+		
+		<material name="Smooth_Init">
+			<shader name="SmoothDepth">
+				<values>
+					<valueof uniform="frontdepthMap" 		type="TEXTURE_BINDING" 		context="CURRENT" 		component="UNIT" id="0" />
+					<valueof uniform="backdepthMap" 		type="TEXTURE_BINDING" 		context="CURRENT" 		component="UNIT" id="1" />
+					<valueof uniform="thickness" 		type="TEXTURE_BINDING" 		context="CURRENT" 		component="UNIT" id="2" />
+					<valueof uniform="Blur" 				type="RENDERER" 		context="CURRENT" 		component="Blur" />
+					<valueof uniform="Blur_Size" 			type="RENDERER" 		context="CURRENT" 		component="Blur_Size" />
+					<valueof uniform="Blur_Quality" 		type="RENDERER" 		context="CURRENT" 		component="Blur_Quality" />
+					<valueof uniform="resolution" 			type="RENDERER" 		context="CURRENT" 		component="FLUID_RES" />
+					<valueof uniform="filterRadius" 		type="RENDERER" 		context="CURRENT" 		component="filterRadius" />
+					<valueof uniform="sphereRadius" 		type="RENDERER" 		context="CURRENT" 		component="sphereRadius" />
+					<valueof uniform="bilateralParameter" 	type="RENDERER" 		context="CURRENT" 		component="bilateralParameter" />
+					<valueof uniform="PROJECTION_MATRIX" 		type="CAMERA" 		context="CURRENT" 		component="PROJECTION_MATRIX" />
+					<valueof uniform="PROJECTION_INVERSE_MATRIX" 		type="CAMERA" 		context="CURRENT" 		component="PROJECTION_INVERSE_MATRIX" />
+				</values>
+			</shader>
+			<textures>
+				<texture name="front_depth" UNIT="0"/>
+				<texture name="back_depth" UNIT="1"/>
+				<texture name="fluidColor"		UNIT="2"/>
+			</textures>
+		</material>
+		
+		<material name="Smooth_Ping">
+			<shader name="SmoothDepth">
+				<values>
+					<valueof uniform="frontdepthMap" 		type="TEXTURE_BINDING" 		context="CURRENT" 		component="UNIT" id="0" />
+					<valueof uniform="backdepthMap" 		type="TEXTURE_BINDING" 		context="CURRENT" 		component="UNIT" id="1" />
+					<valueof uniform="thickness" 		type="TEXTURE_BINDING" 		context="CURRENT" 		component="UNIT" id="2" />
+					<valueof uniform="Blur" 				type="RENDERER" 		context="CURRENT" 		component="Blur" />
+					<valueof uniform="Blur_Size" 			type="RENDERER" 		context="CURRENT" 		component="Blur_Size" />
+					<valueof uniform="Blur_Quality" 		type="RENDERER" 		context="CURRENT" 		component="Blur_Quality" />
+					<valueof uniform="resolution" 			type="RENDERER" 		context="CURRENT" 		component="FLUID_RES" />					
+					<valueof uniform="filterRadius" 		type="RENDERER" 		context="CURRENT" 		component="filterRadius" />
+					<valueof uniform="sphereRadius" 		type="RENDERER" 		context="CURRENT" 		component="sphereRadius" />
+					<valueof uniform="bilateralParameter" 	type="RENDERER" 		context="CURRENT" 		component="bilateralParameter" />
+					<valueof uniform="PROJECTION_MATRIX" 		type="CAMERA" 		context="CURRENT" 		component="PROJECTION_MATRIX" />
+					<valueof uniform="PROJECTION_INVERSE_MATRIX" 		type="CAMERA" 		context="CURRENT" 		component="PROJECTION_INVERSE_MATRIX" />
+
+				</values>
+			</shader>
+			<textures>
+				<texture name="blur_depth_front" UNIT="0"/>
+				<texture name="blur_depth_back" UNIT="1"/>
+				<texture name="blur_thick"		UNIT="2"/>
+			</textures>
+		</material>
+		<material name="Smooth_Pong">
+			<shader name="SmoothDepth">
+				<values>
+					<valueof uniform="frontdepthMap" 		type="TEXTURE_BINDING" 		context="CURRENT" 		component="UNIT" id="0" />
+					<valueof uniform="backdepthMap" 		type="TEXTURE_BINDING" 		context="CURRENT" 		component="UNIT" id="1" />
+					<valueof uniform="thickness" 		type="TEXTURE_BINDING" 		context="CURRENT" 		component="UNIT" id="2" />
+					<valueof uniform="Blur" 				type="RENDERER" 		context="CURRENT" 		component="Blur" />
+					<valueof uniform="Blur_Size" 			type="RENDERER" 		context="CURRENT" 		component="Blur_Size" />
+					<valueof uniform="Blur_Quality" 		type="RENDERER" 		context="CURRENT" 		component="Blur_Quality" />
+					<valueof uniform="resolution" 			type="RENDERER" 		context="CURRENT" 		component="FLUID_RES" />
+					<valueof uniform="filterRadius" 		type="RENDERER" 		context="CURRENT" 		component="filterRadius" />
+					<valueof uniform="sphereRadius" 		type="RENDERER" 		context="CURRENT" 		component="sphereRadius" />
+					<valueof uniform="bilateralParameter" 	type="RENDERER" 		context="CURRENT" 		component="bilateralParameter" />
+					<valueof uniform="PROJECTION_MATRIX" 		type="CAMERA" 		context="CURRENT" 		component="PROJECTION_MATRIX" />
+					<valueof uniform="PROJECTION_INVERSE_MATRIX" 		type="CAMERA" 		context="CURRENT" 		component="PROJECTION_INVERSE_MATRIX" />
+			
+				</values>
+			</shader>
+			<textures>
+				<texture name="blur_depth_front_aux" UNIT="0"/>
+				<texture name="blur_depth_back_aux" UNIT="1"/>
+				<texture name="blur_thick_aux"		UNIT="2"/>
+			</textures>
+		</material>
+
+		<!--material name="Thickness">
+			<shader name="particles">
+				<values>
+					<valueof uniform="PROJECTION_VIEW" 		type="RENDERER" 		context="CURRENT" 		component="PROJECTION_VIEW" />
+					<valueof uniform="m_model" 			type="RENDERER" 		context="CURRENT" 		component="MODEL" />
+					<valueof uniform="m_nright"			type="CAMERA" 			context="CURRENT" 		component="NORMALIZED_RIGHT" />
+					<valueof uniform="m_nup" 			type="CAMERA" 			context="CURRENT" 		component="NORMALIZED_UP" />
+					<valueof uniform="m_campos" 		type="CAMERA" 			context="CURRENT" 		component="POSITION" />
+					<valueof uniform="m_pv" 			type="RENDERER" 		context="CURRENT" 		component="PROJECTION_VIEW" />
+					<valueof uniform="lightDir"			type="LIGHT" 			context="Sun" 			component="DIRECTION" />
+					<valueof uniform="normalMatrix" 	type="RENDERER" 		context="CURRENT" 		component="NORMAL" />
+					<valueof uniform="sphereNormal"		type="TEXTURE_BINDING" 	context="CURRENT" 		component="UNIT" id="0" />
+					<valueof uniform="Particle_alpha" 		type="RENDERER" 		context="CURRENT" 		component="Particle_alpha" />
+					<valueof uniform="Particle_Size" 		type="RENDERER" 		context="CURRENT" 		component="Particle_Size" />
+				</values>
+			</shader>
+			<textures>
+				<texture name="sphereNormal" UNIT="0"/>
+			</textures>
+			<state name="blendpar"/>
+
+			<buffers>
+				
+				<buffer name="simulationLib::Position" >
+					<TYPE value="SHADER_STORAGE" />
+					<BINDING_POINT value="0" />
+				</buffer>
+
+				<buffer name="simulationLib::Density" >
+					<TYPE value="SHADER_STORAGE" />
+					<BINDING_POINT value="1" />
+				</buffer>
+				
+				<buffer name="simulationLib::Adj" >
+					<TYPE value="SHADER_STORAGE" />
+					<BINDING_POINT value="2" />
+				</buffer>
+		
+			</buffers>
+			
+		</material>
+		
+		<material name="deferred_par">
+			<shader name="deferred_particles">
+				<values>
+					<valueof uniform="PROJECTION_VIEW" 		type="RENDERER" 		context="CURRENT" 		component="PROJECTION_VIEW" />
+					<valueof uniform="m_model" 			type="RENDERER" 		context="CURRENT" 		component="MODEL" />
+					<valueof uniform="m_nright"			type="CAMERA" 			context="CURRENT" 		component="NORMALIZED_RIGHT" />
+					<valueof uniform="m_nup" 			type="CAMERA" 			context="CURRENT" 		component="NORMALIZED_UP" />
+					<valueof uniform="m_campos" 		type="CAMERA" 			context="CURRENT" 		component="POSITION" />
+					<valueof uniform="m_pv" 			type="RENDERER" 		context="CURRENT" 		component="PROJECTION_VIEW" />
+					<valueof uniform="lightDir"			type="LIGHT" 			context="Sun" 			component="DIRECTION" />
+					<valueof uniform="normalMatrix" 	type="RENDERER" 		context="CURRENT" 		component="NORMAL" />
+					<valueof uniform="sphereNormal"			type="TEXTURE_BINDING" 	context="CURRENT" 		component="UNIT" id="0" />
+					<valueof uniform="Particle_Size" 		type="RENDERER" 		context="CURRENT" 		component="Particle_Size" />
+
+				</values>
+			</shader>
+			<textures>
+				<texture name="sphereNormal" UNIT="0"/>
+			</textures>
+			<state name="DepthPeeling"/>
+			<buffers>
+				
+				<buffer name="simulationLib::Position" >
+					<TYPE value="SHADER_STORAGE" />
+					<BINDING_POINT value="0" />
+				</buffer>
+
+				<buffer name="simulationLib::Density" >
+					<TYPE value="SHADER_STORAGE" />
+					<BINDING_POINT value="1" />
+				</buffer>
+				
+				<buffer name="simulationLib::Adj" >
+					<TYPE value="SHADER_STORAGE" />
+					<BINDING_POINT value="2" />
+				</buffer>
+		
+			</buffers>
+		</material-->
+
+		<material name="mat_skybox">
+			<shader name="shader_skybox">
+				<values>
+					<valueof uniform="m_proj" 
+							 type="RENDERER" context="CURRENT" component="PROJECTION" />
+					<valueof uniform="m_view" 
+							 type="RENDERER" context="CURRENT" component="VIEW" />
+					<valueof uniform="view_size"
+							 type="VIEWPORT" context="CURRENT" component="SIZE" />
+					<valueof uniform="light_dir" 
+							 type="LIGHT" context="Sun" component="DIRECTION" />
+					<valueof uniform="CMHouse"				
+							 type="TEXTURE_BINDING" 	context="CURRENT" 	component="UNIT" id="0" />
+
+				</values>
+			</shader>	
+			<state name="cull"/>
+			<textures>
+                <texture name="CMHouse" UNIT="0" />
+            </textures>
+		</material>
+
+
+	</materials>
+</materialLib>

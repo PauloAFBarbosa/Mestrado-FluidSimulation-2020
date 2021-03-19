@@ -1665,36 +1665,45 @@ int getAdjv2(float pos[4], float H, unsigned int ret[27]) {
 }
 
 
+// method to seperate bits from a given integer 3 positions apart
+inline uint64_t splitBy3(unsigned int a) {
+	uint64_t x = a & 0x1fffff; // we only look at the first 21 bits
+	x = (x | x << 32) & 0x1f00000000ffff; // shift left 32 bits, OR with self, and 00011111000000000000000000000000000000001111111111111111
+	x = (x | x << 16) & 0x1f0000ff0000ff; // shift left 32 bits, OR with self, and 00011111000000000000000011111111000000000000000011111111
+	x = (x | x << 8) & 0x100f00f00f00f00f; // shift left 32 bits, OR with self, and 0001000000001111000000001111000000001111000000001111000000000000
+	x = (x | x << 4) & 0x10c30c30c30c30c3; // shift left 32 bits, OR with self, and 0001000011000011000011000011000011000011000011000011000100000000
+	x = (x | x << 2) & 0x1249249249249249;
+	return x;
+}
+
+inline uint64_t mortonEncode_magicbits(unsigned int x, unsigned int y, unsigned int z) {
+	uint64_t answer = 0;
+	answer |= splitBy3(x) | splitBy3(y) << 1 | splitBy3(z) << 2;
+	return answer;
+}
+
+
 int main(int argc, char** argv) {
 	
+	float txf = 10;
+	float tyf = 10;
+	float tzf = 10;
+
+	unsigned int tx= (unsigned int)(txf / H);
+	unsigned int ty = (unsigned int)(txf / H);
+	unsigned int tz = (unsigned int)(txf / H);
+
+	printf("tx %d ty %d tz %d\n", tx, ty, tz);
+
+	unsigned int offset = 218;
+
+	printf("Valor %u %d\n", interleave3(tx + offset, ty + offset, tz + offset), interleave3(tx + offset, ty + offset, tz + offset));
+
+	printf("Magic bits %u %d\n", mortonEncode_magicbits(tx + offset, ty + offset, tz + offset-1), mortonEncode_magicbits(tx + offset, ty + offset, tz + offset));
 
 	float pos1[4] = { 0,0,0,0 };
 	int retsize;
 	unsigned int ret[27];
-
-	retsize = getAdjv2(pos1, H, ret);
-
-	for (size_t i = 0; i < retsize; i++)
-	{
-		printf("vizinho %d \n", ret[i]);
-	}
-
-	float x2 = 0.00+H;
-	float y2 = 0.00;
-	float z2 = 0.00;
-
-	unsigned int intx = 0/ H + 43;
-	unsigned int inty = 0 / H + 43;
-	unsigned int intz = 0 / H + 43;
-
-	unsigned int intx2 = x2 / H + 43;
-	unsigned int inty2 = y2 / H + 43;
-	unsigned int intz2 = z2 / H + 43;
-
-	
-	printf("pos %f %f %f cell %d %d %d morton %d\n",0,0,0,intx, inty, intz, interleave3(intx, inty, intz)) ;
-	printf("pos %f %f %f cell %d %d %d morton %d\n", x2, y2, z2, intx2, inty2, intz2, interleave3(intx2, inty2, intz2));
-	
 	
 
 	 unsigned int countRadix[10];
