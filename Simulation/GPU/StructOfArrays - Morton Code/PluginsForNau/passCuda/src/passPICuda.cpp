@@ -96,13 +96,14 @@ struct cudaGraphicsResource* cuda_ssbo_Gravity;
 struct cudaGraphicsResource* cuda_ssbo_SurfaceNormal;
 struct cudaGraphicsResource* cuda_ssbo_SurfaceTension;
 struct cudaGraphicsResource* cuda_ssbo_Viscosity;
+struct cudaGraphicsResource* cuda_ssbo_Acceleration;
 
 
 #include "mySort.h"
 void
 PAssCudaPI::prepare (void) {
 
-	int densityPressure = 0;
+	int densityPressure = 1;
 
 	if (first == 0) {
 		//index
@@ -118,6 +119,7 @@ PAssCudaPI::prepare (void) {
 		IBuffer* bVelocity = RESOURCEMANAGER->getBuffer("simulationLib::Velocity");
 		int buffIdVelocity = bVelocity->getPropi(IBuffer::ID);
 		//cell start and end
+
 		IBuffer* bCellStart = RESOURCEMANAGER->getBuffer("simulationLib::CellStart");
 		int buffIdCellStart = bCellStart->getPropi(IBuffer::ID);
 		IBuffer* bCellEnd = RESOURCEMANAGER->getBuffer("simulationLib::CellEnd");
@@ -151,6 +153,9 @@ PAssCudaPI::prepare (void) {
 			IBuffer* bViscosity = RESOURCEMANAGER->getBuffer("simulationLib::Viscosity");
 			int buffIdViscosity = bViscosity->getPropi(IBuffer::ID);
 
+			IBuffer* bAcceleration = RESOURCEMANAGER->getBuffer("simulationLib::Acceleration");
+			int buffIdAcceleration = bAcceleration->getPropi(IBuffer::ID);
+
 			cudaGraphicsGLRegisterBuffer(&cuda_ssbo_Density, buffIdDensity, cudaGraphicsMapFlagsNone);
 			cudaGraphicsGLRegisterBuffer(&cuda_ssbo_Pressure, buffIdPressure, cudaGraphicsMapFlagsNone);
 			cudaGraphicsGLRegisterBuffer(&cuda_ssbo_Adj, buffIdAdj, cudaGraphicsMapFlagsNone);
@@ -160,6 +165,7 @@ PAssCudaPI::prepare (void) {
 			cudaGraphicsGLRegisterBuffer(&cuda_ssbo_SurfaceNormal, buffIdSurfaceNormal, cudaGraphicsMapFlagsNone);
 			cudaGraphicsGLRegisterBuffer(&cuda_ssbo_SurfaceTension, buffIdSurfaceTension, cudaGraphicsMapFlagsNone);
 			cudaGraphicsGLRegisterBuffer(&cuda_ssbo_Viscosity, buffIdViscosity, cudaGraphicsMapFlagsNone);
+			cudaGraphicsGLRegisterBuffer(&cuda_ssbo_Acceleration, buffIdAcceleration, cudaGraphicsMapFlagsNone);
 		}
 		
 		first = 1;
@@ -184,8 +190,10 @@ PAssCudaPI::prepare (void) {
 	float4* dptrssboSurfaceTension;
 	float4* dptrssboViscosity;
 
-	cudaDeviceSynchronize();
-	std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+	float4* dptrssboAcceleration;
+
+	//cudaDeviceSynchronize();
+	//std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
 	
 	cudaGraphicsMapResources(1, &cuda_ssbo_Index, NULL);
 	cudaGraphicsMapResources(1, &cuda_ssbo_TempIndex, NULL);
@@ -204,11 +212,13 @@ PAssCudaPI::prepare (void) {
 		cudaGraphicsMapResources(1, &cuda_ssbo_SurfaceNormal, NULL);
 		cudaGraphicsMapResources(1, &cuda_ssbo_SurfaceTension, NULL);
 		cudaGraphicsMapResources(1, &cuda_ssbo_Viscosity, NULL);
+
+		cudaGraphicsMapResources(1, &cuda_ssbo_Acceleration, NULL);
 	}
 
-	cudaDeviceSynchronize();
-	std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
-	std::cout << "cudaGraphicsMapResources = " << std::chrono::duration_cast<std::chrono::milliseconds> (end - begin).count() << "[ms]" << std::endl;
+	//cudaDeviceSynchronize();
+	//std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+	//std::cout << "cudaGraphicsMapResources = " << std::chrono::duration_cast<std::chrono::milliseconds> (end - begin).count() << "[ms]" << std::endl;
 
 	size_t num_bytesssbo_Index;
 	size_t num_bytesssbo_TempIndex;
@@ -226,6 +236,8 @@ PAssCudaPI::prepare (void) {
 	size_t num_bytesssbo_SurfaceNormal;
 	size_t num_bytesssbo_SurfaceTension;
 	size_t num_bytesssbo_Viscosity;
+
+	size_t num_bytesssbo_Acceleration;
 	
 	cudaGraphicsResourceGetMappedPointer((void**)&dptrssboIndex, &num_bytesssbo_Index, cuda_ssbo_Index);
 	cudaGraphicsResourceGetMappedPointer((void**)&dptrssboTempIndex, &num_bytesssbo_TempIndex, cuda_ssbo_TempIndex);
@@ -245,6 +257,8 @@ PAssCudaPI::prepare (void) {
 		cudaGraphicsResourceGetMappedPointer((void**)&dptrssboSurfaceNormal, &num_bytesssbo_SurfaceNormal, cuda_ssbo_SurfaceNormal);
 		cudaGraphicsResourceGetMappedPointer((void**)&dptrssboSurfaceTension, &num_bytesssbo_SurfaceTension, cuda_ssbo_SurfaceTension);
 		cudaGraphicsResourceGetMappedPointer((void**)&dptrssboViscosity, &num_bytesssbo_Viscosity, cuda_ssbo_Viscosity);
+
+		cudaGraphicsResourceGetMappedPointer((void**)&dptrssboAcceleration, &num_bytesssbo_Acceleration, cuda_ssbo_Acceleration);
 	}
 
 	mysort(dptrssboIndex,dptrssboPosition, dptrssboTempIndex, dptrssboVelocity,216000);
@@ -253,18 +267,23 @@ PAssCudaPI::prepare (void) {
 	kernelWraper(dptrssboIndex, dptrssboCellStart, dptrssboCellEnd);
 
 	if (densityPressure == 1) {
-		cudaDeviceSynchronize();
-		begin = std::chrono::steady_clock::now();
+		//cudaDeviceSynchronize();
+		//begin = std::chrono::steady_clock::now();
 		cudaDensityPressure(dptrssboPosition, dptrssboIndex, dptrssboCellStart, dptrssboCellEnd, dptrssboDensity, dptrssboPressure, dptrssboAdj);
-		cudaDeviceSynchronize();
-		end = std::chrono::steady_clock::now();
-		std::cout << "DensityPressure = " << std::chrono::duration_cast<std::chrono::milliseconds> (end - begin).count() << "[ms]" << std::endl;
+		//cudaDeviceSynchronize();
+		//end = std::chrono::steady_clock::now();
+		//std::cout << "DensityPressure = " << std::chrono::duration_cast<std::chrono::milliseconds> (end - begin).count() << "[ms]" << std::endl;
 
 		cudaForce(dptrssboPosition, dptrssboVelocity, dptrssboForce, dptrssboDensity, dptrssboPressure, dptrssboGravity, dptrssboSurfaceNormal, dptrssboSurfaceTension, dptrssboViscosity, dptrssboAdj);
+		
+		
+		cudaIntegrate(dptrssboPosition, dptrssboVelocity, dptrssboForce, dptrssboDensity, dptrssboGravity, dptrssboSurfaceTension, dptrssboViscosity, dptrssboAcceleration);
+		
+		cudaUpdateIndex(dptrssboPosition, dptrssboIndex, dptrssboTempIndex);
 	}
 	
-	cudaDeviceSynchronize();
-	begin = std::chrono::steady_clock::now();
+	//cudaDeviceSynchronize();
+	//begin = std::chrono::steady_clock::now();
 	cudaGraphicsUnmapResources(1, &cuda_ssbo_Index, NULL);
 	cudaGraphicsUnmapResources(1, &cuda_ssbo_TempIndex, NULL);
 	cudaGraphicsUnmapResources(1, &cuda_ssbo_Position, NULL);
@@ -276,11 +295,19 @@ PAssCudaPI::prepare (void) {
 		cudaGraphicsUnmapResources(1, &cuda_ssbo_Density, NULL);
 		cudaGraphicsUnmapResources(1, &cuda_ssbo_Pressure, NULL);
 		cudaGraphicsUnmapResources(1, &cuda_ssbo_Adj, NULL);
+
+		cudaGraphicsUnmapResources(1, &cuda_ssbo_Force, NULL);
+		cudaGraphicsUnmapResources(1, &cuda_ssbo_Gravity, NULL);
+		cudaGraphicsUnmapResources(1, &cuda_ssbo_SurfaceNormal, NULL);
+		cudaGraphicsUnmapResources(1, &cuda_ssbo_SurfaceTension, NULL);
+		cudaGraphicsUnmapResources(1, &cuda_ssbo_Viscosity, NULL);
+
+		cudaGraphicsUnmapResources(1, &cuda_ssbo_Acceleration, NULL);
 	}
 
-	cudaDeviceSynchronize();
-	end = std::chrono::steady_clock::now();
-	std::cout << "cudaGraphicsUnmapResources = " << std::chrono::duration_cast<std::chrono::milliseconds> (end - begin).count() << "[ms]" << std::endl;
+	//cudaDeviceSynchronize();
+	//end = std::chrono::steady_clock::now();
+	//std::cout << "cudaGraphicsUnmapResources = " << std::chrono::duration_cast<std::chrono::milliseconds> (end - begin).count() << "[ms]" << std::endl;
 	
 }
 

@@ -502,10 +502,238 @@ void ForceKernel(float4* dptrssboPosition, float4* dptrssboVelocity, float4* dpt
     }
 }
 
+__device__
+bool detectCollision(float4 pos,float * contactx, float* contacty, float* contactz, float* normalx, float* normaly, float* normalz,int index) {
+    
+    float4 contactPoint = make_float4(0);
+    float4 unitSurfaceNormal = make_float4(0);
+    float XMIN = -2;
+    float YMIN = -2;
+    float ZMIN = -2;
+
+    float XMAX = 2;
+    float YMAX = 2;
+    float ZMAX = 2;
+
+    float DECLIVE = 0.0;
+
+    float newx = pos.x + XMAX;
+    float temp = (XMAX + XMAX) - newx;
+    temp = temp / (XMAX + XMAX); //devolve 1 quando newx é 0, ou seja, a particula esta encostada a parede esquerda
+                                // devolve 0 quando esta encostada a parede direita
+
+    float newy = YMIN + (temp * DECLIVE);
+
+    if (pos.x <= XMAX && pos.x >= XMIN && pos.y <= YMAX && pos.y >= newy && pos.z <= ZMAX && pos.z >= ZMIN)
+        return false;
+
+    int maxComponent = 0;
+    float maxValue = abs(pos.x);
+    //Por causa do declive temos de ter isso em conta ao encontrar o maxvalue. (se nao fizer + temp*declive as vezes da como max component o Z quando na realidade deveria ter sido o Y, so nao foi por causa do declive)
+    if (maxValue < abs(pos.y) + (temp * DECLIVE)) {
+        maxComponent = 1;
+        maxValue = abs(pos.y) + (temp * DECLIVE);
+    }
+    if (maxValue < abs(pos.z)) {
+        maxComponent = 2;
+        maxValue = abs(pos.z);
+    }
+    // 'unitSurfaceNormal' is based on the current position component with the largest absolute value
+
+    
+    switch (maxComponent) {
+    case 0:
+        if (pos.x < XMIN) {
+            contactPoint = make_float4(XMIN, pos.y, pos.z, 0);
+
+            if (pos.y < newy)     contactPoint.y = newy;
+            else if (pos.y > YMAX) contactPoint.y = YMAX;
+            if (pos.z < ZMIN)     contactPoint.z = ZMIN;
+            else if (pos.z > ZMAX) contactPoint.z = ZMAX;
+
+            unitSurfaceNormal = make_float4(1, 0, 0, 0);
+
+
+        }
+        else if (pos.x > XMAX) {
+            contactPoint = make_float4(XMAX, pos.y, pos.z, 0);
+
+            if (pos.y < newy)     contactPoint.y = newy;
+            else if (pos.y > YMAX) contactPoint.y = YMAX;
+            if (pos.z < ZMIN)     contactPoint.z = ZMIN;
+            else if (pos.z > ZMAX) contactPoint.z = ZMAX;
+
+            unitSurfaceNormal = make_float4(-1, 0, 0, 0);
+
+
+        }
+        break;
+    case 1:
+        
+        if (pos.y < newy) {
+            contactPoint = make_float4(pos.x, newy, pos.z, 0);
+
+            if (pos.x < XMIN)     contactPoint.x = XMIN;
+            else if (pos.x > XMAX) contactPoint.x = XMAX;
+            if (pos.z < ZMIN)     contactPoint.z = ZMIN;
+            else if (pos.z > ZMAX) contactPoint.z = ZMAX;
+
+            //unitSurfaceNormal = vec4(DECLIVE,1-DECLIVE,0,0);
+            unitSurfaceNormal = make_float4(DECLIVE, 1.0 - DECLIVE, 0, 0);
+
+        }
+        else if (pos.y > YMAX) {
+            contactPoint = make_float4(pos.x, YMAX, pos.z, 0);
+
+            if (pos.x < XMIN)     contactPoint.x = XMIN;
+            else if (pos.x > XMAX) contactPoint.x = XMAX;
+            if (pos.z < ZMIN)     contactPoint.z = ZMIN;
+            else if (pos.z > ZMAX) contactPoint.z = ZMAX;
+
+            unitSurfaceNormal = make_float4(0, -1, 0, 0);
+
+        }
+        break;
+    case 2:
+        if (pos.z < ZMIN) {
+
+            contactPoint = make_float4(pos.x, pos.y, ZMIN, 0);
+
+            if (pos.x < XMIN)     contactPoint.x = XMIN;
+            else if (pos.x > XMAX) contactPoint.x = XMAX;
+            if (pos.y < newy)     contactPoint.y = newy;
+            else if (pos.y > YMAX) contactPoint.y = YMAX;
+            unitSurfaceNormal = make_float4(0, 0, 1, 0);
+
+
+        }
+        else if (pos.z > ZMAX) {
+            contactPoint = make_float4(pos.x, pos.y, ZMAX, 0);
+
+            if (pos.x < XMIN)     contactPoint.x = XMIN;
+            else if (pos.x > XMAX) contactPoint.x = XMAX;
+            if (pos.y < newy)     contactPoint.y = newy;
+            else if (pos.y > YMAX) contactPoint.y = YMAX;
+            unitSurfaceNormal = make_float4(0, 0, -1, 0);
+
+        }
+        break;
+    }
+
+    //printf("Contact point %f %f %f\n", contactPoint.x, contactPoint.y, contactPoint.z);
+
+    //printf("Normal %f %f %f\n", unitSurfaceNormal.x, unitSurfaceNormal.y, unitSurfaceNormal.z);
+
+    *contactx = contactPoint.x;
+    *contacty = contactPoint.y;
+    *contactz = contactPoint.z;
+
+    *normalx = unitSurfaceNormal.x;
+    *normaly = unitSurfaceNormal.y;
+    *normalz = unitSurfaceNormal.z;
+
+    
+    //printf("INSIDE pos %f %f %f maxvalue %f abs posy %f temp %f index %d maxComponent %d \n", pos.x, pos.y, pos.z, maxValue, abs(pos.y), temp, index,maxComponent);
+    //printf("INSIDE pos %f %f %f maxvalue %f abs posy %f temp %f index %d \n", pos.x, pos.y, pos.z, maxValue, abs(pos.y), temp, index);
+
+    return true;
+}
+__device__
+float4 updateVelocity(float4 velocity, float4 unitSurfaceNormal, float penetrationDepth) {
+    //ret = velocity - unitSurfaceNormal * (1 + RESTITUTION * penetrationDepth / (TIMESTEP * glm::length(velocity))) * glm::dot(velocity, unitSurfaceNormal);
+    float RESTITUTION = 0.5;
+    
+    //se usar a var aqui ele vai me dar zero por alguma razao
+    float4 ret = (velocity - unitSurfaceNormal * (1 + RESTITUTION * penetrationDepth / (0.01 * length(velocity))) * dot(unitSurfaceNormal, velocity));
+    //printf("(TIMESTEP * length(velocity)) %f  .... length(velocity) %f .... velocity %f %f %f \n",(TIMESTEP * float (length(velocity)) ),length(velocity), velocity.x, velocity.y, velocity.z);
+    return ret;
+}
+
+__global__
+void IntegrateKernel(float4* dptrssboPosition, float4* dptrssboVelocity, float4* dptrssboForce, float* dptrssboDensity, float4* dptrssboGravity, float4* dptrssboSurfaceTension, float4* dptrssboViscosity, float4* dptrssboAcceleration)
+{
+    int index = blockIdx.x * blockDim.x + threadIdx.x;
+    float4 totalForce = make_float4(0);
+
+    totalForce = dptrssboForce[index] + dptrssboViscosity[index] + dptrssboGravity[index] + dptrssboSurfaceTension[index];
+
+
+
+    //employEulerIntegrator
+    dptrssboAcceleration[index] = totalForce / dptrssboDensity[index];
+    float TIMESTEP = 0.01;
+    
+    dptrssboVelocity[index] = dptrssboVelocity[index] + dptrssboAcceleration[index] * TIMESTEP;
+
+    
+    dptrssboPosition[index] = dptrssboPosition[index] + dptrssboVelocity[index] * TIMESTEP;
+
+    
+
+    float4 contactPoint = make_float4(0);
+    float4 unitSurfaceNormal = make_float4(0);
+
+    float cx, cy, cz, nx, ny, nz;
+    
+    bool retcolision = detectCollision(dptrssboPosition[index],&cx, &cy, &cz, &nx, &ny, &nz,index);
+
+    contactPoint = make_float4(cx, cy, cz, 0);
+    unitSurfaceNormal = make_float4(nx, ny, nz, 0);
+
+
+    if (retcolision) {
+        
+        //printf("Contact point %f %f %f normal %f %f %f \n", contactPoint.x, contactPoint.y, contactPoint.z, unitSurfaceNormal.x, unitSurfaceNormal.y, unitSurfaceNormal.z);
+        float4 ret=make_float4(0);
+        float4 arg = make_float4(0);
+
+        arg = dptrssboPosition[index] - contactPoint;
+        
+        ret =updateVelocity(dptrssboVelocity[index], unitSurfaceNormal, length(arg));
+        //printf("updated vel %f %f %f unitSurfaceNormal %f %f %f len %f \n", ret.x, ret.y, ret.z, unitSurfaceNormal.x, unitSurfaceNormal.y, unitSurfaceNormal.z, length(arg));
+
+        dptrssboVelocity[index] = ret * 0.998;
+
+        if (length(dptrssboVelocity[index]) < 0.01)
+            dptrssboVelocity[index] = make_float4(0, 0, 0, 0);
+
+
+        dptrssboPosition[index] = contactPoint;
+    }
+}
+
+__global__
+void UpdateKernel(float4* dptrssboPosition, int* dptrssboIndex, int* dptrssboTempIndex)
+{
+    int index = blockIdx.x * blockDim.x + threadIdx.x;
+
+    uint offset = 43;
+
+    float H = 0.0457;
+
+    uint morton_x = uint((dptrssboPosition[index].x / H) + offset);
+    uint morton_y = uint((dptrssboPosition[index].y / H) + offset);
+    uint morton_z = uint((dptrssboPosition[index].z / H) + offset);
+    uint morton_cell = interleave3(morton_x, morton_y, morton_z);
+
+    dptrssboIndex[index] = morton_cell;
+    dptrssboTempIndex[index] = morton_cell;
+}
+
 void cudaDensityPressure(float4 * dptrssboPosition,int * dptrssboIndex,int * dptrssboCellStart,int * dptrssboCellEnd,float * dptrssboDensity, float * dptrssboPressure, int * dptrssboAdj) {
-	densityPressureKernel << <6750, 32 >> > (dptrssboPosition,dptrssboIndex, dptrssboCellStart, dptrssboCellEnd, dptrssboDensity, dptrssboPressure, dptrssboAdj);
+	densityPressureKernel << <1125, 192 >> > (dptrssboPosition,dptrssboIndex, dptrssboCellStart, dptrssboCellEnd, dptrssboDensity, dptrssboPressure, dptrssboAdj);
 }
 
 void cudaForce(float4* dptrssboPosition, float4* dptrssboVelocity, float4* dptrssboForce, float* dptrssboDensity, float* dptrssboPressure, float4* dptrssboGravity, float4* dptrssboSurfaceNormal, float4* dptrssboSurfaceTension, float4* dptrssboViscosity, int* dptrssboAdj) {
-    ForceKernel << <6750, 32 >> > (dptrssboPosition, dptrssboVelocity, dptrssboForce, dptrssboDensity, dptrssboPressure, dptrssboGravity, dptrssboSurfaceNormal, dptrssboSurfaceTension, dptrssboViscosity, dptrssboAdj);
+    ForceKernel << <1125, 192 >> > (dptrssboPosition, dptrssboVelocity, dptrssboForce, dptrssboDensity, dptrssboPressure, dptrssboGravity, dptrssboSurfaceNormal, dptrssboSurfaceTension, dptrssboViscosity, dptrssboAdj);
+}
+
+void cudaIntegrate(float4 * dptrssboPosition, float4 * dptrssboVelocity, float4 * dptrssboForce,float* dptrssboDensity, float4* dptrssboGravity, float4* dptrssboSurfaceTension, float4* dptrssboViscosity, float4* dptrssboAcceleration) {
+    
+    IntegrateKernel << <1125, 192 >> > (dptrssboPosition, dptrssboVelocity, dptrssboForce, dptrssboDensity, dptrssboGravity, dptrssboSurfaceTension, dptrssboViscosity, dptrssboAcceleration);
+}
+
+void cudaUpdateIndex(float4* dptrssboPosition, int* dptrssboIndex, int* dptrssboTempIndex) {
+
+    UpdateKernel << <1125, 192 >> > (dptrssboPosition, dptrssboIndex, dptrssboTempIndex);
 }

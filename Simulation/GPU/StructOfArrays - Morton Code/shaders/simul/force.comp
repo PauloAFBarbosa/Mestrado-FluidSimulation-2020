@@ -482,7 +482,12 @@ void main()
     uint ret[27];
     int retSize=0;
 
-    retSize=getAdj(position[index], H, ret);
+    vec4 p =position[index];
+    vec4 v = velocity[index];
+    float press = pressure[index];
+    float dens = density[index];
+
+    retSize=getAdj(p, H, ret);
 
     vec4 sumViscosity = vec4(0);
     vec4 sumForce = vec4(0);
@@ -497,29 +502,30 @@ void main()
 
     for (int i = 0 ; i< vizinhos ; i ++){
         //Viscosity
-
-        if (position[index].x == position[adj[index*MAXADJ + i + 1]].x && position[index].y == position[adj[index*MAXADJ + i + 1]].y && position[index].z == position[adj[index*MAXADJ + i + 1]].z)
+        int adji= adj[index*MAXADJ + i + 1];
+        if (p.x == position[adji].x && p.y == position[adji].y && p.z == position[adji].z)
                 continue;
             vec4 arg;
-            arg = position[index] - position[adj[index*MAXADJ + i + 1]];
+            arg = p - position[adji];
 
-            sumViscosity += useViscosityKernel_laplacian(arg, H) * (velocity[adj[index*MAXADJ + i + 1]] - velocity[index]) * (MASS / density[adj[index*MAXADJ + i + 1]]) ;
+            sumViscosity += useViscosityKernel_laplacian(arg, H) * (velocity[adji] - v) * (MASS / density[adji]) ;
 
             //Force
             vec4 ret_kernel = vec4(0);
-            arg = position[index] - position[adj[index*MAXADJ + i + 1]];
+            arg = p - position[adji];
             
             usePressureKernel_gradient(arg, H, ret_kernel);
             
-            sumForce += ret_kernel * (pressure[index] / (density[index] * density[index]) + pressure[adj[index*MAXADJ + i + 1]] / (density[adj[index*MAXADJ + i + 1]] * density[adj[index*MAXADJ + i + 1]])) * MASS;
+            sumForce += ret_kernel * (press / (dens * dens) + pressure[adji] / (density[adji] * density[adji]));
             
-            //SurfaceNormal
-            vec4 ret2 = vec4(0);
+            //SurfaceNormal ------------ nao faz diferença
+
+            //vec4 ret2 = vec4(0);
             
-            arg = position[index]- position[adj[index*MAXADJ + i + 1]];
+            //arg = p- position[adji];
             
-            useDefaultKernel_gradient(arg, H, ret2);
-            sumSurfaceNormal += ret2 * (MASS / density[adj[index*MAXADJ + i + 1]]);
+            //useDefaultKernel_gradient(arg, H, ret2);
+            //sumSurfaceNormal += ret2 * (MASS / density[adji]);
     }
 
     
@@ -527,25 +533,27 @@ void main()
     
     viscosity[index]= sumViscosity * VISCOSITY;
     
-    force[index]= -(sumForce*density[index]);
+    force[index]= -(sumForce*MASS*dens);
     //debug[index] = vec4(density[index]);
 
-    //tempPosition[index]=vec4(sumForce[0],sumForce[1],sumForce[2 ],0);
+    //tempp=vec4(sumForce[0],sumForce[1],sumForce[2 ],0);
 
-    surfaceNormal[index] = sumSurfaceNormal;
+    //surfaceNormal[index] = sumSurfaceNormal;
 
-    gravity[index] = GRAVITY * density[index];
+    //gravity[index] = GRAVITY * density[index];
 
 
+    /*    Surface tension nao faz diferença no resultado quase
 
     if (length(surfaceNormal[index]) >= THRESHOLD) {
 
         for (int i = 0 ; i< vizinhos ; i ++){
-            if (position[index].x == position[adj[index*MAXADJ + i + 1]].x && position[index].y == position[adj[index*MAXADJ + i + 1]].y && position[index].z == position[adj[index*MAXADJ + i + 1]].z)
+            int adji= adj[index*MAXADJ + i + 1];
+            if (p.x == position[adji].x && p.y == position[adji].y && p.z == position[adji].z)
                 continue;
             vec4 arg;
-            arg = position[index] - position[adj[index*MAXADJ+i+1]];
-            sum += (MASS / density[adj[index*MAXADJ+i+1]]) * useDefaultKernel_laplacian(arg, H);
+            arg = p - position[adji];
+            sum += (MASS / density[adji]) * useDefaultKernel_laplacian(arg, H);
         }
             
             
@@ -561,4 +569,5 @@ void main()
         else {
             surfaceTension[index]= vec4(0);
         }
+    */
 }

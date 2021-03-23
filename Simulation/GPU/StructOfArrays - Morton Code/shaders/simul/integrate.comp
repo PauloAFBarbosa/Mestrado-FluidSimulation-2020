@@ -45,6 +45,7 @@ uniform float ZMIN;
 uniform float DECLIVE;
 uniform float RESTITUTION;
 uniform float TIMESTEP;
+uniform vec4 GRAVITY;
 
 layout(std430, binding = 0) buffer Position
 {
@@ -221,12 +222,13 @@ void main()
 
     vec4 totalForce= vec4(0);
 
-    totalForce = force[index] + viscosity[index] + gravity[index] + surfaceTension[index];
+    //retirado surfaceTension
+    totalForce = force[index] + viscosity[index]; //+ surfaceTension[index];
 
     
 
     //employEulerIntegrator
-    acceleration[index] = totalForce / density[index];
+    acceleration[index] = totalForce / density[index] + GRAVITY;
 
     velocity[index] = velocity[index] + acceleration[index] * TIMESTEP;
     

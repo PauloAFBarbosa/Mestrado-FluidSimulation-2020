@@ -388,6 +388,7 @@
 					<valueof uniform="ZMIN" 		type="RENDERER" 		context="CURRENT" 		component="ZMIN" />
 					<valueof uniform="DECLIVE" 		type="RENDERER" 		context="CURRENT" 		component="DECLIVE" />
 					<valueof uniform="RESTITUTION" 		type="RENDERER" 		context="CURRENT" 		component="RESTITUTION" />
+					<valueof uniform="GRAVITY" 		type="RENDERER" 		context="CURRENT" 		component="GRAVITY" />
 				</values>
 		    </shader>
 			<buffers>

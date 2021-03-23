@@ -45,8 +45,8 @@
 				<attribute name="Particle_Color" 			data="VEC4" 	type="RENDERER" x="0.0" y="0.3" z="0.3" w="1"/>
 				<attribute name="Thin_Color" 				data="VEC4" 	type="RENDERER" x="0.8" y="1.0" z="1.0" w="1"/>
 				<attribute name="ETA"						data="FLOAT" 	type="RENDERER" value="1.1" />
-				<attribute name="Blur"						data="INT" 		type="RENDERER" value="2" />
-				<attribute name="DebugParticles"			data="INT" 		type="RENDERER" value="0" />
+				<attribute name="Blur"						data="INT" 		type="RENDERER" value="0" />
+				<attribute name="DebugParticles"			data="INT" 		type="RENDERER" value="1" />
 				<attribute name="Particle_alpha"			data="FLOAT" 	type="RENDERER" value="0.02" />
 				<attribute name="Particle_Size"				data="VEC3" 	type="RENDERER" x="0.015" y="0.01" z="0.01" />
 				<attribute name="ThickType" 				data="INT"		type="RENDERER" value="2"  />
@@ -115,10 +115,10 @@
 		<cameras>
 			<camera name="MainCamera" >
 				<viewport name="MainViewport" />
-				<POSITION x="-0.062" y="1.110" z="1.585" />
+				<POSITION x="0.0" y="0.0" z="4.0" />
 				<NEAR 	value="0.02" />
 				<FAR 	value="100" /> 
-				<LOOK_AT_POINT x="-0.053" y="0.349" z="0.936"/>
+				<LOOK_AT_POINT x="-0.053" y="-1.0" z="0.936"/>
 			</camera>
 		</cameras>
 		
