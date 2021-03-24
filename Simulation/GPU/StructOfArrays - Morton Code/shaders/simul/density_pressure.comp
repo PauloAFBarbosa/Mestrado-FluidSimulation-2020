@@ -85,6 +85,11 @@ layout(std430, binding = 7) buffer Index
     uint bufferIndex[];
 };
 
+layout(std430, binding = 8) buffer AdjV2
+{
+    int adjV2[];
+};
+
 //Morton code --------------------------------------------
 
 
@@ -183,110 +188,110 @@ int getAdj(vec4 pos, float H, out uint ret[27]) {
     ret[retSize] = morton_cell;
     retSize++;
 
-    //1864184 é o numero maximo que o morton code pode devolver num cubo de -2 a 2 
-    if (morton_x < 1864184 && morton_y > 0 && morton_z > 0){
+    //86 é o numero maximo que o morton code pode devolver num cubo de -2 a 2 
+    if (morton_x < 86 && morton_y > 0 && morton_z > 0){
         morton_cell = interleave3(morton_x+1, morton_y-1, morton_z-1);
         ret[retSize] = morton_cell;
         retSize++;
     }
-    if (morton_x < 1864184  && morton_z > 0){
+    if (morton_x < 86  && morton_z > 0){
         morton_cell = interleave3(morton_x+1, morton_y, morton_z-1);
         ret[retSize] = morton_cell;
         retSize++;
     }
-    if (morton_x < 1864184  && morton_y > 0){
+    if (morton_x < 86  && morton_y > 0){
         morton_cell = interleave3(morton_x+1, morton_y-1, morton_z);
         ret[retSize] = morton_cell;
         retSize++;
     }
 
-    if (morton_x < 1864184  ){
+    if (morton_x < 86  ){
         morton_cell = interleave3(morton_x+1, morton_y, morton_z);
         ret[retSize] = morton_cell;
         retSize++;
     }
 
-    if (morton_x  > 0  && morton_y < 1864184 && morton_z > 0){
+    if (morton_x  > 0  && morton_y < 86 && morton_z > 0){
         morton_cell = interleave3(morton_x-1, morton_y+1, morton_z-1);
         ret[retSize] = morton_cell;
         retSize++;
     }
 
-    if (morton_y < 1864184 && morton_z > 0){
+    if (morton_y < 86 && morton_z > 0){
         morton_cell = interleave3(morton_x, morton_y+1, morton_z-1);
         ret[retSize] = morton_cell;
         retSize++;
     }
 
-    if (morton_y < 1864184 && morton_x > 0){
+    if (morton_y < 86 && morton_x > 0){
         morton_cell = interleave3(morton_x-1, morton_y+1, morton_z);
         ret[retSize] = morton_cell;
         retSize++;
     }
-    if (morton_y < 1864184 ){
+    if (morton_y < 86 ){
         morton_cell = interleave3(morton_x, morton_y+1, morton_z);
         ret[retSize] = morton_cell;
         retSize++;
     }
 
-    if (morton_x  < 1864184  && morton_y < 1864184 && morton_z > 0){
+    if (morton_x  < 86  && morton_y < 86 && morton_z > 0){
         morton_cell = interleave3(morton_x+1, morton_y+1, morton_z-1);
         ret[retSize] = morton_cell;
         retSize++;
     }
 
-    if (morton_x  < 1864184  && morton_y < 1864184){
+    if (morton_x  < 86  && morton_y < 86){
         morton_cell = interleave3(morton_x+1, morton_y+1, morton_z);
         ret[retSize] = morton_cell;
         retSize++;
     }
 
-    if (morton_x  >0  && morton_y >0 && morton_z < 1864184){
+    if (morton_x  >0  && morton_y >0 && morton_z < 86){
         morton_cell = interleave3(morton_x-1, morton_y-1, morton_z+1);
         ret[retSize] = morton_cell;
         retSize++;
     }
-    if (morton_y >0 && morton_z < 1864184){
+    if (morton_y >0 && morton_z < 86){
         morton_cell = interleave3(morton_x, morton_y-1, morton_z+1);
         ret[retSize] = morton_cell;
         retSize++;
     }
-    if (morton_x >0 && morton_z < 1864184){
+    if (morton_x >0 && morton_z < 86){
         morton_cell = interleave3(morton_x-1, morton_y, morton_z+1);
         ret[retSize] = morton_cell;
         retSize++;
     }
 
-    if (morton_z < 1864184){
+    if (morton_z < 86){
         morton_cell = interleave3(morton_x, morton_y, morton_z+1);
         ret[retSize] = morton_cell;
         retSize++;
     }
 
-    if (morton_x  < 1864184  && morton_y >0 && morton_z < 1864184 ){
+    if (morton_x  < 86  && morton_y >0 && morton_z < 86 ){
         morton_cell = interleave3(morton_x+1, morton_y-1, morton_z+1);
         ret[retSize] = morton_cell;
         retSize++;
     }
-    if (morton_x  < 1864184  && morton_z < 1864184 ){
+    if (morton_x  < 86  && morton_z < 86 ){
         morton_cell = interleave3(morton_x+1, morton_y, morton_z+1);
         ret[retSize] = morton_cell;
         retSize++;
     }
 
-    if (morton_x >0 && morton_y < 1864184 && morton_z < 1864184 ){
+    if (morton_x >0 && morton_y < 86 && morton_z < 86 ){
         morton_cell = interleave3(morton_x-1, morton_y+1, morton_z+1);
         ret[retSize] = morton_cell;
         retSize++;
     }
 
-    if (morton_y < 1864184 && morton_z < 1864184 ){
+    if (morton_y < 86 && morton_z < 86 ){
         morton_cell = interleave3(morton_x, morton_y+1, morton_z+1);
         ret[retSize] = morton_cell;
         retSize++;
     }
 
-    if (morton_x <1864184 && morton_y < 1864184 && morton_z < 1864184 ){
+    if (morton_x <86 && morton_y < 86 && morton_z < 86 ){
         morton_cell = interleave3(morton_x+1, morton_y+1, morton_z+1);
         ret[retSize] = morton_cell;
         retSize++;
@@ -343,29 +348,36 @@ void main()
 
     uint ret[27];
     int retSize=0;
+    vec4 p = position[index];
 
     uint offset = 43;
-    uint morton_x = uint((position[index].x / H) +offset);
-    uint morton_y = uint((position[index].y / H) +offset);
-    uint morton_z = uint((position[index].z / H) +offset);
+    uint morton_x = uint((p.x / H) +offset);
+    uint morton_y = uint((p.y / H) +offset);
+    uint morton_z = uint((p.z / H) +offset);
 
+    uint mycell=interleave3(morton_x,morton_y,morton_z);
+    
     //debug[index] = vec4 (morton_x,morton_y,morton_z,0);    
 
-    retSize=getAdj(position[index], H, ret);
+    retSize=getAdj(p, H, ret);
+
+    //retSize=adjV2[mycell*28];
+
+    //debug[index]= vec4(mycell,morton_x,morton_y,morton_z);
     
     // compute density
     float sum=1;
 
     int vizinhos=0;
 
-    int naovizinhos=0;
-
-    vec4 p = position[index];
+    
 
     for (int j = 0; j < retSize; j++)
         {
             //uint bucket = uint(adjMat[(28*b)+(j+1)]) ;
             uint cell = ret[j];
+
+            //uint cell = adjV2[(mycell*28)+(j+1)];
     
             int from = cellStart[cell];
             int to = from + cellEnd[cell];
@@ -388,24 +400,15 @@ void main()
                     vizinhos++;
                     
                 }
-                else{
-
-                    naovizinhos++;
-                }
 
                 sum += ker_res;
 
-                
-                
-                
-                
                 
             }
         }
     
     adj[index*MAXADJ]=vizinhos;
-
-    //debug[index]= vec4(conta,7,7,naovizinhos);
+    
     density[index] = sum*MASS;
     
     // compute pressure

@@ -286,9 +286,8 @@ void main()
                     uint morton_x = uint((x / H) +offset);
                     uint morton_y = uint((y / H) +offset);
                     uint morton_z = uint((z / H) +offset);
-
                     uint morton_cell = interleave3(morton_x, morton_y, morton_z);
-                    
+
                     
                     
                     //tempPosition agora vai guardar o index do codigo morton e o position guarda a posição normal
@@ -300,7 +299,36 @@ void main()
                     
             }
         }
-    }    
+    }
+
+    uint ret[27];
+    int retsize;
+    for (int x = 0; x < 86; x++)
+    {
+        for (int y = 0; y < 86; y++)
+        {
+            for (int z = 0; z < 86; z++)
+            {
+                retsize=getAdj(uint(x), uint(y), uint(z), H, ret);
+                uint mycell = interleave3(uint(x), uint(y), uint(z));
+
+                adjV2[mycell*28]= retsize;
+
+                for (int i = 0; i < 27; i++)
+                {
+                    if (i < retsize) {
+                        adjV2[mycell*28+i+1]=int(ret[i]);
+                    }
+                    else {
+                        adjV2[mycell*28+i+1]= 0;
+                    }
+                }
+                
+            }
+        }
+    }
+
+    
 
     
 

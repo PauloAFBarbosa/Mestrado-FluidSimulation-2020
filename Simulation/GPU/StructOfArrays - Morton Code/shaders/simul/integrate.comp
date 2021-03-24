@@ -47,6 +47,9 @@ uniform float RESTITUTION;
 uniform float TIMESTEP;
 uniform vec4 GRAVITY;
 
+uniform vec4 Ball;
+uniform float BallSize;
+
 layout(std430, binding = 0) buffer Position
 {
     vec4 position[];
@@ -92,7 +95,86 @@ layout(std430, binding = 7) buffer Viscosity
 };
 
 
+bool detectCollisionV2(vec4 pos, out vec4 contactPoint, out vec4 unitSurfaceNormal) {
+    //o cubo esta centrado em 0,0,0
+    float newx = pos.x + XMAX;
+    float temp = (XMAX + XMAX) - newx;
+    temp = temp / (XMAX + XMAX); //devolve 1 quando newx é 0, ou seja, a particula esta encostada a parede esquerda
+                                // devolve 0 quando esta encostada a parede direita
 
+    float newy = YMIN + (temp * DECLIVE);
+
+    if (pos.x < XMAX && pos.x > XMIN && pos.y < YMAX && pos.y > newy && pos.z < ZMAX && pos.z > ZMIN){
+        //Colission with the ball
+        float dist=length(Ball-pos);
+        if(dist<BallSize){
+            vec4 pointer=normalize(pos-Ball);
+            contactPoint = Ball + pointer*BallSize;
+            unitSurfaceNormal=pointer;
+            return true;
+        }
+        else
+            return false;
+    }
+
+
+    contactPoint = vec4(pos.x,pos.y,pos.z,0);
+
+    unitSurfaceNormal= vec4(0);
+
+    if (pos.x < XMIN) {
+            contactPoint.x = XMIN;
+            
+            unitSurfaceNormal = normalize(unitSurfaceNormal+vec4(1,0,0,0));
+            
+            
+    }
+    else if (pos.x > XMAX) {
+            contactPoint.x = XMAX;
+            
+            unitSurfaceNormal = normalize(unitSurfaceNormal+vec4(-1,0,0,0));
+            
+
+    }
+    if (pos.y < newy) {
+            contactPoint.y =newy;
+            unitSurfaceNormal = normalize(unitSurfaceNormal+vec4(DECLIVE,1-DECLIVE,0,0));
+            
+            
+        }
+        else if (pos.y > YMAX) {
+            contactPoint.y =YMAX;
+            
+            unitSurfaceNormal = normalize(unitSurfaceNormal+vec4(0,-1,0,0));
+            
+            
+        }
+        
+    
+        if (pos.z < ZMIN) {
+            contactPoint.z =ZMIN;
+            unitSurfaceNormal = normalize(unitSurfaceNormal+vec4(0,0,1,0));
+            
+            
+            
+        }
+        else if (pos.z > ZMAX) {
+            contactPoint.z =ZMAX;
+            unitSurfaceNormal = normalize(unitSurfaceNormal+vec4(0,0,-1,0));
+            
+               
+        }
+
+        float dist=length(Ball-pos);
+        if(dist<BallSize){
+            vec4 pointer=normalize(pos-Ball);
+            //contactPoint = Ball + pointer*BallSize;
+            unitSurfaceNormal=normalize(unitSurfaceNormal+pointer);
+            
+        }
+
+        return true;
+}
 
 
 
@@ -237,7 +319,7 @@ void main()
     vec4 contactPoint= vec4(0);
     vec4 unitSurfaceNormal= vec4(0);
     
-    bool retcolision = detectCollision(position[index], contactPoint, unitSurfaceNormal);
+    bool retcolision = detectCollisionV2(position[index], contactPoint, unitSurfaceNormal);
     
 
 

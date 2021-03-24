@@ -487,8 +487,7 @@ void main()
     float press = pressure[index];
     float dens = density[index];
 
-    retSize=getAdj(p, H, ret);
-
+    
     vec4 sumViscosity = vec4(0);
     vec4 sumForce = vec4(0);
     vec4 sumSurfaceNormal= vec4(0);

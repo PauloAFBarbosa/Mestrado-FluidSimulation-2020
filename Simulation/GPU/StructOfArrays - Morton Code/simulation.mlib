@@ -171,6 +171,15 @@
 			</structure>
 			<CLEAR value="NEVER" />
 		</buffer>
+		<buffer name="AdjV2">
+			<!-- NUMBER_OF_PARTICLES*100 216000 -->
+			<DIM x="2000000*28" y="1" z="1" />
+			<structure>
+				<field value="INT" />
+			</structure>
+			<CLEAR value="NEVER" />
+			<file name="adj.txt"/>
+		</buffer>
 		<buffer name="Histogram">
 			<!-- 216 porque vamos ter 216 threads -->
 			<DIM x="10" y="2160" z="1" />
@@ -248,6 +257,10 @@
 					<buffer name="TempIndex">
 						<TYPE value="SHADER_STORAGE" />
 						<BINDING_POINT value="5" />
+					</buffer>
+					<buffer name="AdjV2">
+						<TYPE value="SHADER_STORAGE" />
+						<BINDING_POINT value="6" />
 					</buffer>
 					
 								
@@ -389,6 +402,8 @@
 					<valueof uniform="DECLIVE" 		type="RENDERER" 		context="CURRENT" 		component="DECLIVE" />
 					<valueof uniform="RESTITUTION" 		type="RENDERER" 		context="CURRENT" 		component="RESTITUTION" />
 					<valueof uniform="GRAVITY" 		type="RENDERER" 		context="CURRENT" 		component="GRAVITY" />
+					<valueof uniform="Ball" 		type="RENDERER" 		context="CURRENT" 		component="Ball" />
+					<valueof uniform="BallSize" 		type="RENDERER" 		context="CURRENT" 		component="BallSize" />
 				</values>
 		    </shader>
 			<buffers>
@@ -477,6 +492,11 @@
 					<buffer name="Index">
 						<TYPE value="SHADER_STORAGE" />
 						<BINDING_POINT value="7" />
+					</buffer>
+
+					<buffer name="AdjV2">
+						<TYPE value="SHADER_STORAGE" />
+						<BINDING_POINT value="8" />
 					</buffer>
 									
 			</buffers>
