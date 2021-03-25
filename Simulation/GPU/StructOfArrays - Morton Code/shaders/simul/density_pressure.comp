@@ -20,7 +20,7 @@
 
 #version 460
 
-#define WORK_GROUP_SIZE 32
+#define WORK_GROUP_SIZE 64
 
 layout (local_size_x = WORK_GROUP_SIZE) in;
 
@@ -338,7 +338,7 @@ void main()
     if (Pause == 1)
         return;
 
-    int conta=0;
+    
     
     uint index = gl_GlobalInvocationID.x;
 
@@ -355,15 +355,16 @@ void main()
     uint morton_y = uint((p.y / H) +offset);
     uint morton_z = uint((p.z / H) +offset);
 
-    uint mycell=interleave3(morton_x,morton_y,morton_z);
+    //O mycell ja tem o * 28, pois cada celula pode ter 27 vizinhos mais 1 posição para guardar o tamanho
+    uint mycell=28*interleave3(morton_x,morton_y,morton_z);
     
     //debug[index] = vec4 (morton_x,morton_y,morton_z,0);    
 
-    retSize=getAdj(p, H, ret);
+    //retSize=getAdj(p, H, ret);
 
-    //retSize=adjV2[mycell*28];
+    retSize=adjV2[mycell];
 
-    //debug[index]= vec4(mycell,morton_x,morton_y,morton_z);
+    //debug[index]= vec4(mycell,retSize,adjV2[mycell*28],0);
     
     // compute density
     float sum=1;
@@ -375,9 +376,9 @@ void main()
     for (int j = 0; j < retSize; j++)
         {
             //uint bucket = uint(adjMat[(28*b)+(j+1)]) ;
-            uint cell = ret[j];
+            //uint cell = ret[j];
 
-            //uint cell = adjV2[(mycell*28)+(j+1)];
+            uint cell = adjV2[(mycell)+(j+1)];
     
             int from = cellStart[cell];
             int to = from + cellEnd[cell];
@@ -392,7 +393,7 @@ void main()
 
                 if (ker_res!=0 ){
                     
-                    conta++;
+                    
                     //int vizinhos = adj[index*MAXADJ];
                     //Aqui é MAXADJ porque no maximo vai dar para guardar 99 vizinhos mais 1 posição para dizer quantos vizinhos se guardou
                     adj[index*MAXADJ + vizinhos + 1]= i;

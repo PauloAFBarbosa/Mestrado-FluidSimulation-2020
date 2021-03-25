@@ -1682,8 +1682,40 @@ inline uint64_t mortonEncode_magicbits(unsigned int x, unsigned int y, unsigned 
 	return answer;
 }
 
+void partSort(unsigned int arr[], int N, int a, int b)
+{
+	// Variables to store start and
+	// end of the index range
+	int l = min(a, b);
+	int r = max(a, b);
+
+	// Temporary array
+	int *temp = new int[r - l + 1];
+	int j = 0;
+	for (int i = l; i <= r; i++) {
+		temp[j] = arr[i];
+		j++;
+	}
+
+	// Sort the temporary array
+	sort(temp, temp + r - l + 1);
+
+	// Modifying original array with
+	// temporary array elements
+	j = 0;
+	for (int i = l; i <= r; i++) {
+		arr[i] = temp[j];
+		j++;
+	}
+}
+
 
 int main(int argc, char** argv) {
+	unsigned int xD = 154125;
+	unsigned int r1, r2, r3;
+	deinterleave3(xD, r1, r2, r3);
+	printf ("154125 é igual a cell %d %d %d\n",r1,r2,r3);
+	
 
 	printf("max element will be %d\n", (unsigned int)((2 / H) + 43));
 	
@@ -1699,12 +1731,18 @@ int main(int argc, char** argv) {
 		{
 			for (unsigned int z = 0; z < 87; z++)
 			{
+				for (int i = 0; i < 27; i++)
+				{
+					ret2[i] = 0;
+				}
 				retsize2=getAdjv2(x, y, z, H, ret2);
+
+				//partSort(ret2, 27, 0, retsize2-1);
 
 				unsigned int mycell = interleave3(x, y, z);
 				//myfile << retsize2 << "\n";
 				result[mycell * 28] = retsize2;
-				for (int i = 0; i < 27; i++)
+				for (unsigned int i = 0; i < 27; i++)
 				{
 					if (i < retsize2) {
 						result[mycell * 28 + 1 + i] = ret2[i];

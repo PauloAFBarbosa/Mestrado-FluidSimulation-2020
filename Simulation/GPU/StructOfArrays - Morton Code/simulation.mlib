@@ -173,7 +173,7 @@
 		</buffer>
 		<buffer name="AdjV2">
 			<!-- NUMBER_OF_PARTICLES*100 216000 -->
-			<DIM x="2000000*28" y="1" z="1" />
+			<DIM x="2000000" y="28" z="1" />
 			<structure>
 				<field value="INT" />
 			</structure>

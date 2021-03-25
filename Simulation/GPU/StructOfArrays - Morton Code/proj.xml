@@ -156,7 +156,7 @@
 			
 			
 			<pass class="compute" name="DensityPressure">
-				<material name="density_pressure" fromLibrary="simulationLib" dimX="NUMBER_OF_WORK_GROUPS" dimY="1" dimZ="1"/>
+				<material name="density_pressure" fromLibrary="simulationLib" dimX="3375" dimY="1" dimZ="1"/>
 			</pass>
 			<pass class="compute" name="Force">
 				<material name="force" fromLibrary="simulationLib" dimX="NUMBER_OF_WORK_GROUPS" dimY="1" dimZ="1"/>
