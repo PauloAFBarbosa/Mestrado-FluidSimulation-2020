@@ -33,22 +33,13 @@ layout(std430, binding = 2) buffer Index
     uint index[];
 };
 
-layout(std430, binding = 3) buffer Exp
-{
-    uint exp[];
-};
 
-layout(std430, binding = 4) buffer UseTemp
-{
-    uint useTemp[];
-};
-
-layout(std430, binding = 5) buffer TempIndex
+layout(std430, binding = 3) buffer TempIndex
 {
     uint tempIndex[];
 };
 
-layout(std430, binding = 6) buffer AdjV2
+layout(std430, binding = 4) buffer AdjV2
 {
     int adjV2[];
 };
@@ -269,10 +260,10 @@ void main()
     int inseridos=0;
     
     int conta=0;
-    int myoffset = 0;
+    
 
-    exp[0]=1;
-    useTemp[0]=0;
+    
+    
 
     //Cria as particulas e poe no array temporario
     //calcula o tamanho de cada bucket, tambem temporario

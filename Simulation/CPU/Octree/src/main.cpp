@@ -1713,17 +1713,27 @@ void partSort(unsigned int arr[], int N, int a, int b)
 int main(int argc, char** argv) {
 	unsigned int xD = 154125;
 	unsigned int r1, r2, r3;
-	deinterleave3(xD, r1, r2, r3);
-	printf ("154125 é igual a cell %d %d %d\n",r1,r2,r3);
+	//deinterleave3(xD, r1, r2, r3);
+	//printf ("154125 é igual a cell %d %d %d\n",r1,r2,r3);
 	
 
-	printf("max element will be %d\n", (unsigned int)((2 / H) + 43));
+	printf("min %d max %d\n", (unsigned int)((-5 / H)+109), (unsigned int)((5 / H) + 109));
+
+	printf("Max morton code fica %d ... com magic bits fica %d\n", interleave3(86, 86, 86), mortonEncode_magicbits(86, 86, 86));
+
 	
 
 	unsigned int ret2[27];
 	int retsize2;
 
-	int * result = new int[2000000 * 28];
+	int* result = new int[2000000 * 28];
+
+	int* indexes = new int[87*87*87];
+
+	for (int i = 0; i < 87 * 87 * 87; i++)
+	{
+		indexes[i] = -1;
+	}
 
 	for (unsigned int x = 0; x < 87; x++)
 	{
@@ -1735,11 +1745,13 @@ int main(int argc, char** argv) {
 				{
 					ret2[i] = 0;
 				}
-				retsize2=getAdjv2(x, y, z, H, ret2);
+				retsize2 = getAdjv2(x, y, z, H, ret2);
 
 				//partSort(ret2, 27, 0, retsize2-1);
 
 				unsigned int mycell = interleave3(x, y, z);
+
+				indexes[x + 87 * (y + 87 * z)] = mycell;
 				//myfile << retsize2 << "\n";
 				result[mycell * 28] = retsize2;
 				for (unsigned int i = 0; i < 27; i++)
@@ -1756,14 +1768,27 @@ int main(int argc, char** argv) {
 			}
 		}
 	}
+	printf("vai fazer sort dos indexes \n");
+	//sort(indexes, indexes + 2000000);
+	printf("Feito \n");
+
 	ofstream myfile;
 	myfile.open("adj.txt");
-	for (int i = 0; i < 2000000*28; i++)
+	for (int i = 0; i < 2000000 * 28; i++)
 	{
 		myfile << result[i] << "\n";
 	}
 
 	myfile.close();
+
+	ofstream myfile2;
+	myfile2.open("indexes.txt");
+	for (int i = 0; i < 87 * 87 * 87; i++)
+	{
+		myfile2 << indexes[i] << "\n";
+	}
+
+	myfile2.close();
 	
 	float txf = 10;
 	float tyf = 10;
@@ -1775,7 +1800,7 @@ int main(int argc, char** argv) {
 
 	printf("tx %d ty %d tz %d\n", tx, ty, tz);
 
-	unsigned int offset = 218;
+	unsigned int offset = 86;
 
 	printf("Valor %u %d\n", interleave3(tx + offset, ty + offset, tz + offset), interleave3(tx + offset, ty + offset, tz + offset));
 

@@ -83,7 +83,7 @@
 	
 				<attribute name="PONTOS_LADO" 				data="INT" 		type="RENDERER" value="60"/>
 				<attribute name="HASHSIZE" 					data="INT" 		type="RENDERER" value="HASH_SIZE"/>
-				<!--Usado para definir o volume onde vai ser feita a simulação-->
+				<!--Usado para definir o volume onde vai ser feita a simulação ... pode ir de -5 até 5 -->
 				<attribute name="XMIN" 						data="FLOAT" 		type="RENDERER" value="-2"/>
 				<attribute name="YMIN" 						data="FLOAT" 		type="RENDERER" value="-2"/>
 				<attribute name="ZMIN" 						data="FLOAT" 		type="RENDERER" value="-2"/>

@@ -44,48 +44,48 @@ uniform float H;
 uniform float MASS;
 uniform float STIFF;
 
-layout(std430, binding = 0) buffer Position
+layout(std430, binding = 0) readonly restrict buffer Position
 {
     vec4 position[];
 };
 
 
-layout(std430, binding = 1) buffer Density
+layout(std430, binding = 1) restrict buffer Density
 {
     float density[];
 };
 
-layout(std430, binding = 2) buffer Pressure
+layout(std430, binding = 2) restrict buffer Pressure
 {
     float pressure[];
 };
 
-layout(std430, binding = 3) buffer Debug
+layout(std430, binding = 3) restrict buffer Debug
 {
     vec4 debug[];
 };
 
-layout(std430, binding = 4) buffer Adj
+layout(std430, binding = 4) restrict buffer Adj
 {
     int adj[];
 };
 
-layout(std430, binding = 5) buffer CellStart
+layout(std430, binding = 5) readonly restrict buffer CellStart
 {
     int cellStart[];
 };
 
-layout(std430, binding = 6) buffer CellEnd
+layout(std430, binding = 6) readonly restrict buffer CellEnd
 {
     int cellEnd[];
 };
 
-layout(std430, binding = 7) buffer Index
+layout(std430, binding = 7) readonly restrict buffer Index
 {
     uint bufferIndex[];
 };
 
-layout(std430, binding = 8) buffer AdjV2
+layout(std430, binding = 8) readonly restrict buffer AdjV2
 {
     int adjV2[];
 };
@@ -335,6 +335,7 @@ float random (vec2 uv)
 
 void main()
 {
+    
     if (Pause == 1)
         return;
 

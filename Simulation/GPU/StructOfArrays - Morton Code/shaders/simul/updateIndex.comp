@@ -33,17 +33,7 @@ layout(std430, binding = 2) buffer Index
     uint bufferIndex[];
 };
 
-layout(std430, binding = 3) buffer Exp
-{
-    uint exp[];
-};
-
-layout(std430, binding = 4) buffer UseTemp
-{
-    uint useTemp[];
-};
-
-layout(std430, binding = 5) buffer TempIndex
+layout(std430, binding = 3) buffer TempIndex
 {
     uint tempIndex[];
 };
@@ -92,9 +82,6 @@ void main()
     
     if (Pause == 1)
         return;
-   
-    exp[0]=1;
-    useTemp[0]=0;
 
     uint index = gl_GlobalInvocationID.x;
 

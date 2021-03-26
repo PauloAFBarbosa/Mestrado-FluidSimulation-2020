@@ -45,49 +45,51 @@ uniform float H;
 uniform int Number_Particles;
 uniform vec3 External_Force;
 uniform int Pause;
-layout(std430, binding = 0) buffer Position
+
+layout(std430, binding = 0) readonly restrict buffer Position
 {
     vec4 position[];
 };
 
-layout(std430, binding = 1) buffer Velocity
+layout(std430, binding = 1) readonly restrict buffer Velocity
 {
     vec4 velocity[];
 };
 
-layout(std430, binding = 2) buffer Force
+layout(std430, binding = 2) restrict buffer Force
 {
     vec4 force[];
 };
 
-layout(std430, binding = 3) buffer Density
+layout(std430, binding = 3) readonly restrict buffer Density
 {
     float density[];
 };
 
-layout(std430, binding = 4) buffer Pressure
+layout(std430, binding = 4) readonly restrict buffer Pressure
 {
+    
     float pressure[];
 };
 
 
 
-layout(std430, binding = 5) buffer Gravity
+layout(std430, binding = 5) readonly restrict buffer Gravity
 {
     vec4 gravity[];
 };
 
-layout(std430, binding = 6) buffer SurfaceNormal
+layout(std430, binding = 6) restrict buffer SurfaceNormal
 {
     vec4 surfaceNormal[];
 };
 
-layout(std430, binding = 7) buffer SurfaceTension
+layout(std430, binding = 7) restrict buffer SurfaceTension
 {
     vec4 surfaceTension[];
 };
 
-layout(std430, binding = 8) buffer Viscosity
+layout(std430, binding = 8) restrict buffer Viscosity
 {
     vec4 viscosity[];
 };
@@ -98,12 +100,12 @@ layout(std430, binding = 8) buffer Viscosity
 
 
 
-layout(std430, binding = 9) buffer Debug
+layout(std430, binding = 9) restrict buffer Debug
 {
     vec4 debug[];
 };
 
-layout(std430, binding = 10) buffer Adj
+layout(std430, binding = 10) readonly restrict buffer Adj
 {
     int adj[];
 };

@@ -130,30 +130,7 @@
 			<CLEAR value="NEVER" />
 		</buffer>
 
-		<buffer name="CountRadix">
-			<DIM x="10" y="1" z="1" />
-			<structure>
-				<field value="UINT" />
-			</structure>
-			<CLEAR value="NEVER" />
-		</buffer>
-
-		<buffer name="Exp">
-			<DIM x="1" y="1" z="1" />
-			<structure>
-				<field value="UINT" />
-			</structure>
-			<CLEAR value="NEVER" />
-		</buffer>
-		<buffer name="UseTemp">
-			<DIM x="1" y="1" z="1" />
-			<structure>
-				<field value="UINT" />
-			</structure>
-			<CLEAR value="NEVER" />
-		</buffer>
 		
-
 		
 		<buffer name="Debug">
 			<DIM x="NUMBER_OF_PARTICLES" y="1" z="1" />
@@ -180,22 +157,7 @@
 			<CLEAR value="NEVER" />
 			<file name="adj.txt"/>
 		</buffer>
-		<buffer name="Histogram">
-			<!-- 216 porque vamos ter 216 threads -->
-			<DIM x="10" y="2160" z="1" />
-			<structure>
-				<field value="INT" />
-			</structure>
-			<CLEAR value="NEVER" />
-		</buffer>
-		<buffer name="PrefixSum">
-			<!-- 216 porque vamos ter 216 threads -->
-			<DIM x="10" y="2160" z="1" />
-			<structure>
-				<field value="INT" />
-			</structure>
-			<CLEAR value="NEVER" />
-		</buffer>
+		
 
 		<buffer name="CellStart">
 			<!-- Vai indicar o index (no array das particulas) onde uma celula começa -->
@@ -246,21 +208,13 @@
 						<BINDING_POINT value="2" />
 					</buffer>
 
-					<buffer name="Exp">
+					<buffer name="TempIndex">
 						<TYPE value="SHADER_STORAGE" />
 						<BINDING_POINT value="3" />
 					</buffer>
-					<buffer name="UseTemp">
-						<TYPE value="SHADER_STORAGE" />
-						<BINDING_POINT value="4" />
-					</buffer>
-					<buffer name="TempIndex">
-						<TYPE value="SHADER_STORAGE" />
-						<BINDING_POINT value="5" />
-					</buffer>
 					<buffer name="AdjV2">
 						<TYPE value="SHADER_STORAGE" />
-						<BINDING_POINT value="6" />
+						<BINDING_POINT value="4" />
 					</buffer>
 					
 								
@@ -295,18 +249,9 @@
 						<TYPE value="SHADER_STORAGE" />
 						<BINDING_POINT value="2" />
 					</buffer>
-
-					<buffer name="Exp">
-						<TYPE value="SHADER_STORAGE" />
-						<BINDING_POINT value="3" />
-					</buffer>
-					<buffer name="UseTemp">
-						<TYPE value="SHADER_STORAGE" />
-						<BINDING_POINT value="4" />
-					</buffer>
 					<buffer name="TempIndex">
 						<TYPE value="SHADER_STORAGE" />
-						<BINDING_POINT value="5" />
+						<BINDING_POINT value="3" />
 					</buffer>
 					
 								
