@@ -117,10 +117,10 @@ unsigned int  interleave3(unsigned int x, unsigned int y, unsigned int z) {
 }
 
 
-void deinterleave3(unsigned int n, unsigned int x, unsigned int y, unsigned int z) {
-	x = unpart1by2(n);
-	y = unpart1by2(n >> 1);
-	z = unpart1by2(n >> 2);
+void deinterleave3(unsigned int n, unsigned int * x, unsigned int * y, unsigned int * z) {
+	*x = unpart1by2(n);
+	*y = unpart1by2(n >> 1);
+	*z = unpart1by2(n >> 2);
 }
 
 //Morton code --------------------------------------------
@@ -1504,7 +1504,7 @@ void radixsort(int arr[], int n)
 int getAdjv2(unsigned int x, unsigned int y, unsigned int z, float H, unsigned int ret[27]) {
 
 	int retSize = 0;
-	unsigned int offset = 43;
+	
 	unsigned int morton_x = x;
 	unsigned int morton_y = y;
 	unsigned int morton_z = z;
@@ -1552,23 +1552,23 @@ int getAdjv2(unsigned int x, unsigned int y, unsigned int z, float H, unsigned i
 	retSize++;
 
 	//86 é o numero maximo que o morton code pode devolver num cubo de -2 a 2 
-	if (morton_x < 86 && morton_y > 0 && morton_z > 0) {
+	if (morton_x < 94 && morton_y > 0 && morton_z > 0) {
 		morton_cell = interleave3(morton_x + 1, morton_y - 1, morton_z - 1);
 		ret[retSize] = morton_cell;
 		retSize++;
 	}
-	if (morton_x < 86 && morton_z > 0) {
+	if (morton_x < 94 && morton_z > 0) {
 		morton_cell = interleave3(morton_x + 1, morton_y, morton_z - 1);
 		ret[retSize] = morton_cell;
 		retSize++;
 	}
-	if (morton_x < 86 && morton_y > 0) {
+	if (morton_x < 94 && morton_y > 0) {
 		morton_cell = interleave3(morton_x + 1, morton_y - 1, morton_z);
 		ret[retSize] = morton_cell;
 		retSize++;
 	}
 
-	if (morton_x < 86) {
+	if (morton_x < 94) {
 		morton_cell = interleave3(morton_x + 1, morton_y, morton_z);
 		ret[retSize] = morton_cell;
 		retSize++;
@@ -1597,64 +1597,64 @@ int getAdjv2(unsigned int x, unsigned int y, unsigned int z, float H, unsigned i
 		retSize++;
 	}
 
-	if (morton_x < 86 && morton_y < 86 && morton_z > 0) {
+	if (morton_x < 94 && morton_y < 86 && morton_z > 0) {
 		morton_cell = interleave3(morton_x + 1, morton_y + 1, morton_z - 1);
 		ret[retSize] = morton_cell;
 		retSize++;
 	}
 
-	if (morton_x < 86 && morton_y < 86) {
+	if (morton_x < 94 && morton_y < 86) {
 		morton_cell = interleave3(morton_x + 1, morton_y + 1, morton_z);
 		ret[retSize] = morton_cell;
 		retSize++;
 	}
 
-	if (morton_x > 0 && morton_y > 0 && morton_z < 86) {
+	if (morton_x > 0 && morton_y > 0 && morton_z < 126) {
 		morton_cell = interleave3(morton_x - 1, morton_y - 1, morton_z + 1);
 		ret[retSize] = morton_cell;
 		retSize++;
 	}
-	if (morton_y > 0 && morton_z < 86) {
+	if (morton_y > 0 && morton_z < 126) {
 		morton_cell = interleave3(morton_x, morton_y - 1, morton_z + 1);
 		ret[retSize] = morton_cell;
 		retSize++;
 	}
-	if (morton_x > 0 && morton_z < 86) {
+	if (morton_x > 0 && morton_z < 126) {
 		morton_cell = interleave3(morton_x - 1, morton_y, morton_z + 1);
 		ret[retSize] = morton_cell;
 		retSize++;
 	}
 
-	if (morton_z < 86) {
+	if (morton_z < 126) {
 		morton_cell = interleave3(morton_x, morton_y, morton_z + 1);
 		ret[retSize] = morton_cell;
 		retSize++;
 	}
 
-	if (morton_x < 86 && morton_y >0 && morton_z < 86) {
+	if (morton_x < 94 && morton_y >0 && morton_z < 126) {
 		morton_cell = interleave3(morton_x + 1, morton_y - 1, morton_z + 1);
 		ret[retSize] = morton_cell;
 		retSize++;
 	}
-	if (morton_x < 86 && morton_z < 86) {
+	if (morton_x < 94 && morton_z < 126) {
 		morton_cell = interleave3(morton_x + 1, morton_y, morton_z + 1);
 		ret[retSize] = morton_cell;
 		retSize++;
 	}
 
-	if (morton_x > 0 && morton_y < 86 && morton_z < 86) {
+	if (morton_x > 0 && morton_y < 86 && morton_z < 126) {
 		morton_cell = interleave3(morton_x - 1, morton_y + 1, morton_z + 1);
 		ret[retSize] = morton_cell;
 		retSize++;
 	}
 
-	if (morton_y < 86 && morton_z < 86) {
+	if (morton_y < 86 && morton_z < 126) {
 		morton_cell = interleave3(morton_x, morton_y + 1, morton_z + 1);
 		ret[retSize] = morton_cell;
 		retSize++;
 	}
 
-	if (morton_x < 86 && morton_y < 86 && morton_z < 86) {
+	if (morton_x < 94 && morton_y < 86 && morton_z < 126) {
 		morton_cell = interleave3(morton_x + 1, morton_y + 1, morton_z + 1);
 		ret[retSize] = morton_cell;
 		retSize++;
@@ -1710,6 +1710,8 @@ void partSort(unsigned int arr[], int N, int a, int b)
 }
 
 
+
+
 int main(int argc, char** argv) {
 	unsigned int xD = 154125;
 	unsigned int r1, r2, r3;
@@ -1717,7 +1719,9 @@ int main(int argc, char** argv) {
 	//printf ("154125 é igual a cell %d %d %d\n",r1,r2,r3);
 	
 
-	printf("min %d max %d\n", (unsigned int)((-5 / H)+109), (unsigned int)((5 / H) + 109));
+	printf("min %d max %d\n", (unsigned int)((-2.9 / H)), (unsigned int)((2.9 / H)));
+	printf("min %d max %d\n", (unsigned int)((-2.19 / H)), (unsigned int)((2.19 / H)));
+
 
 	printf("Max morton code fica %d ... com magic bits fica %d\n", interleave3(86, 86, 86), mortonEncode_magicbits(86, 86, 86));
 
@@ -1726,20 +1730,13 @@ int main(int argc, char** argv) {
 	unsigned int ret2[27];
 	int retsize2;
 
-	int* result = new int[2000000 * 28];
+	int* result = new int[2048383 * 28];
 
-	int* indexes = new int[87*87*87];
-
-	for (int i = 0; i < 87 * 87 * 87; i++)
+	for (unsigned int x = 0; x < 94+1; x++)
 	{
-		indexes[i] = -1;
-	}
-
-	for (unsigned int x = 0; x < 87; x++)
-	{
-		for (unsigned int y = 0; y < 87; y++)
+		for (unsigned int y = 0; y < 86+1; y++)
 		{
-			for (unsigned int z = 0; z < 87; z++)
+			for (unsigned int z = 0; z < 126+2; z++)
 			{
 				for (int i = 0; i < 27; i++)
 				{
@@ -1751,14 +1748,17 @@ int main(int argc, char** argv) {
 
 				unsigned int mycell = interleave3(x, y, z);
 
-				indexes[x + 87 * (y + 87 * z)] = mycell;
-				//myfile << retsize2 << "\n";
+				if (mycell > 2000000)
+					printf("Problemas no %d %d %d\n", x, y, z);
+				
+				//printf("vai no %d %d %d com cell %d\n", x, y, z, mycell);
 				result[mycell * 28] = retsize2;
 				for (unsigned int i = 0; i < 27; i++)
 				{
 					if (i < retsize2) {
 						result[mycell * 28 + 1 + i] = ret2[i];
-						//myfile << ret2[i] << "\n";
+						if (ret2[i] > 2000000)
+							printf("Problemas no %d %d %d\n",x,y,z);
 					}
 					else {
 						result[mycell * 28 + 1 + i] = 0;
@@ -1771,7 +1771,7 @@ int main(int argc, char** argv) {
 	printf("vai fazer sort dos indexes \n");
 	//sort(indexes, indexes + 2000000);
 	printf("Feito \n");
-
+	
 	ofstream myfile;
 	myfile.open("adj.txt");
 	for (int i = 0; i < 2000000 * 28; i++)
@@ -1780,13 +1780,24 @@ int main(int argc, char** argv) {
 	}
 
 	myfile.close();
+	
+
 
 	ofstream myfile2;
 	myfile2.open("indexes.txt");
-	for (int i = 0; i < 87 * 87 * 87; i++)
+	unsigned int bigx = 0, bigy = 0, bigz = 0;
+	for (unsigned int i = 0; i < 2000000; i++)
 	{
-		myfile2 << indexes[i] << "\n";
+		unsigned int x = 0, y = 0, z = 0;
+		
+		deinterleave3(i, &x, &y, &z);
+		
+
+		
+		myfile2 << i <<"-> (x,y,z)"<<x<<","<<y << "," <<z<<"\n";
 	}
+
+	printf("bigs %d %d %d\n",bigx, bigy, bigz);
 
 	myfile2.close();
 	

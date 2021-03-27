@@ -351,10 +351,13 @@ void main()
     int retSize=0;
     vec4 p = position[index];
 
-    uint offset = 43;
-    uint morton_x = uint((p.x / H) +offset);
-    uint morton_y = uint((p.y / H) +offset);
-    uint morton_z = uint((p.z / H) +offset);
+    uint offsetx = 47;
+    uint offsety = 43;
+    uint offsetz = 63;
+
+    uint morton_x = uint((p.x / H) +offsetx);
+    uint morton_y = uint((p.y / H) +offsety);
+    uint morton_z = uint((p.z / H) +offsetz);
 
     //O mycell ja tem o * 28, pois cada celula pode ter 27 vizinhos mais 1 posição para guardar o tamanho
     uint mycell=28*interleave3(morton_x,morton_y,morton_z);

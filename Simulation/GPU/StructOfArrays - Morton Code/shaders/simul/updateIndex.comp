@@ -85,11 +85,13 @@ void main()
 
     uint index = gl_GlobalInvocationID.x;
 
-    uint offset=43;
+    uint offsetx = 47;
+    uint offsety = 43;
+    uint offsetz = 63;
 
-    uint morton_x = uint((position[index].x / H) +offset);
-    uint morton_y = uint((position[index].y / H) +offset);
-    uint morton_z = uint((position[index].z / H) +offset);
+    uint morton_x = uint((position[index].x / H) +offsetx);
+    uint morton_y = uint((position[index].y / H) +offsety);
+    uint morton_z = uint((position[index].z / H) +offsetz);
     uint morton_cell = interleave3(morton_x, morton_y, morton_z);
 
     bufferIndex[index] = morton_cell;

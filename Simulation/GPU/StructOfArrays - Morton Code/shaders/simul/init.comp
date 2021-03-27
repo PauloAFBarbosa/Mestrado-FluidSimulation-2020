@@ -272,11 +272,13 @@ void main()
                 for (float z = -particleRadius * PONTOS_LADO, z_pontos = 0; z_pontos < PONTOS_LADO; z += particleDiameter, z_pontos++) {
                     
                     //Este offset é calculado assim: como temos os pontos -2 isso da a celula -43 (-2 / H), assim para os valores enviados para a funcao que calcula o morton code serem sempre 0 ou maior, temos de somar esses 43
-                    uint offset = 43;
+                    uint offsetx = 47;
+                    uint offsety = 43;
+                    uint offsetz = 63;
 
-                    uint morton_x = uint((x / H) +offset);
-                    uint morton_y = uint((y / H) +offset);
-                    uint morton_z = uint((z / H) +offset);
+                    uint morton_x = uint((x / H) +offsetx);
+                    uint morton_y = uint((y / H) +offsety);
+                    uint morton_z = uint((z / H) +offsetx);
 
                     uint morton_cell = interleave3(morton_x, morton_y, morton_z);
                     

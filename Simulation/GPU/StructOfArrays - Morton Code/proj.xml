@@ -83,13 +83,16 @@
 	
 				<attribute name="PONTOS_LADO" 				data="INT" 		type="RENDERER" value="60"/>
 				<attribute name="HASHSIZE" 					data="INT" 		type="RENDERER" value="HASH_SIZE"/>
-				<!--Usado para definir o volume onde vai ser feita a simulação ... pode ir de -5 até 5 -->
-				<attribute name="XMIN" 						data="FLOAT" 		type="RENDERER" value="-2"/>
+				<!--Usado para definir o volume onde vai ser feita a simulação-->
+				<!--X pode ir de -2.17 até 2.17 -->
+				<!--Y pode ir de -2 até 2 -->
+				<!--Z pode ir de -2.9 até 2.9 -->
+				<attribute name="XMIN" 						data="FLOAT" 		type="RENDERER" value="-2.17"/>
 				<attribute name="YMIN" 						data="FLOAT" 		type="RENDERER" value="-2"/>
-				<attribute name="ZMIN" 						data="FLOAT" 		type="RENDERER" value="-2"/>
-				<attribute name="XMAX" 						data="FLOAT" 		type="RENDERER" value="2"/>
+				<attribute name="ZMIN" 						data="FLOAT" 		type="RENDERER" value="-2.9"/>
+				<attribute name="XMAX" 						data="FLOAT" 		type="RENDERER" value="2.17"/>
 				<attribute name="YMAX" 						data="FLOAT" 		type="RENDERER" value="2"/>
-				<attribute name="ZMAX" 						data="FLOAT" 		type="RENDERER" value="2"/>
+				<attribute name="ZMAX" 						data="FLOAT" 		type="RENDERER" value="2.9"/>
 		</attributes>
 
 		<scenes>

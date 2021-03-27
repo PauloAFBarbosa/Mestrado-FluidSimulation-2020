@@ -111,6 +111,28 @@ bool detectCollisionV2(vec4 pos, out vec4 contactPoint, out vec4 unitSurfaceNorm
             vec4 pointer=normalize(pos-Ball);
             contactPoint = Ball + pointer*BallSize;
             unitSurfaceNormal=pointer;
+            //Como o contact point agora pode estar fora no volume tenho de verificar isso
+
+            if (contactPoint.x < XMIN) {
+                    contactPoint.x = XMIN;
+            }
+            else if (contactPoint.x > XMAX) {
+                    contactPoint.x = XMAX;
+            }
+            if (contactPoint.y < newy) {
+                    contactPoint.y =newy;
+                }
+                else if (contactPoint.y > YMAX) {
+                    contactPoint.y =YMAX;
+                }
+                
+            
+                if (contactPoint.z < ZMIN) {
+                    contactPoint.z =ZMIN;                    
+                }
+                else if (contactPoint.z > ZMAX) {
+                    contactPoint.z =ZMAX;                       
+                }
             return true;
         }
         else
