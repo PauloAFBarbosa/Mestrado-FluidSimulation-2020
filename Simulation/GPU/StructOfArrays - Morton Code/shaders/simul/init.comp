@@ -278,7 +278,7 @@ void main()
 
                     uint morton_x = uint((x / H) +offsetx);
                     uint morton_y = uint((y / H) +offsety);
-                    uint morton_z = uint((z / H) +offsetx);
+                    uint morton_z = uint((z / H) +offsetz);
 
                     uint morton_cell = interleave3(morton_x, morton_y, morton_z);
                     

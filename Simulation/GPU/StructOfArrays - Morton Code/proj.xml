@@ -2,12 +2,11 @@
 <project name="SPH_Fluid_Sim" width = "1280" height = "720">
 	<assets>
 		<constants>
-			<constant name="NUMBER_OF_PARTICLES" value="216000" />
-			<constant name="NUMBER_OF_VERTICES"  value="1296000" />
+			<constant name="NUMBER_OF_PARTICLES" value="1000000" />
+			<constant name="NUMBER_OF_VERTICES"  value="6000000" />
 			<!-- Lança com 625 workgroups. Cada workgroup vai ter 25 threads-->
-			<constant name="NUMBER_OF_WORK_GROUPS" value="6750" />
-			<!-- Lança com 100 workgroups. Cada workgroup vai ter 10 threads-->
-			<constant name="NUMBER_OF_WORK_GROUPS_HASH" value="625" />
+			<constant name="NUMBER_OF_WORK_GROUPS" value="31250" />
+			<constant name="NUMBER_OF_WORK_GROUPS_DENSITY_PRESSURE" value="15625" />
 
 			<constant name="HASH_SIZE" value="20000" />
 
@@ -81,7 +80,7 @@
 				<attribute name="Ball" 					data="VEC4" type="RENDERER" x = "2" y = "2" z = "2" w="0" />
 				<attribute name="BallSize" 					data="FLOAT" type="RENDERER" value="0.1" />
 	
-				<attribute name="PONTOS_LADO" 				data="INT" 		type="RENDERER" value="60"/>
+				<attribute name="PONTOS_LADO" 				data="INT" 		type="RENDERER" value="100"/>
 				<attribute name="HASHSIZE" 					data="INT" 		type="RENDERER" value="HASH_SIZE"/>
 				<!--Usado para definir o volume onde vai ser feita a simulação-->
 				<!--X pode ir de -2.17 até 2.17 -->
@@ -159,7 +158,7 @@
 			
 			
 			<pass class="compute" name="DensityPressure">
-				<material name="density_pressure" fromLibrary="simulationLib" dimX="3375" dimY="1" dimZ="1"/>
+				<material name="density_pressure" fromLibrary="simulationLib" dimX="NUMBER_OF_WORK_GROUPS_DENSITY_PRESSURE" dimY="1" dimZ="1"/>
 			</pass>
 			<pass class="compute" name="Force">
 				<material name="force" fromLibrary="simulationLib" dimX="NUMBER_OF_WORK_GROUPS" dimY="1" dimZ="1"/>

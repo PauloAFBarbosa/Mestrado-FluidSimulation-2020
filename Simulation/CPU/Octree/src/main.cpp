@@ -1719,12 +1719,35 @@ int main(int argc, char** argv) {
 	//printf ("154125 é igual a cell %d %d %d\n",r1,r2,r3);
 	
 
-	printf("min %d max %d\n", (unsigned int)((-2.9 / H)), (unsigned int)((2.9 / H)));
+	printf("min %d max %d\n", (unsigned int)((-1.35811 / H)+47), (unsigned int)((2.9 / H)));
 	printf("min %d max %d\n", (unsigned int)((-2.19 / H)), (unsigned int)((2.19 / H)));
 
 
 	printf("Max morton code fica %d ... com magic bits fica %d\n", interleave3(86, 86, 86), mortonEncode_magicbits(86, 86, 86));
 
+	unsigned int x, y, z;
+
+	deinterleave3(136327, &x, &y, &z);
+
+	printf("136327 e a celula %d %d %d\n", x, y, z);
+
+	printf("------------\n");
+
+	deinterleave3(136320, &x, &y, &z);
+
+	printf("Vizinho e 136320 %d %d %d\n", x, y, z);
+
+	deinterleave3(136321, &x, &y, &z);
+
+	printf("Vizinho e 136321 %d %d %d\n", x, y, z);
+
+	deinterleave3(136322, &x, &y, &z);
+
+	printf("Vizinho e 136322 %d %d %d\n", x, y, z);
+
+	deinterleave3(136323, &x, &y, &z);
+
+	printf("Vizinho e 136323 %d %d %d\n", x, y, z);
 	
 
 	unsigned int ret2[27];

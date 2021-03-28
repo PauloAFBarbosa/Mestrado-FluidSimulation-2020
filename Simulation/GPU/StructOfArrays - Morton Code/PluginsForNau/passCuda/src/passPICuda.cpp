@@ -103,7 +103,7 @@ struct cudaGraphicsResource* cuda_ssbo_Acceleration;
 void
 PAssCudaPI::prepare (void) {
 
-	int densityPressure = 1;
+	int densityPressure = 0;
 
 	if (first == 0) {
 		//index
@@ -152,6 +152,7 @@ PAssCudaPI::prepare (void) {
 			int buffIdSurfaceTension = bSurfaceTension->getPropi(IBuffer::ID);
 			IBuffer* bViscosity = RESOURCEMANAGER->getBuffer("simulationLib::Viscosity");
 			int buffIdViscosity = bViscosity->getPropi(IBuffer::ID);
+
 
 			IBuffer* bAcceleration = RESOURCEMANAGER->getBuffer("simulationLib::Acceleration");
 			int buffIdAcceleration = bAcceleration->getPropi(IBuffer::ID);
@@ -261,7 +262,7 @@ PAssCudaPI::prepare (void) {
 		cudaGraphicsResourceGetMappedPointer((void**)&dptrssboAcceleration, &num_bytesssbo_Acceleration, cuda_ssbo_Acceleration);
 	}
 
-	mysort(dptrssboIndex,dptrssboPosition, dptrssboTempIndex, dptrssboVelocity,216000);
+	mysort(dptrssboIndex,dptrssboPosition, dptrssboTempIndex, dptrssboVelocity,1000000);
 
 	//calls a kernel that counds each index to cellstart and cellend
 	kernelWraper(dptrssboIndex, dptrssboCellStart, dptrssboCellEnd);
@@ -284,6 +285,7 @@ PAssCudaPI::prepare (void) {
 	
 	//cudaDeviceSynchronize();
 	//begin = std::chrono::steady_clock::now();
+	
 	cudaGraphicsUnmapResources(1, &cuda_ssbo_Index, NULL);
 	cudaGraphicsUnmapResources(1, &cuda_ssbo_TempIndex, NULL);
 	cudaGraphicsUnmapResources(1, &cuda_ssbo_Position, NULL);
@@ -304,7 +306,7 @@ PAssCudaPI::prepare (void) {
 
 		cudaGraphicsUnmapResources(1, &cuda_ssbo_Acceleration, NULL);
 	}
-
+	
 	//cudaDeviceSynchronize();
 	//end = std::chrono::steady_clock::now();
 	//std::cout << "cudaGraphicsUnmapResources = " << std::chrono::duration_cast<std::chrono::milliseconds> (end - begin).count() << "[ms]" << std::endl;

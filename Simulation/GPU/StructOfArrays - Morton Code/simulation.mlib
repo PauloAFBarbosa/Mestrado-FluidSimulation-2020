@@ -142,7 +142,7 @@
 
 		<buffer name="Adj">
 			<!-- NUMBER_OF_PARTICLES*100 216000 -->
-			<DIM x="216000" y="500" z="1" />
+			<DIM x="NUMBER_OF_PARTICLES" y="500" z="1" />
 			<structure>
 				<field value="INT" />
 			</structure>

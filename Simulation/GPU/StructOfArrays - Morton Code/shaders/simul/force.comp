@@ -481,9 +481,6 @@ void main()
     if (index > Number_Particles)
         return;
 
-    uint ret[27];
-    int retSize=0;
-
     vec4 p =position[index];
     vec4 v = velocity[index];
     float press = pressure[index];

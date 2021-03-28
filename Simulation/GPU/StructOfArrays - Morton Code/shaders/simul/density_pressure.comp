@@ -141,158 +141,162 @@ bool contains(uint arr[27], int size, uint member) {
 int getAdj(vec4 pos, float H, out uint ret[27]) {
     
     int retSize=0;
-    uint offset = 43;
-    uint morton_x = uint((pos.x / H) +offset);
-    uint morton_y = uint((pos.y / H) +offset);
-    uint morton_z = uint((pos.z / H) +offset);
+
+    uint offsetx = 47;
+    uint offsety = 43;
+    uint offsetz = 63;
+
+    uint morton_x = uint((pos.x / H) +offsetx);
+    uint morton_y = uint((pos.y / H) +offsety);
+    uint morton_z = uint((pos.z / H) +offsetz);
 
     uint morton_cell;
     
-    if (morton_x > 0 && morton_y > 0 && morton_z > 0){
-        morton_cell = interleave3(morton_x-1, morton_y-1, morton_z-1);
+    if (morton_x > 0 && morton_y > 0 && morton_z > 0) {
+        morton_cell = interleave3(morton_x - 1, morton_y - 1, morton_z - 1);
         ret[retSize] = morton_cell;
         retSize++;
     }
-    if (morton_y > 0 && morton_z > 0){
-        morton_cell = interleave3(morton_x, morton_y-1, morton_z-1);
+    if (morton_y > 0 && morton_z > 0) {
+        morton_cell = interleave3(morton_x, morton_y - 1, morton_z - 1);
         ret[retSize] = morton_cell;
         retSize++;
     }
-    if (morton_x > 0 && morton_z > 0){
-        morton_cell = interleave3(morton_x-1, morton_y, morton_z-1);
+    if (morton_x > 0 && morton_z > 0) {
+        morton_cell = interleave3(morton_x - 1, morton_y, morton_z - 1);
         ret[retSize] = morton_cell;
         retSize++;
     }
-    if (morton_z > 0){
-        morton_cell = interleave3(morton_x, morton_y, morton_z-1);
+    if (morton_z > 0) {
+        morton_cell = interleave3(morton_x, morton_y, morton_z - 1);
         ret[retSize] = morton_cell;
         retSize++;
     }
-    if (morton_x > 0 && morton_y > 0){
-        morton_cell = interleave3(morton_x-1, morton_y-1, morton_z);
+    if (morton_x > 0 && morton_y > 0) {
+        morton_cell = interleave3(morton_x - 1, morton_y - 1, morton_z);
         ret[retSize] = morton_cell;
         retSize++;
     }
-    if (morton_y > 0){
-        morton_cell = interleave3(morton_x, morton_y-1, morton_z);
+    if (morton_y > 0) {
+        morton_cell = interleave3(morton_x, morton_y - 1, morton_z);
         ret[retSize] = morton_cell;
         retSize++;
     }
-    if (morton_x > 0){
-        morton_cell = interleave3(morton_x-1, morton_y, morton_z);
+    if (morton_x > 0) {
+        morton_cell = interleave3(morton_x - 1, morton_y, morton_z);
         ret[retSize] = morton_cell;
         retSize++;
     }
 
-    morton_cell= interleave3(morton_x, morton_y, morton_z);
+    morton_cell = interleave3(morton_x, morton_y, morton_z);
     ret[retSize] = morton_cell;
     retSize++;
 
     //86 é o numero maximo que o morton code pode devolver num cubo de -2 a 2 
-    if (morton_x < 86 && morton_y > 0 && morton_z > 0){
-        morton_cell = interleave3(morton_x+1, morton_y-1, morton_z-1);
+    if (morton_x < 94 && morton_y > 0 && morton_z > 0) {
+        morton_cell = interleave3(morton_x + 1, morton_y - 1, morton_z - 1);
         ret[retSize] = morton_cell;
         retSize++;
     }
-    if (morton_x < 86  && morton_z > 0){
-        morton_cell = interleave3(morton_x+1, morton_y, morton_z-1);
+    if (morton_x < 94 && morton_z > 0) {
+        morton_cell = interleave3(morton_x + 1, morton_y, morton_z - 1);
         ret[retSize] = morton_cell;
         retSize++;
     }
-    if (morton_x < 86  && morton_y > 0){
-        morton_cell = interleave3(morton_x+1, morton_y-1, morton_z);
-        ret[retSize] = morton_cell;
-        retSize++;
-    }
-
-    if (morton_x < 86  ){
-        morton_cell = interleave3(morton_x+1, morton_y, morton_z);
+    if (morton_x < 94 && morton_y > 0) {
+        morton_cell = interleave3(morton_x + 1, morton_y - 1, morton_z);
         ret[retSize] = morton_cell;
         retSize++;
     }
 
-    if (morton_x  > 0  && morton_y < 86 && morton_z > 0){
-        morton_cell = interleave3(morton_x-1, morton_y+1, morton_z-1);
+    if (morton_x < 94) {
+        morton_cell = interleave3(morton_x + 1, morton_y, morton_z);
         ret[retSize] = morton_cell;
         retSize++;
     }
 
-    if (morton_y < 86 && morton_z > 0){
-        morton_cell = interleave3(morton_x, morton_y+1, morton_z-1);
+    if (morton_x > 0 && morton_y < 86 && morton_z > 0) {
+        morton_cell = interleave3(morton_x - 1, morton_y + 1, morton_z - 1);
         ret[retSize] = morton_cell;
         retSize++;
     }
 
-    if (morton_y < 86 && morton_x > 0){
-        morton_cell = interleave3(morton_x-1, morton_y+1, morton_z);
-        ret[retSize] = morton_cell;
-        retSize++;
-    }
-    if (morton_y < 86 ){
-        morton_cell = interleave3(morton_x, morton_y+1, morton_z);
+    if (morton_y < 86 && morton_z > 0) {
+        morton_cell = interleave3(morton_x, morton_y + 1, morton_z - 1);
         ret[retSize] = morton_cell;
         retSize++;
     }
 
-    if (morton_x  < 86  && morton_y < 86 && morton_z > 0){
-        morton_cell = interleave3(morton_x+1, morton_y+1, morton_z-1);
+    if (morton_y < 86 && morton_x > 0) {
+        morton_cell = interleave3(morton_x - 1, morton_y + 1, morton_z);
+        ret[retSize] = morton_cell;
+        retSize++;
+    }
+    if (morton_y < 86) {
+        morton_cell = interleave3(morton_x, morton_y + 1, morton_z);
         ret[retSize] = morton_cell;
         retSize++;
     }
 
-    if (morton_x  < 86  && morton_y < 86){
-        morton_cell = interleave3(morton_x+1, morton_y+1, morton_z);
+    if (morton_x < 94 && morton_y < 86 && morton_z > 0) {
+        morton_cell = interleave3(morton_x + 1, morton_y + 1, morton_z - 1);
         ret[retSize] = morton_cell;
         retSize++;
     }
 
-    if (morton_x  >0  && morton_y >0 && morton_z < 86){
-        morton_cell = interleave3(morton_x-1, morton_y-1, morton_z+1);
-        ret[retSize] = morton_cell;
-        retSize++;
-    }
-    if (morton_y >0 && morton_z < 86){
-        morton_cell = interleave3(morton_x, morton_y-1, morton_z+1);
-        ret[retSize] = morton_cell;
-        retSize++;
-    }
-    if (morton_x >0 && morton_z < 86){
-        morton_cell = interleave3(morton_x-1, morton_y, morton_z+1);
+    if (morton_x < 94 && morton_y < 86) {
+        morton_cell = interleave3(morton_x + 1, morton_y + 1, morton_z);
         ret[retSize] = morton_cell;
         retSize++;
     }
 
-    if (morton_z < 86){
-        morton_cell = interleave3(morton_x, morton_y, morton_z+1);
+    if (morton_x > 0 && morton_y > 0 && morton_z < 126) {
+        morton_cell = interleave3(morton_x - 1, morton_y - 1, morton_z + 1);
+        ret[retSize] = morton_cell;
+        retSize++;
+    }
+    if (morton_y > 0 && morton_z < 126) {
+        morton_cell = interleave3(morton_x, morton_y - 1, morton_z + 1);
+        ret[retSize] = morton_cell;
+        retSize++;
+    }
+    if (morton_x > 0 && morton_z < 126) {
+        morton_cell = interleave3(morton_x - 1, morton_y, morton_z + 1);
         ret[retSize] = morton_cell;
         retSize++;
     }
 
-    if (morton_x  < 86  && morton_y >0 && morton_z < 86 ){
-        morton_cell = interleave3(morton_x+1, morton_y-1, morton_z+1);
-        ret[retSize] = morton_cell;
-        retSize++;
-    }
-    if (morton_x  < 86  && morton_z < 86 ){
-        morton_cell = interleave3(morton_x+1, morton_y, morton_z+1);
+    if (morton_z < 126) {
+        morton_cell = interleave3(morton_x, morton_y, morton_z + 1);
         ret[retSize] = morton_cell;
         retSize++;
     }
 
-    if (morton_x >0 && morton_y < 86 && morton_z < 86 ){
-        morton_cell = interleave3(morton_x-1, morton_y+1, morton_z+1);
+    if (morton_x < 94 && morton_y >0 && morton_z < 126) {
+        morton_cell = interleave3(morton_x + 1, morton_y - 1, morton_z + 1);
+        ret[retSize] = morton_cell;
+        retSize++;
+    }
+    if (morton_x < 94 && morton_z < 126) {
+        morton_cell = interleave3(morton_x + 1, morton_y, morton_z + 1);
         ret[retSize] = morton_cell;
         retSize++;
     }
 
-    if (morton_y < 86 && morton_z < 86 ){
-        morton_cell = interleave3(morton_x, morton_y+1, morton_z+1);
+    if (morton_x > 0 && morton_y < 86 && morton_z < 126) {
+        morton_cell = interleave3(morton_x - 1, morton_y + 1, morton_z + 1);
         ret[retSize] = morton_cell;
         retSize++;
     }
 
-    if (morton_x <86 && morton_y < 86 && morton_z < 86 ){
-        morton_cell = interleave3(morton_x+1, morton_y+1, morton_z+1);
+    if (morton_y < 86 && morton_z < 126) {
+        morton_cell = interleave3(morton_x, morton_y + 1, morton_z + 1);
+        ret[retSize] = morton_cell;
+        retSize++;
+    }
+
+    if (morton_x < 94 && morton_y < 86 && morton_z < 126) {
+        morton_cell = interleave3(morton_x + 1, morton_y + 1, morton_z + 1);
         ret[retSize] = morton_cell;
         retSize++;
     }
@@ -354,7 +358,7 @@ void main()
     uint offsetx = 47;
     uint offsety = 43;
     uint offsetz = 63;
-
+    //17,13,33
     uint morton_x = uint((p.x / H) +offsetx);
     uint morton_y = uint((p.y / H) +offsety);
     uint morton_z = uint((p.z / H) +offsetz);
@@ -373,9 +377,7 @@ void main()
     // compute density
     float sum=1;
 
-    int vizinhos=0;
-
-    
+    int vizinhos=0;    
 
     for (int j = 0; j < retSize; j++)
         {
@@ -386,13 +388,16 @@ void main()
     
             int from = cellStart[cell];
             int to = from + cellEnd[cell];
+
+            
+            
             for (int i = from; i < to; i++)
             {
-
+                
 
                 vec4 arg;
                 arg = p - position[i];
-                
+
                 float ker_res = useDefaultKernel(arg, H);
 
                 if (ker_res!=0 ){

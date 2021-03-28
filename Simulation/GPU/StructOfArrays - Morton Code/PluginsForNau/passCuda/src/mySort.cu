@@ -274,7 +274,10 @@ void count(int * indexes , int* CellStart, int* CellEnd)
 	int i = blockIdx.x * blockDim.x + threadIdx.x;
 	
 	int indexCount = indexes[i];
+    
 	atomicAdd(CellStart + indexCount, 1);
+
+    
 
 	atomicAdd(CellEnd + indexCount, 1);
 	
@@ -282,13 +285,14 @@ void count(int * indexes , int* CellStart, int* CellEnd)
 
 void kernelWraper(int * dptrssboIndex, int* dptrssboCellStart, int* dptrssboCellEnd) {
 
-	count<<<6750, 32 >>>(dptrssboIndex, dptrssboCellStart, dptrssboCellEnd);
-	
-	
+    //Alterar aqui quando se muda o tamanho das particulas
 
+
+	count<<<15625, 64 >>>(dptrssboIndex, dptrssboCellStart, dptrssboCellEnd);
+
+	
 	thrust::device_ptr<int> cellstartThrust = thrust::device_pointer_cast((dptrssboCellStart));
 	thrust::exclusive_scan(cellstartThrust, cellstartThrust + 2000000, cellstartThrust);
-	
 }
 
 
