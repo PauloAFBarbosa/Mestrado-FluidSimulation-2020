@@ -67,6 +67,7 @@
 				<attribute name="External_Force" 			data="VEC3" 	type="RENDERER" x="0" y="0.0" z="0.0" />
 				<attribute name="Viscosity"					data="FLOAT" 	type="RENDERER" value="3000" />
 				<attribute name="RESTITUTION"				data="FLOAT" type="RENDERER" value="0.5"/>
+				<attribute name="WALL_DAMPING"				data="FLOAT" type="RENDERER" value="0.5"/>
 				<attribute name="TIMESTEP" 					data="FLOAT" type="RENDERER" value = "0.01" />
 				<attribute name="SURFACETENSION" 			data="FLOAT" type="RENDERER" value = "0.0728" />
 				<attribute name="THRESHOLD" 				data="FLOAT" type="RENDERER" value = "7.065" />
@@ -298,6 +299,7 @@
 			<var label="H" 					type="RENDERER" context="CURRENT" component="H" def="min=0.0457 max=100 step=0.0001"/>
 			<var label="STIFF" 				type="RENDERER" context="CURRENT" component="STIFF" def="min=1 max=100 step=1"/>
 			<var label="DECLIVE" 			type="RENDERER" context="CURRENT" component="DECLIVE" def="min=-1.0 max=1 step=0.05"/>
+			<var label="Wall damping" 			type="RENDERER" context="CURRENT" component="WALL_DAMPING" def="min=0 max=1 step=0.1"/>
 			<var label="RESTDENSITY" 		type="RENDERER" context="CURRENT" component="RESTDENSITY" def="min=100 max=10000 step=100"/>
 			<var label="VISCOSITY" 			type="RENDERER" context="CURRENT" component="VISCOSITY" def="min=3 max=25 step=0.1"/>
 			<var label="GRAVITY" 			type="RENDERER" context="CURRENT" component="GRAVITY" def="min=-20 max=20 step=1"/>

@@ -27,12 +27,13 @@ layout (local_size_x = WORK_GROUP_SIZE) in;
 // constants
 
 #define TIME_STEP 0.0001f
-#define WALL_DAMPING 0.5f
+
 #define WALL_SIZEX 0.5
 #define WALL_SIZEZ 0.5
 
 uniform int Number_Particles;
 uniform int Pause;
+uniform float WALL_DAMPING;
 uniform float time;
 uniform float XMAX;
 uniform float YMAX;
