@@ -408,10 +408,8 @@ void main()
                     adj[index*MAXADJ + vizinhos + 1]= i;
                     //adj[index*MAXADJ ]++;
                     vizinhos++;
-                    
+                    sum += ker_res;   
                 }
-
-                sum += ker_res;
 
                 
             }

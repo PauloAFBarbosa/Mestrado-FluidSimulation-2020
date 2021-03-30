@@ -27,7 +27,7 @@ layout (local_size_x = WORK_GROUP_SIZE) in;
 // constants
 
 #define TIME_STEP 0.0001f
-#define WALL_DAMPING 0.3f
+#define WALL_DAMPING 0.5f
 #define WALL_SIZEX 0.5
 #define WALL_SIZEZ 0.5
 
@@ -95,7 +95,7 @@ layout(std430, binding = 7) buffer Viscosity
 };
 
 
-bool detectCollisionV2(vec4 pos, out vec4 contactPoint, out vec4 unitSurfaceNormal) {
+bool detectCollisionV2(vec4 pos,vec4 velocity, out vec4 contactPoint, out vec4 unitSurfaceNormal) {
     //o cubo esta centrado em 0,0,0
     float newx = pos.x + XMAX;
     float temp = (XMAX + XMAX) - newx;
@@ -140,7 +140,7 @@ bool detectCollisionV2(vec4 pos, out vec4 contactPoint, out vec4 unitSurfaceNorm
     }
 
 
-    contactPoint = vec4(pos.x,pos.y,pos.z,0);
+    contactPoint = pos;
 
     unitSurfaceNormal= vec4(0);
 
@@ -195,12 +195,12 @@ bool detectCollisionV2(vec4 pos, out vec4 contactPoint, out vec4 unitSurfaceNorm
             
         }
 
+        vec4 t = (contactPoint-pos) ;
+
+        contactPoint= pos + t*WALL_DAMPING;
+
         return true;
 }
-
-
-
-
 
 bool detectCollision(vec4 pos, out vec4 contactPoint, out vec4 unitSurfaceNormal) {
     //o cubo esta centrado em 0,0,0
@@ -309,10 +309,12 @@ bool detectCollision(vec4 pos, out vec4 contactPoint, out vec4 unitSurfaceNormal
     return true;
 }
 
+
+
 void updateVelocity(vec4 velocity, vec4 unitSurfaceNormal, float penetrationDepth, out vec4 ret) {
     //ret = velocity - unitSurfaceNormal * (1 + RESTITUTION * penetrationDepth / (TIMESTEP * glm::length(velocity))) * glm::dot(velocity, unitSurfaceNormal);
     
-    ret= velocity - unitSurfaceNormal * (1 + RESTITUTION * penetrationDepth / (TIMESTEP * length(velocity))) * dot(unitSurfaceNormal, velocity);
+    ret= velocity -  (1 + RESTITUTION * (penetrationDepth / (TIMESTEP * length(velocity)))  ) * dot(unitSurfaceNormal, velocity)*unitSurfaceNormal;
 }
 
 void main()
@@ -341,7 +343,7 @@ void main()
     vec4 contactPoint= vec4(0);
     vec4 unitSurfaceNormal= vec4(0);
     
-    bool retcolision = detectCollisionV2(position[index], contactPoint, unitSurfaceNormal);
+    bool retcolision = detectCollisionV2(position[index],velocity[index], contactPoint, unitSurfaceNormal);
     
 
 
@@ -351,13 +353,11 @@ void main()
         vec4 arg;
         
         arg = position[index] - contactPoint;
-
+        
         updateVelocity(velocity[index], unitSurfaceNormal, length(arg), ret);
         
         velocity[index] = ret*0.998;
 
-        if (length(velocity[index])<0.01)
-        	velocity[index]=vec4(0,0,0,0);
         
 
         position[index]= contactPoint;

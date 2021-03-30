@@ -506,7 +506,8 @@ void main()
             vec4 arg;
             arg = p - position[adji];
 
-            sumViscosity += useViscosityKernel_laplacian(arg, H) * (velocity[adji] - v) * (MASS / density[adji]) ;
+            //sumViscosity += useViscosityKernel_laplacian(arg, H) * (velocity[adji] - v) * (MASS / density[adji]) ;
+            sumViscosity += useViscosityKernel_laplacian(arg, H) * (velocity[adji] - v) * (MASS) ;
 
             //Force
             vec4 ret_kernel = vec4(0);
@@ -529,9 +530,9 @@ void main()
     
 
     
-    viscosity[index]= sumViscosity * VISCOSITY;
+    viscosity[index]= sumViscosity * (VISCOSITY/dens);
     
-    force[index]= -(sumForce*MASS*dens);
+    force[index]= -(sumForce*dens*MASS);
     //debug[index] = vec4(density[index]);
 
     //tempp=vec4(sumForce[0],sumForce[1],sumForce[2 ],0);
