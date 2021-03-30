@@ -104,8 +104,7 @@ bool detectCollisionV2(vec4 pos,vec4 velocity, out vec4 contactPoint, out vec4 u
                                 // devolve 0 quando esta encostada a parede direita
 
     float newy = YMIN + (temp * DECLIVE);
-
-    if (pos.x < XMAX && pos.x > XMIN && pos.y < YMAX && pos.y > newy && pos.z < ZMAX && pos.z > ZMIN){
+    if (pos.x <= XMAX && pos.x >= XMIN && pos.y <= YMAX && pos.y >= newy && pos.z <= ZMAX && pos.z >= ZMIN){
         //Colission with the ball
         float dist=length(Ball-pos);
         if(dist<BallSize){
@@ -196,12 +195,14 @@ bool detectCollisionV2(vec4 pos,vec4 velocity, out vec4 contactPoint, out vec4 u
             
         }
 
-        vec4 t = (contactPoint-pos) ;
+        vec4 t = (contactPoint-pos);
 
         contactPoint= pos + t*WALL_DAMPING;
 
         return true;
 }
+
+
 
 bool detectCollision(vec4 pos, out vec4 contactPoint, out vec4 unitSurfaceNormal) {
     //o cubo esta centrado em 0,0,0
@@ -339,12 +340,15 @@ void main()
 
     velocity[index] = velocity[index] + acceleration[index] * TIMESTEP;
     
-    position[index] = position[index] + velocity[index] * TIMESTEP;
+    vec4 oldPosition = position[index];
+    position[index] = oldPosition + velocity[index] * TIMESTEP;
 
     vec4 contactPoint= vec4(0);
     vec4 unitSurfaceNormal= vec4(0);
     
     bool retcolision = detectCollisionV2(position[index],velocity[index], contactPoint, unitSurfaceNormal);
+
+    
     
 
 
@@ -357,10 +361,12 @@ void main()
         
         updateVelocity(velocity[index], unitSurfaceNormal, length(arg), ret);
         
-        velocity[index] = ret*0.998;
+        vec4 velocityDamp=ret*0.998;
+
+        velocity[index] = velocityDamp;
 
         
 
-        position[index]= contactPoint;
+        position[index]= oldPosition+ velocityDamp * TIMESTEP;
     }
 }

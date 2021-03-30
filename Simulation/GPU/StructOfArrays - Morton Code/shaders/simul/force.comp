@@ -507,7 +507,7 @@ void main()
             arg = p - position[adji];
 
             //sumViscosity += useViscosityKernel_laplacian(arg, H) * (velocity[adji] - v) * (MASS / density[adji]) ;
-            sumViscosity += useViscosityKernel_laplacian(arg, H) * (velocity[adji] - v) * (MASS) ;
+            sumViscosity += useViscosityKernel_laplacian(arg, H) * (velocity[adji] - v) ;
 
             //Force
             vec4 ret_kernel = vec4(0);
@@ -515,7 +515,7 @@ void main()
             
             usePressureKernel_gradient(arg, H, ret_kernel);
             
-            sumForce += ret_kernel * (press / (dens * dens) + pressure[adji] / (density[adji] * density[adji]));
+            sumForce += ret_kernel * ((press / (dens * dens)) + (pressure[adji] / (density[adji] * density[adji])));
             
             //SurfaceNormal ------------ nao faz diferença
 
@@ -530,7 +530,7 @@ void main()
     
 
     
-    viscosity[index]= sumViscosity * (VISCOSITY/dens);
+    viscosity[index]= sumViscosity * (VISCOSITY/dens)*MASS;
     
     force[index]= -(sumForce*dens*MASS);
     //debug[index] = vec4(density[index]);

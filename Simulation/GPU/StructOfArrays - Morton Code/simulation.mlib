@@ -388,6 +388,10 @@
 						<TYPE value="SHADER_STORAGE" />
 						<BINDING_POINT value="7" />
 					</buffer>
+					<buffer name="Debug" >
+						<TYPE value="SHADER_STORAGE" />
+						<BINDING_POINT value="8" />
+					</buffer>
 					
 			</buffers>
 		</material> 	
