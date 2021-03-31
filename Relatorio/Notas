@@ -1,0 +1,32 @@
+1- comecei com simulação em cpu que comparava uma particula com todas as outras
+	- complexidade n^2
+2- Depois passou-te a usar uma octree para fazer query das particulas vizinhas
+	- reduziu bastante a procura de vizinhos, e assim foi possivel simular mais particulas
+3- Depois, visto que se queria fazer uma simulação sem restrição de volume passou-se de uma octree para hashmap, onde em vez de apontadores para particulas se usava indices para se referir a particulas, assim ja se foi preparando o codigo para correr em gpu
+	- Com o hashmap é possivel ter uma simulação sem restrições
+
+4- De seguida passou-se o hashmap para GPU e nesse momento tive de tomar uma decisão
+	- Visto que não posso alocar mais memoria para os buffers, tinha de decidir ao inicio uma das duas:
+		Criar um hashmap em que em cada bucket era possivel ter todas as particulas (gasta mais memoria nrBuckets*nrParticulas, mas por as particulas dentro do hashmap é mais rapido, é so por e ja esta)
+
+		Criar um hashmap em que em cada bucket apenas ia ter espaço para as particulas desse mesmo bucket. Esta foi  a abordagem que escolhi, e para fazer desta maneira primeiro tinha de pegar em todas as particulas e po-las num array temporario e á medida que ia fazendo isso contava quantas particulas iam ficar em cada bucket. No fim disso tinha todas as particulas dentro de um array Temp e sabia o tamanho de cada bucket, assim era possivel tendo um array de tamanho[NrParticulas] por as particulas no bucket certo dentro desse mesmo array. Complexidade 2N mas poupava bastante memória. Visto que estamos em gpu faz com que contar as particulas em cada bucket possa ser feito em paralelo e tambem pode ser feito em paralelo a parte de meter as particulas no array final nas posições corretas
+	- O hashmap em gpu revelou bom desempenho, mas podia ser melhorado ainda. Como por exemplo:
+		Visto que devido as colisões no hashmap tinhamos 300 particulas nos buckets vizinhos e apenas 30 delas eram vizinhas, assim, criei um buffer para guardar as particulas vizinhas de cada particula, com isto o passo de calcular a densidade e pressão ficou um pouco mais lento(pois tinha mais escritas em memória) mas o passo de calcular as forças ficou bastante mais rapido pois apenas ia buscar as particulas vizinhas. Assim passou-se de 300+300 comparações para 300+30 comparações.
+	- Uma desvantagem do hashmap é que não consigo pre computar os vizinhos, pois a posição 0,0,0 podia ser o bucket 0, e a posição 0.01,0,0 (que devia estar no mesmo bucket que a outra particula, numa grid regular) pode calhar no bucket 99. A unica maneira de calcular isso seria calcular todas as possibilidades de posições dos floats, e isso é impossivel de se fazer
+	- Outra desvantagem do hashmap é que os dados não têm localidade, particulas vizinhas não estão necessariamente perto no array de particulas.
+
+	- Quando se passou para GPU teve de se decidir se iria usar arrays of structs ou structs of arrays, optou-se por usar structs of arrays pois como testei e como li em vários artigos, tem melhor performance.
+		Isto acontece pois, por exemplo, para calcular a densidade apenas se precisa das posições, assim quando se vai buscar uma posição (usando structs of arrays) é trazido para cache outras posições. Caso se use arrays of struts quando a posição é trazida para cache também é trazido velocidade etc. (todas as informações de uma aprticula), assim com structs of arrays cabem mais posições em cache e temos mais hits.
+		Segundo os testes feito, structs of arrays é mais rápido(citar um artigo para isto).
+
+	- Usando hashmaps em gpu consegiu-se ter uma simulação a correr com 216 mil particulas, penso que não se deve conseguir melhor utilizando hashs (ou outros metodos que não limitem o volume da simulação)
+
+5- De seguida passou-se para a utilização de uma grid regular onde cada particula é atribuido um indice utilizando morton code (z order)
+	-Z order tem a vantagem que particulas perto em termos de posição estão também perto nos seus indices, aumentando os cache hits.
+	-Para isso a cada particula é atribuido um indice. Depois disso é feita uma ordenação das particulas pelo seu indice (para que particulas com posições proximas fiquem proximas no array)
+	-Para fazer a ordenação escolheu-se o algoritmo radix sort, que é um algoritmo que ordena particulas sem fazer comparações e tem uma performance excelente para grandes numeros de elementos.
+	- primeiramente implementou-se uma versão rudimentar do radix sort para ter uma melhor ideia como funciona. Depois utilizou-se a versão do sort da nvidia disponivel no thrust. Que é capaz de ordenar milhões de particulas em poucos milissegundos.
+	- Como era de esperar, Quando se passou para este metodo, o processo de calcular a densidade pressao e as forças ficou bastante mais rapido devido a existir uma melhor localidade dos dados.
+	-utilizando outro programa foi possivel criar um ficheiro onde para cada celula da zona de simulação é calculado os vizinhos dessa mesma celula. Esses dados são carregados para um buffer e assim durante a simulação não é preciso cancular as celulas vizinhas, basta apenas ler de um buffer
+	- foram feitas optimizações ao codigo para evitar serem feitas escritas/lidas de buffers dentro de loops, por exemplo incrementar o numero de vizinhos dentro de um ciclo for pode ser feito numa var local e no fim do ciclo pode ser feita a escrita para memoria fazendo assim apenas 1 escrita.
+	- Com todas as optimizações (opt no codigo, uzar lista de vizinhos pre calculada, guardar os vizinhos-particulas- dentro de um buffer) é possivel simular 1 milhão de particulas

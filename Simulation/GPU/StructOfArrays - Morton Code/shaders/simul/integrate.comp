@@ -101,7 +101,7 @@ layout(std430, binding = 8) buffer Debug
 };
 
 
-bool detectCollisionV2(vec4 pos,vec4 velocity, out vec4 contactPoint, out vec4 unitSurfaceNormal) {
+bool detectCollisionV2(in vec4 pos,in uint index,out int hitBall, out vec4 contactPoint, out vec4 unitSurfaceNormal) {
     //o cubo esta centrado em 0,0,0
     float newx = pos.x + XMAX;
     float temp = (XMAX + XMAX) - newx;
@@ -110,8 +110,10 @@ bool detectCollisionV2(vec4 pos,vec4 velocity, out vec4 contactPoint, out vec4 u
 
     float newy = YMIN + (temp * DECLIVE);
     if (pos.x <= XMAX && pos.x >= XMIN && pos.y <= YMAX && pos.y >= newy && pos.z <= ZMAX && pos.z >= ZMIN){
+        
         //Colission with the ball
         float dist=length(Ball-pos);
+        
         if(dist<BallSize){
             vec4 pointer=normalize(pos-Ball);
             contactPoint = Ball + pointer*BallSize;
@@ -138,10 +140,14 @@ bool detectCollisionV2(vec4 pos,vec4 velocity, out vec4 contactPoint, out vec4 u
                 else if (contactPoint.z > ZMAX) {
                     contactPoint.z =ZMAX;                       
                 }
+            
+            hitBall=1;
             return true;
         }
-        else
+        else{
+            hitBall=0;
             return false;
+        }
     }
 
 
@@ -203,7 +209,7 @@ bool detectCollisionV2(vec4 pos,vec4 velocity, out vec4 contactPoint, out vec4 u
         //vec4 t = (contactPoint-pos);
 
         //contactPoint= pos + t*WALL_DAMPING;
-
+        hitBall=0;
         return true;
 }
 
@@ -345,39 +351,50 @@ void main()
     
 
     //employEulerIntegrator
-    acceleration[index] = totalForce / density[index] + GRAVITY;
+    vec4 acc= totalForce / density[index] + GRAVITY;
 
-    velocity[index] = velocity[index] + acceleration[index] * TIMESTEP;
+    vec4 vel = velocity[index] + acc * TIMESTEP;
     
     vec4 oldPosition = position[index];
-    position[index] = oldPosition + velocity[index] * TIMESTEP;
+    vec4 pos = oldPosition + vel * TIMESTEP;
 
     vec4 contactPoint= vec4(0);
     vec4 unitSurfaceNormal= vec4(0);
-    
-    bool retcolision = detectCollisionV2(position[index],velocity[index], contactPoint, unitSurfaceNormal);
+    //usado para saber se entrou em colisão com a bola, para aumentar o RESTITUTION
+    int hitball=0;
+    bool retcolision = detectCollisionV2(pos,index,hitball, contactPoint, unitSurfaceNormal);
 
     
     
-
+    
 
     if (retcolision) {
         
         vec4 ret;
         vec4 arg;
         
-        arg = position[index] - contactPoint;
+        arg = pos - contactPoint;
 
 
-        updateVelocity(velocity[index], unitSurfaceNormal, length(arg), ret);
+        updateVelocity(vel, unitSurfaceNormal, length(arg), ret);
         
+        float updatedRESTITUTION=RESTITUTION;
+
+        if(hitball.x==1){
+            updatedRESTITUTION=1;
+        }
         
-        vec4 velocityDamp=ret*(RESTITUTION);
+        vec4 velocityDamp = ret*(updatedRESTITUTION);
 
         velocity[index] = velocityDamp;
 
         
+        
         position[index]= contactPoint;
         //position[index]= oldPosition+ velocityDamp * TIMESTEP;
+    }
+    else{
+        position[index]=pos;
+        velocity[index]=vel;
     }
 }
