@@ -72,6 +72,7 @@
 				<attribute name="SURFACETENSION" 			data="FLOAT" type="RENDERER" value = "0.0728" />
 				<attribute name="THRESHOLD" 				data="FLOAT" type="RENDERER" value = "7.065" />
 				<attribute name="H" 						data="FLOAT" type="RENDERER" value = "0.0457" />
+				<attribute name="SIMULATIONSCALE" 						data="FLOAT" type="RENDERER" value = "1.0" />
 				<attribute name="STIFF" 					data="FLOAT" type="RENDERER" value = "3.0" />
 				<attribute name="DECLIVE" 					data="FLOAT" type="RENDERER" value = "0.0" />
 				<attribute name="MASS" 						data="FLOAT" type="RENDERER" value = "0.02" />
@@ -80,6 +81,7 @@
 				<attribute name="GRAVITY" 					data="VEC4" type="RENDERER" x = "0" y = "-9.8" z = "0" w="0" />
 				<attribute name="Ball" 					data="VEC4" type="RENDERER" x = "2" y = "2" z = "2" w="0" />
 				<attribute name="BallSize" 					data="FLOAT" type="RENDERER" value="0.1" />
+				<attribute name="COLLISIONTYPE" 					data="INT" type="RENDERER" value="0" />
 	
 				<attribute name="PONTOS_LADO" 				data="INT" 		type="RENDERER" value="100"/>
 				<attribute name="HASHSIZE" 					data="INT" 		type="RENDERER" value="HASH_SIZE"/>
@@ -304,6 +306,10 @@
 			<var label="VISCOSITY" 			type="RENDERER" context="CURRENT" component="VISCOSITY" def="min=3 max=25 step=0.1"/>
 			<var label="GRAVITY" 			type="RENDERER" context="CURRENT" component="GRAVITY" def="min=-20 max=20 step=1"/>
 			<var label="RESTITUTION" 		type="RENDERER" context="CURRENT" component="RESTITUTION" def="min=0 max=1 step=0.1"/>
+			<var label="SIMULATIONSCALE" 		type="RENDERER" context="CURRENT" component="SIMULATIONSCALE" def="min=0 max=1 step=0.05"/>
+			<var label="COLLISIONTYPE (0-fast 1-realistic)" 		type="RENDERER" context="CURRENT" component="COLLISIONTYPE" def="min=0 max=1"/>
+			
+			
         </window>
     </interface>
 </project>

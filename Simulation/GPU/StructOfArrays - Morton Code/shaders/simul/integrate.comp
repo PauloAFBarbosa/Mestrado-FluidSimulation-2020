@@ -50,6 +50,7 @@ uniform vec4 GRAVITY;
 
 uniform vec4 Ball;
 uniform float BallSize;
+uniform int COLLISIONTYPE;
 
 layout(std430, binding = 0) buffer Position
 {
@@ -143,7 +144,7 @@ bool detectCollisionV2(in vec4 pos,in vec4 vel,in uint index,out int hitBall, ou
 
             float penetrationDepth = length(pos - contactPoint);
             retVelocity= vel-(2) * dot(unitSurfaceNormal, normalize(vel))*unitSurfaceNormal;
-            
+            retVelocity *= RESTITUTION;
             hitBall=1;
             return true;
         }
@@ -184,7 +185,7 @@ bool detectCollisionV2(in vec4 pos,in vec4 vel,in uint index,out int hitBall, ou
             contactPoint.y =newy;
             unitSurfaceNormal = normalize(unitSurfaceNormal+vec4(DECLIVE,1-DECLIVE,0,0));
             
-            retVelocity.y=0;
+            
         }
         else if (pos.y > YMAX) {
             contactPoint.y =YMAX;
@@ -220,9 +221,13 @@ bool detectCollisionV2(in vec4 pos,in vec4 vel,in uint index,out int hitBall, ou
         }
         
         float penetrationDepth = length(pos - contactPoint);
+        if (COLLISIONTYPE == 0)
+            retVelocity= vel-(2) * dot(unitSurfaceNormal, (vel))*unitSurfaceNormal;
+        else
+            retVelocity= vel -  (1+RESTITUTION *(penetrationDepth/(TIMESTEP*length(vel)))) * dot(unitSurfaceNormal, vel)*unitSurfaceNormal;
+        //retVelocity *= RESTITUTION;
         
-        retVelocity= vel-(2) * dot(unitSurfaceNormal, (vel))*unitSurfaceNormal;
-        
+        //
         
         //retVelocity=retVelocity*RESTITUTION;
         hitBall=0;

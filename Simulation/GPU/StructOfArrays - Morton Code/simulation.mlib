@@ -274,6 +274,7 @@
 					<valueof uniform="GRAVITY" 		type="RENDERER" 		context="CURRENT" 		component="GRAVITY" />
 					<valueof uniform="THRESHOLD" 		type="RENDERER" 		context="CURRENT" 		component="THRESHOLD" />
 					<valueof uniform="SURFACETENSION" 		type="RENDERER" 		context="CURRENT" 		component="SURFACETENSION" />
+					<valueof uniform="SIMULATIONSCALE" 		type="RENDERER" 		context="CURRENT" 		component="SIMULATIONSCALE" />
 					
 					
 				</values>
@@ -350,6 +351,7 @@
 					<valueof uniform="Ball" 		type="RENDERER" 		context="CURRENT" 		component="Ball" />
 					<valueof uniform="BallSize" 		type="RENDERER" 		context="CURRENT" 		component="BallSize" />
 					<valueof uniform="WALL_DAMPING" 		type="RENDERER" 		context="CURRENT" 		component="WALL_DAMPING" />
+					<valueof uniform="COLLISIONTYPE" 		type="RENDERER" 		context="CURRENT" 		component="COLLISIONTYPE" />
 				</values>
 		    </shader>
 			<buffers>
@@ -405,6 +407,8 @@
 					<valueof uniform="H" 		type="RENDERER" 		context="CURRENT" 		component="H" />
 					<valueof uniform="MASS" 		type="RENDERER" 		context="CURRENT" 		component="MASS" />
 					<valueof uniform="STIFF" 		type="RENDERER" 		context="CURRENT" 		component="STIFF" />
+					<valueof uniform="SIMULATIONSCALE" 		type="RENDERER" 		context="CURRENT" 		component="SIMULATIONSCALE" />
+					
 				</values>
 		    </shader>
 			<buffers>

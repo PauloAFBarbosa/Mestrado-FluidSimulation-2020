@@ -45,6 +45,7 @@ uniform float H;
 uniform int Number_Particles;
 uniform vec3 External_Force;
 uniform int Pause;
+uniform float SIMULATIONSCALE;
 
 layout(std430, binding = 0) readonly restrict buffer Position
 {
@@ -515,7 +516,7 @@ void main()
             
             usePressureKernel_gradient(arg, H, ret_kernel);
             
-            sumForce += ret_kernel * ((press / (dens * dens)) + (pressure[adji] / (density[adji] * density[adji])));
+            sumForce +=SIMULATIONSCALE* ret_kernel * ((press / (dens * dens)) + (pressure[adji] / (density[adji] * density[adji])));
             
             //SurfaceNormal ------------ nao faz diferença
 

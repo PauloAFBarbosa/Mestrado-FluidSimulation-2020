@@ -43,6 +43,7 @@ uniform float RESTDENSITY;
 uniform float H;
 uniform float MASS;
 uniform float STIFF;
+uniform float SIMULATIONSCALE;
 
 layout(std430, binding = 0) readonly restrict buffer Position
 {
@@ -408,7 +409,7 @@ void main()
                     adj[index*MAXADJ + vizinhos + 1]= i;
                     //adj[index*MAXADJ ]++;
                     vizinhos++;
-                    sum += ker_res;   
+                    sum += SIMULATIONSCALE* ker_res;   
                 }
 
                 
