@@ -97,7 +97,9 @@ struct cudaGraphicsResource* cuda_ssbo_SurfaceNormal;
 struct cudaGraphicsResource* cuda_ssbo_SurfaceTension;
 struct cudaGraphicsResource* cuda_ssbo_Viscosity;
 struct cudaGraphicsResource* cuda_ssbo_Acceleration;
+struct cudaGraphicsResource* cuda_ssbo_AdjV2;
 
+int particleNumber=0;
 
 #include "mySort.h"
 void
@@ -106,6 +108,14 @@ PAssCudaPI::prepare (void) {
 	int densityPressure = 0;
 
 	if (first == 0) {
+		
+
+		//ir buscar o nr de particulas aqui
+		
+		void* d = (Data*)NAU->getAttributeValue("RENDERER", "CURRENT", "Number_Particles", 0);
+
+		particleNumber = *(int*)d;
+
 		//index
 		IBuffer* bIndex = RESOURCEMANAGER->getBuffer("simulationLib::Index");
 		int buffIdIndex = bIndex->getPropi(IBuffer::ID);
@@ -125,6 +135,9 @@ PAssCudaPI::prepare (void) {
 		IBuffer* bCellEnd = RESOURCEMANAGER->getBuffer("simulationLib::CellEnd");
 		int buffIdCellEnd = bCellEnd->getPropi(IBuffer::ID);
 
+		IBuffer* bAdjV2 = RESOURCEMANAGER->getBuffer("simulationLib::AdjV2");
+		int buffIdAdjV2 = bAdjV2->getPropi(IBuffer::ID);
+
 		// register this buffer object with CUDA
 		//So devia chamar isto uma vez
 		cudaGraphicsGLRegisterBuffer(&cuda_ssbo_Index, buffIdIndex, cudaGraphicsMapFlagsNone);
@@ -133,6 +146,7 @@ PAssCudaPI::prepare (void) {
 		cudaGraphicsGLRegisterBuffer(&cuda_ssbo_Velocity, buffIdVelocity, cudaGraphicsMapFlagsNone);
 		cudaGraphicsGLRegisterBuffer(&cuda_ssbo_CellStart, buffIdCellStart, cudaGraphicsMapFlagsNone);
 		cudaGraphicsGLRegisterBuffer(&cuda_ssbo_CellEnd, buffIdCellEnd, cudaGraphicsMapFlagsNone);
+		cudaGraphicsGLRegisterBuffer(&cuda_ssbo_AdjV2, buffIdAdjV2, cudaGraphicsMapFlagsNone);
 
 		if (densityPressure == 1) {
 			IBuffer* bDensity = RESOURCEMANAGER->getBuffer("simulationLib::Density");
@@ -168,7 +182,18 @@ PAssCudaPI::prepare (void) {
 			cudaGraphicsGLRegisterBuffer(&cuda_ssbo_Viscosity, buffIdViscosity, cudaGraphicsMapFlagsNone);
 			cudaGraphicsGLRegisterBuffer(&cuda_ssbo_Acceleration, buffIdAcceleration, cudaGraphicsMapFlagsNone);
 		}
-		
+
+		//vai preencher o adjV2
+		/*
+		int* dptrssboAdjV2;
+		cudaGraphicsMapResources(1, &cuda_ssbo_AdjV2, NULL);
+		size_t num_bytesssbo_AdjV2;
+		cudaGraphicsResourceGetMappedPointer((void**)&dptrssboAdjV2, &num_bytesssbo_AdjV2, cuda_ssbo_AdjV2);
+
+		cudaComputeAdjV2(dptrssboAdjV2);
+
+		cudaGraphicsUnmapResources(1, &cuda_ssbo_AdjV2, NULL);
+		*/
 		first = 1;
 	}
 	
@@ -262,10 +287,10 @@ PAssCudaPI::prepare (void) {
 		cudaGraphicsResourceGetMappedPointer((void**)&dptrssboAcceleration, &num_bytesssbo_Acceleration, cuda_ssbo_Acceleration);
 	}
 
-	mysort(dptrssboIndex,dptrssboPosition, dptrssboTempIndex, dptrssboVelocity,1000000);
+	mysort(dptrssboIndex,dptrssboPosition, dptrssboTempIndex, dptrssboVelocity, particleNumber);
 
 	//calls a kernel that counds each index to cellstart and cellend
-	kernelWraper(dptrssboIndex, dptrssboCellStart, dptrssboCellEnd);
+	kernelWraper(dptrssboIndex, dptrssboCellStart, dptrssboCellEnd,particleNumber);
 
 	if (densityPressure == 1) {
 		//cudaDeviceSynchronize();

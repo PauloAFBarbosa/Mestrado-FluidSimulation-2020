@@ -283,12 +283,13 @@ void count(int * indexes , int* CellStart, int* CellEnd)
 	
 }
 
-void kernelWraper(int * dptrssboIndex, int* dptrssboCellStart, int* dptrssboCellEnd) {
+void kernelWraper(int * dptrssboIndex, int* dptrssboCellStart, int* dptrssboCellEnd,int nrParticles) {
 
     //Alterar aqui quando se muda o tamanho das particulas
 
+    int x = nrParticles / 64;
 
-	count<<<15625, 64 >>>(dptrssboIndex, dptrssboCellStart, dptrssboCellEnd);
+	count<<<x, 64 >>>(dptrssboIndex, dptrssboCellStart, dptrssboCellEnd);
 
 	
 	thrust::device_ptr<int> cellstartThrust = thrust::device_pointer_cast((dptrssboCellStart));
@@ -724,6 +725,8 @@ void UpdateKernel(float4* dptrssboPosition, int* dptrssboIndex, int* dptrssboTem
     dptrssboTempIndex[index] = morton_cell;
 }
 
+
+
 void cudaDensityPressure(float4 * dptrssboPosition,int * dptrssboIndex,int * dptrssboCellStart,int * dptrssboCellEnd,float * dptrssboDensity, float * dptrssboPressure, int * dptrssboAdj) {
 	densityPressureKernel << <1125, 192 >> > (dptrssboPosition,dptrssboIndex, dptrssboCellStart, dptrssboCellEnd, dptrssboDensity, dptrssboPressure, dptrssboAdj);
 }
@@ -740,4 +743,8 @@ void cudaIntegrate(float4 * dptrssboPosition, float4 * dptrssboVelocity, float4 
 void cudaUpdateIndex(float4* dptrssboPosition, int* dptrssboIndex, int* dptrssboTempIndex) {
 
     UpdateKernel << <1125, 192 >> > (dptrssboPosition, dptrssboIndex, dptrssboTempIndex);
+}
+
+void cudaComputeAdjV2(int* dptrssboAdjV2) {
+    //computeAdjV2Kernel << < 31250 , 64>> > (dptrssboAdjV2);
 }

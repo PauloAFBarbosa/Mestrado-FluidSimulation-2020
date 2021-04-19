@@ -143,8 +143,10 @@ bool detectCollisionV2(in vec4 pos,in vec4 vel,in uint index,out int hitBall, ou
                 }
 
             float penetrationDepth = length(pos - contactPoint);
-            retVelocity= vel-(2) * dot(unitSurfaceNormal, normalize(vel))*unitSurfaceNormal;
-            retVelocity *= RESTITUTION;
+        if (COLLISIONTYPE == 0)
+            retVelocity= vel-(2) * dot(unitSurfaceNormal, (vel))*unitSurfaceNormal;
+        else
+            retVelocity= vel -  (1+RESTITUTION *(penetrationDepth/(TIMESTEP*length(vel)))) * dot(unitSurfaceNormal, vel)*unitSurfaceNormal;
             hitBall=1;
             return true;
         }

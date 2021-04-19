@@ -4,8 +4,11 @@
 		<constants>
 			<constant name="NUMBER_OF_PARTICLES" value="1000000" />
 			<constant name="NUMBER_OF_VERTICES"  value="6000000" />
-			<!-- Lança com 625 workgroups. Cada workgroup vai ter 25 threads-->
+			<!-- tem wg com tamanho 32-->
 			<constant name="NUMBER_OF_WORK_GROUPS" value="31250" />
+			
+			<!-- density pressure tem wg com tamanho 64-->
+			<!-- 64*NUMBER_OF_WORK_GROUPS_DENSITY_PRESSURE tem de dar igual ao nr de particulas-->
 			<constant name="NUMBER_OF_WORK_GROUPS_DENSITY_PRESSURE" value="15625" />
 
 			<constant name="HASH_SIZE" value="20000" />

@@ -409,7 +409,7 @@ void main()
                     adj[index*MAXADJ + vizinhos + 1]= i;
                     //adj[index*MAXADJ ]++;
                     vizinhos++;
-                    sum += SIMULATIONSCALE* ker_res;   
+                    sum += ker_res;   
                 }
 
                 
@@ -418,10 +418,10 @@ void main()
     
     adj[index*MAXADJ]=vizinhos;
     
-    density[index] = sum*MASS;
+    density[index] = sum*MASS*SIMULATIONSCALE;
     
     // compute pressure
-    pressure[index] = STIFF * ((sum*MASS) - RESTDENSITY);
+    pressure[index] = STIFF * ((sum*MASS*SIMULATIONSCALE) - RESTDENSITY);
 
     
 }
