@@ -110,7 +110,6 @@ layout(std430, binding = 11) buffer Debug
 {
     vec4 debug[];
 };
-
 layout(std430, binding = 12) buffer Adj
 {
     int adj[];
@@ -488,9 +487,9 @@ void main()
         return;
 
     uint ret[27];
-    //int retSize=0;
+    int retSize=0;
 
-    //retSize=getAdj(position[index], H, ret);
+    retSize=getAdj(position[index], H, ret);
 
     vec4 sumViscosity = vec4(0);
     vec4 sumForce = vec4(0);
@@ -502,7 +501,41 @@ void main()
     count=0;
 
     int vizinhos= adj[index*MAXADJ];
+    /*
+    for (int j = 0; j < retSize; j++)
+    {
+        //uint bucket = uint(adjMat[(28*b)+(j+1)]) ;
+        uint bucket = ret[j];
 
+        int offset = offsets[bucket];
+        int bucketSize = bucketSizes[bucket];
+        for (int i = 0; i < bucketSize; i++)
+        {
+            if (position[index].x == position[offset +i].x && position[index].y == position[offset +i].y && position[index].z == position[offset +i].z)
+                continue;
+            vec4 arg;
+            arg = position[index] - position[offset +i];
+
+            sumViscosity += useViscosityKernel_laplacian(arg, H) * (velocity[offset +i] - velocity[index]) * (MASS / density[offset +i]) ;
+
+            //Force
+            vec4 ret_kernel = vec4(0);
+            arg = position[index] - position[offset +i];
+            
+            usePressureKernel_gradient(arg, H, ret_kernel);
+            
+            sumForce += ret_kernel * (pressure[index] / (density[index] * density[index]) + pressure[offset +i] / (density[offset +i] * density[offset +i])) * MASS;
+            
+            //SurfaceNormal
+            vec4 ret2 = vec4(0);
+            
+            arg = position[index]- position[offset +i];
+            
+            useDefaultKernel_gradient(arg, H, ret2);
+            sumSurfaceNormal += ret2 * (MASS / density[offset +i]);
+        }
+    }*/
+    
     for (int i = 0 ; i< vizinhos ; i ++){
         //Viscosity
 
@@ -544,7 +577,24 @@ void main()
     gravity[index] = GRAVITY * density[index];
 
     if (length(surfaceNormal[index]) >= THRESHOLD) {
+        /*
+        for (int j = 0; j < retSize; j++)
+        {
+            //uint bucket = uint(adjMat[(28*b)+(j+1)]) ;
+            uint bucket = ret[j];
 
+            int offset = offsets[bucket];
+            int bucketSize = bucketSizes[bucket];
+            for (int i = 0; i < bucketSize; i++)
+            {
+                if (position[index].x == position[offset +i].x && position[index].y == position[offset +i].y && position[index].z == position[offset +i].z)
+                    continue;
+                vec4 arg;
+                arg = position[index] - position[offset+i];
+                sum += (MASS / density[offset+i]) * useDefaultKernel_laplacian(arg, H);
+            }
+        }*/
+        
         for (int i = 0 ; i< vizinhos ; i ++){
             if (position[index].x == position[adj[index*MAXADJ + i + 1]].x && position[index].y == position[adj[index*MAXADJ + i + 1]].y && position[index].z == position[adj[index*MAXADJ + i + 1]].z)
                 continue;

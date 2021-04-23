@@ -2,14 +2,14 @@
 <project name="SPH_Fluid_Sim" width = "1280" height = "720">
 	<assets>
 		<constants>
-			<constant name="NUMBER_OF_PARTICLES" value="1000000" />
-			<constant name="NUMBER_OF_VERTICES"  value="6000000" />
+			<constant name="NUMBER_OF_PARTICLES" value="1728000" />
+			<constant name="NUMBER_OF_VERTICES"  value="10368000" />
 			<!-- tem wg com tamanho 32-->
-			<constant name="NUMBER_OF_WORK_GROUPS" value="31250" />
+			<constant name="NUMBER_OF_WORK_GROUPS" value="54000" />
 			
 			<!-- density pressure tem wg com tamanho 64-->
 			<!-- 64*NUMBER_OF_WORK_GROUPS_DENSITY_PRESSURE tem de dar igual ao nr de particulas-->
-			<constant name="NUMBER_OF_WORK_GROUPS_DENSITY_PRESSURE" value="15625" />
+			<constant name="NUMBER_OF_WORK_GROUPS_DENSITY_PRESSURE" value="27000" />
 
 			<constant name="HASH_SIZE" value="20000" />
 
@@ -86,7 +86,7 @@
 				<attribute name="BallSize" 					data="FLOAT" type="RENDERER" value="0.1" />
 				<attribute name="COLLISIONTYPE" 					data="INT" type="RENDERER" value="0" />
 	
-				<attribute name="PONTOS_LADO" 				data="INT" 		type="RENDERER" value="100"/>
+				<attribute name="PONTOS_LADO" 				data="INT" 		type="RENDERER" value="120"/>
 				<attribute name="HASHSIZE" 					data="INT" 		type="RENDERER" value="HASH_SIZE"/>
 				<!--Usado para definir o volume onde vai ser feita a simulação-->
 				<!--X pode ir de -2.17 até 2.17 -->

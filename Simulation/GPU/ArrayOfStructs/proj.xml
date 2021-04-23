@@ -2,10 +2,10 @@
 <project name="Particles" width = "1280" height = "720">
 	<assets>
 		<constants>
-			<constant name="NUMBER_OF_PARTICLES" value="216000" />
+			<constant name="NUMBER_OF_PARTICLES" value="1000000" />
 
 			<!-- Lança com 625 workgroups. Cada workgroup vai ter 32 threads-->
-			<constant name="NUMBER_OF_WORK_GROUPS" value="6750" />
+			<constant name="NUMBER_OF_WORK_GROUPS" value="31250" />
 
 			<!-- Lança com 100 workgroups. Cada workgroup vai ter 32 threads-->
 			<constant name="NUMBER_OF_WORK_GROUPS_HASH" value="625" />
@@ -43,7 +43,7 @@
 			<attribute name="VISCOSITY" 				data="FLOAT" type="RENDERER" value = "3.5" />
 			<attribute name="GRAVITY" 					data="VEC4" type="RENDERER" x = "0" y = "-9.8" z = "0" w="0" />
 
-			<attribute name="PONTOS_LADO" 				data="INT" 		type="RENDERER" value="60"/>
+			<attribute name="PONTOS_LADO" 				data="INT" 		type="RENDERER" value="100"/>
 			<attribute name="HASHSIZE" 					data="INT" 		type="RENDERER" value="HASH_SIZE"/>
 			<!--Usado para definir o volume onde vai ser feita a simulação-->
 			<attribute name="XMIN" 						data="FLOAT" 		type="RENDERER" value="-2"/>
