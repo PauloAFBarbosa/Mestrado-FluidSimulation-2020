@@ -20,7 +20,7 @@
 
 #version 460
 
-#define WORK_GROUP_SIZE 25
+#define WORK_GROUP_SIZE 32
 
 layout (local_size_x = WORK_GROUP_SIZE) in;
 
@@ -34,7 +34,7 @@ layout (local_size_x = WORK_GROUP_SIZE) in;
 #define SMOOTHING_LENGTH (4 * PARTICLE_RADIUS)
 
 #define PARTICLE_STIFFNESS 2000
-
+#define MAXADJ 500
 uniform int Pause;
 uniform int Number_Particles;
 uniform int HASHSIZE;
@@ -74,9 +74,9 @@ layout(std430, binding = 2) buffer Offsets
     int offsets[];
 };
 
-layout(std430, binding = 3) buffer AdjMat
+layout(std430, binding = 3) buffer Adj
 {
-    int adjMat[];
+    int adj[];
 };
 
 bool contains(uint arr[27], int size, uint member) {
@@ -430,8 +430,8 @@ void main()
     retSize=getAdj(particles[index].position, H, ret);
     // compute density
     float sum=1;
-
-    
+    int conta=0;
+    int vizinhos=0;
 
     for (int j = 0; j < retSize; j++)
         {
@@ -440,7 +440,7 @@ void main()
     
             int offset = offsets[bucket];
             int bucketSize = bucketSizes[bucket];
-            for (uint i = 0; i < bucketSize; i++)
+            for (int i = 0; i < bucketSize; i++)
             {
 
                 vec4 arg;
@@ -449,10 +449,20 @@ void main()
                 float ker_res = useDefaultKernel(arg, H);
 
                 sum += MASS * ker_res;
+
+                if (ker_res!=0 ){
+                    
+                    conta++;
+                    //int vizinhos = adj[index*MAXADJ];
+                    //Aqui é MAXADJ porque no maximo vai dar para guardar 99 vizinhos mais 1 posição para dizer quantos vizinhos se guardou
+                    adj[index*MAXADJ + vizinhos + 1]= offset + i;
+                    //adj[index*MAXADJ ]++;
+                    vizinhos++;
+                }
                 
             }
         }
-
+    adj[index*MAXADJ]=vizinhos;
     particles[index].density = sum;
     // compute pressure
     particles[index].pressure = STIFF * (sum - RESTDENSITY);

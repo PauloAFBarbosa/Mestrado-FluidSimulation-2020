@@ -2,15 +2,15 @@
 <project name="Particles" width = "1280" height = "720">
 	<assets>
 		<constants>
-			<constant name="NUMBER_OF_PARTICLES" value="64000" />
+			<constant name="NUMBER_OF_PARTICLES" value="216000" />
 
-			<!-- Lança com 625 workgroups. Cada workgroup vai ter 25 threads-->
-			<constant name="NUMBER_OF_WORK_GROUPS" value="2560" />
+			<!-- Lança com 625 workgroups. Cada workgroup vai ter 32 threads-->
+			<constant name="NUMBER_OF_WORK_GROUPS" value="6750" />
 
-			<!-- Lança com 100 workgroups. Cada workgroup vai ter 10 threads-->
-			<constant name="NUMBER_OF_WORK_GROUPS_HASH" value="100" />
+			<!-- Lança com 100 workgroups. Cada workgroup vai ter 32 threads-->
+			<constant name="NUMBER_OF_WORK_GROUPS_HASH" value="625" />
 
-			<constant name="HASH_SIZE" value="1000" />
+			<constant name="HASH_SIZE" value="20000" />
 		</constants>
         <attributes>
 			<attribute name="Particle_Radius" 			data="FLOAT" 	type="RENDERER" value="0.005"/>
@@ -43,15 +43,15 @@
 			<attribute name="VISCOSITY" 				data="FLOAT" type="RENDERER" value = "3.5" />
 			<attribute name="GRAVITY" 					data="VEC4" type="RENDERER" x = "0" y = "-9.8" z = "0" w="0" />
 
-			<attribute name="PONTOS_LADO" 				data="INT" 		type="RENDERER" value="40"/>
+			<attribute name="PONTOS_LADO" 				data="INT" 		type="RENDERER" value="60"/>
 			<attribute name="HASHSIZE" 					data="INT" 		type="RENDERER" value="HASH_SIZE"/>
 			<!--Usado para definir o volume onde vai ser feita a simulação-->
-			<attribute name="XMIN" 						data="FLOAT" 		type="RENDERER" value="-1"/>
-			<attribute name="YMIN" 						data="FLOAT" 		type="RENDERER" value="-1"/>
-			<attribute name="ZMIN" 						data="FLOAT" 		type="RENDERER" value="-1"/>
-			<attribute name="XMAX" 						data="FLOAT" 		type="RENDERER" value="1"/>
-			<attribute name="YMAX" 						data="FLOAT" 		type="RENDERER" value="1"/>
-			<attribute name="ZMAX" 						data="FLOAT" 		type="RENDERER" value="1"/>
+			<attribute name="XMIN" 						data="FLOAT" 		type="RENDERER" value="-2"/>
+			<attribute name="YMIN" 						data="FLOAT" 		type="RENDERER" value="-2"/>
+			<attribute name="ZMIN" 						data="FLOAT" 		type="RENDERER" value="-2"/>
+			<attribute name="XMAX" 						data="FLOAT" 		type="RENDERER" value="2"/>
+			<attribute name="YMAX" 						data="FLOAT" 		type="RENDERER" value="2"/>
+			<attribute name="ZMAX" 						data="FLOAT" 		type="RENDERER" value="2"/>
 
 
 		</attributes>
@@ -103,6 +103,10 @@
 				<mode value="RUN_ONCE"/>
 				<material name="Init" fromLibrary="particleLib" dimX="1" dimY="1" dimZ="1"/>
 			</pass>
+			<pass class="compute" name="Populate">
+				<mode value="RUN_ONCE"/>
+				<material name="Populate" fromLibrary="particleLib" dimX="NUMBER_OF_WORK_GROUPS" dimY="1" dimZ="1"/>
+			</pass >
 			<pass class="compute" name="DensityPressure">
 				
 				<material name="density_pressure" fromLibrary="particleLib" dimX="NUMBER_OF_WORK_GROUPS" dimY="1" dimZ="1"/>
@@ -124,15 +128,15 @@
 				
 				<material name="ComputeTemps" fromLibrary="particleLib" dimX="NUMBER_OF_WORK_GROUPS" dimY="1" dimZ="1"/>
 			</pass>
+			
+			<pass class="compute" name="ComputeOffsets">
+				
+				<material name="ComputeOffsets" fromLibrary="particleLib" dimX="NUMBER_OF_WORK_GROUPS_HASH" dimY="1" dimZ="1"/>
+			</pass>
 
 			<pass class="compute" name="UpdateHash">
 
 				<material name="UpdateHash" fromLibrary="particleLib" dimX="NUMBER_OF_WORK_GROUPS" dimY="1" dimZ="1"/>
-			</pass>
-
-			<pass class="compute" name="ComputeOffsets">
-				
-				<material name="ComputeOffsets" fromLibrary="particleLib" dimX="NUMBER_OF_WORK_GROUPS_HASH" dimY="1" dimZ="1"/>
 			</pass>
 			
 			

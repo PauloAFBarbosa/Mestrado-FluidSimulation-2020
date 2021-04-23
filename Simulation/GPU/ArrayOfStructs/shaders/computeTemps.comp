@@ -1,6 +1,6 @@
 #version 460
 
-#define WORK_GROUP_SIZE 25
+#define WORK_GROUP_SIZE 32
 
 layout (local_size_x = WORK_GROUP_SIZE) in;
 
@@ -67,9 +67,6 @@ void main()
 {
     
     uint index = gl_GlobalInvocationID.x;
-
-    if (index > Number_Particles)
-        return;
 
     tempParticles[index].position = particles[index].position;
         

@@ -488,9 +488,9 @@ void main()
         return;
 
     uint ret[27];
-    int retSize=0;
+    //int retSize=0;
 
-    retSize=getAdj(position[index], H, ret);
+    //retSize=getAdj(position[index], H, ret);
 
     vec4 sumViscosity = vec4(0);
     vec4 sumForce = vec4(0);

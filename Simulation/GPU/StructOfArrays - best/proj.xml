@@ -4,9 +4,9 @@
 		<constants>
 			<constant name="NUMBER_OF_PARTICLES" value="216000" />
 			<constant name="NUMBER_OF_VERTICES"  value="1296000" />
-			<!-- Lança com 625 workgroups. Cada workgroup vai ter 25 threads-->
+			<!-- Lança com 625 workgroups. Cada workgroup vai ter 32 threads-->
 			<constant name="NUMBER_OF_WORK_GROUPS" value="6750" />
-			<!-- Lança com 100 workgroups. Cada workgroup vai ter 10 threads-->
+			<!-- Lança com 100 workgroups. Cada workgroup vai ter 32 threads-->
 			<constant name="NUMBER_OF_WORK_GROUPS_HASH" value="625" />
 
 			<constant name="HASH_SIZE" value="20000" />

@@ -6,6 +6,7 @@ layout (local_size_x = WORK_GROUP_SIZE) in;
 
 #define PARTICLE_RADIUS 0.005f
 
+
 uniform int Number_Particles;
 uniform mat4 m_model;
 
@@ -47,21 +48,9 @@ layout(std430, binding = 2) buffer BucketSizes
     int bucketSizes[];
 };
 
-layout(std430, binding = 3) buffer Offsets
-{
-    int offsets[];
-};
-
-
-
-layout(std430, binding = 4) buffer TempBucketSizes
+layout(std430, binding = 3) buffer TempBucketSizes
 {
     int tempBucketSizes[];
-};
-
-layout(std430, binding = 5) buffer Position
-{
-    vec4 position[];
 };
 
 
@@ -99,14 +88,19 @@ void main()
 
     uint bucket = hashFunction(tempParticles[index].position, H, HASHSIZE);
     int bucketSize= atomicAdd(bucketSizes[bucket],1);
-    int offset = offsets[bucket];
+    int offset = 0;
     //vai correr o array com os tamanhos dos buckets até chegar ao bucket atual
-    
+    for (int j = 0; j < bucket; j++)
+    {
+        //exemplo, se tivermos um array com [p1,p2,p3,p4]
+        //p1 e p2 sao do bucket 0 e p3 e p4 do bucket 1
+        //o bucket 1 começa no indice 2 que é o bucketsize do bucket 0
+        offset += tempBucketSizes[j];
+    }
 
     particles[offset+bucketSize].position = tempParticles[index].position;
     particles[offset+bucketSize].velocity = tempParticles[index].velocity;
-    
-    position[index]= tempParticles[index].position;
+        
 
     
 
