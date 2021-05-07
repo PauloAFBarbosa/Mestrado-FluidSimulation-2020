@@ -150,7 +150,7 @@
 		</materialLibs>
 	</assets>
 	
-	<pipelines default="pip" mode="RUN_SEQUENTIAL">
+	<pipelines default="pip2" mode="RUN_SEQUENTIAL">
 		<!-- SIMULATION -->
 		<!-- Init (Run once) && sort -->
 		<pipeline name="sort">
