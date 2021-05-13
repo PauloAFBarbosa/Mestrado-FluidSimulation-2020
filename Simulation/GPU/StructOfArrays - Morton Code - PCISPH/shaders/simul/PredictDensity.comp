@@ -2,7 +2,7 @@
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
-// in the Software without restriction, including without limitation the rights
+// in the Software without ion, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
@@ -45,48 +45,48 @@ uniform float MASS;
 uniform float STIFF;
 uniform float SIMULATIONSCALE;
 
-layout(std430, binding = 0) readonly restrict buffer Position
+layout(std430, binding = 0)   buffer Position
 {
     vec4 position[];
 };
 
 
-layout(std430, binding = 1) restrict buffer Density
+layout(std430, binding = 1)  buffer Density
 {
     float density[];
 };
 
-layout(std430, binding = 2) restrict buffer Pressure
+layout(std430, binding = 2)  buffer Pressure
 {
     float pressure[];
 };
 
-layout(std430, binding = 3) restrict buffer Debug
+layout(std430, binding = 3)  buffer Debug
 {
     vec4 debug[];
 };
 
-layout(std430, binding = 4) restrict buffer Adj
+layout(std430, binding = 4)  buffer Adj
 {
     int adj[];
 };
 
-layout(std430, binding = 5) readonly restrict buffer CellStart
+layout(std430, binding = 5)   buffer CellStart
 {
     int cellStart[];
 };
 
-layout(std430, binding = 6) readonly restrict buffer CellEnd
+layout(std430, binding = 6)   buffer CellEnd
 {
     int cellEnd[];
 };
 
-layout(std430, binding = 7) readonly restrict buffer Index
+layout(std430, binding = 7)   buffer Index
 {
     uint bufferIndex[];
 };
 
-layout(std430, binding = 8) readonly restrict buffer AdjV2
+layout(std430, binding = 8)   buffer AdjV2
 {
     int adjV2[];
 };
@@ -360,21 +360,29 @@ void main()
 
     //Predicted density
     for (int i = 0 ; i< vizinhos ; i ++){
+        
+        int adji= adj[index*MAXADJ + i + 1];
+
         vec4 arg;
-        arg = p - position[i];
+        arg = p - position[adji];
 
         sum += useDefaultKernel(arg, H);  
     }
+
     density[index] = sum*MASS*SIMULATIONSCALE;
-    //Calc density variation
-    float densityVariation = max(0.0, density[index]-RESTDENSITY);
-
-    if (densityVariation==0.0)
-        return;
-    else
-        debug[index]= vec4(densityVariation); //Debug vai guardar as densityVariation's
-
-    pressure[index] += densityVariation* SIMULATIONSCALE;
 
     
+    float densityVar = density[index]- (RESTDENSITY);
+
+    //densityVar = densityVar * 0.01 ; //1 é uma scale
+
+    if (densityVar < 0){
+        densityVar =0;
+        
+    }
+
+    
+    pressure[index]+= densityVar*0.05;
+
+
 }

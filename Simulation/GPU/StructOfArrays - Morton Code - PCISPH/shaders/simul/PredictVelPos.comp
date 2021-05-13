@@ -375,12 +375,12 @@ void main()
     vec4 totalForce= vec4(0);
 
     //retirado surfaceTension
-    totalForce = viscosity[index]+ gravity[index]; //+ surfaceTension[index];
+    totalForce = force[index] + viscosity[index]; //+ surfaceTension[index];
 
     
 
     //employEulerIntegrator
-    vec4 acc= totalForce / density[index];
+    vec4 acc= totalForce / density[index] + GRAVITY;
 
     vec4 vel = velocity[index] + acc * TIMESTEP;
     

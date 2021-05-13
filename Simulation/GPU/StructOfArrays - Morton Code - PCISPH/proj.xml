@@ -68,7 +68,7 @@
 			<!-- LUA ATTRIBUTES -->
 				<attribute name="Blur_PingPong" 	data="INT" 		type="RENDERER" value="0"  />
 				<attribute name="Sim_Iters" 		data="INT" 		type="RENDERER" value="0"  />
-				<attribute name="Sim_MaxIters" 		data="INT" 		type="RENDERER" value="400"  />
+				<attribute name="Sim_MaxIters" 		data="INT" 		type="RENDERER" value="700"  />
 				<attribute name="Pcisph_Iters" 		data="INT" 		type="RENDERER" value="0"  />
 				<attribute name="Pcisph_MaxIters" 		data="INT" 		type="RENDERER" value="7"  />
 			<!-- Atributos Simulaçao -->
@@ -150,7 +150,7 @@
 		</materialLibs>
 	</assets>
 	
-	<pipelines default="pip2" mode="RUN_SEQUENTIAL">
+	<pipelines default="sort" mode="RUN_SEQUENTIAL">
 		<!-- SIMULATION -->
 		<!-- Init (Run once) && sort -->
 		<pipeline name="sort">
@@ -174,17 +174,15 @@
 		
 
 		<!-- PciSph loop -> predict vel/pos  predict density/density var update pressure   compute pressure force -->
-		<pipeline name="pcisphLoop">
+		<pipeline name="pcisphLoop" repetitions="7">
 			<!-- script that ends the pcisph loop - para ja faz 7 iterações sempre -->
-			<testScript file="scripts/pipelines.lua" script="SimController" />
-
 			<testScript file="scripts/pcisph.lua" script="LoopController" />
 			
 			<pass class="compute" name="PredictVelPos">
-				<material name="PredictVelPos" fromLibrary="simulationLib" dimX="NUMBER_OF_WORK_GROUPS_DENSITY_PRESSURE" dimY="1" dimZ="1"/>
+				<material name="PredictVelPos" fromLibrary="simulationLib" dimX="NUMBER_OF_WORK_GROUPS" dimY="1" dimZ="1"/>
 			</pass>
 			<pass class="compute" name="PredictDensity">
-				<material name="PredictDensity" fromLibrary="simulationLib" dimX="NUMBER_OF_WORK_GROUPS" dimY="1" dimZ="1"/>
+				<material name="PredictDensity" fromLibrary="simulationLib" dimX="NUMBER_OF_WORK_GROUPS_DENSITY_PRESSURE" dimY="1" dimZ="1"/>
 			</pass>
 			<pass class="compute" name="ComputePressureForce">
 				<material name="ComputePressureForce" fromLibrary="simulationLib" dimX="NUMBER_OF_WORK_GROUPS" dimY="1" dimZ="1"/>
@@ -193,9 +191,8 @@
 		</pipeline>
 
 		<pipeline name="lastStep">
-			<pass class="compute" name="NewVelPos">
-				<material name="NewVelPos" fromLibrary="simulationLib" dimX="NUMBER_OF_WORK_GROUPS" dimY="1" dimZ="1"/>
-			</pass>
+			
+			
 			<pass class="compute" name="Integrate">
 				<material name="integrate" fromLibrary="simulationLib" dimX="NUMBER_OF_WORK_GROUPS" dimY="1" dimZ="1"/>
 			</pass>
@@ -338,6 +335,8 @@
 			<var label="RESTITUTION" 		type="RENDERER" context="CURRENT" component="RESTITUTION" def="min=0 max=1 step=0.1"/>
 			<var label="SIMULATIONSCALE" 		type="RENDERER" context="CURRENT" component="SIMULATIONSCALE" def="min=0 max=1 step=0.05"/>
 			<var label="COLLISIONTYPE (0-fast 1-realistic)" 		type="RENDERER" context="CURRENT" component="COLLISIONTYPE" def="min=0 max=1"/>
+			<var label="PCILoop" 		type="RENDERER" context="CURRENT" component="Pcisph_Iters" def="min=0 max=10"/>
+			
 			
 			
         </window>

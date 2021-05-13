@@ -363,6 +363,7 @@
 					<valueof uniform="THRESHOLD" 		type="RENDERER" 		context="CURRENT" 		component="THRESHOLD" />
 					<valueof uniform="SURFACETENSION" 		type="RENDERER" 		context="CURRENT" 		component="SURFACETENSION" />
 					<valueof uniform="SIMULATIONSCALE" 		type="RENDERER" 		context="CURRENT" 		component="SIMULATIONSCALE" />
+					<valueof uniform="RESTDENSITY" 		type="RENDERER" 		context="CURRENT" 		component="RESTDENSITY" />
 					
 					
 				</values>
