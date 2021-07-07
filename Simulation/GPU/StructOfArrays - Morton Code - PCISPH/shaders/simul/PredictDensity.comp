@@ -368,11 +368,12 @@ void main()
 
         sum += useDefaultKernel(arg, H);  
     }
-
-    density[index] = sum*MASS*SIMULATIONSCALE;
+   
+    sum = sum*MASS*SIMULATIONSCALE;
+    density[index] = sum;
 
     
-    float densityVar = density[index]- (RESTDENSITY);
+    float densityVar = sum- (RESTDENSITY);
 
     //densityVar = densityVar * 0.01 ; //1 é uma scale
 

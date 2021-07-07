@@ -76,6 +76,7 @@
 				<attribute name="THRESHOLD" 				data="FLOAT" type="RENDERER" value = "7.065" />
 				<attribute name="H" 						data="FLOAT" type="RENDERER" value = "0.0457" />
 				<attribute name="SIMULATIONSCALE" 						data="FLOAT" type="RENDERER" value = "1.0" />
+				<attribute name="SIMULATIONSCALEFORCE" 						data="FLOAT" type="RENDERER" value = "1.0" />
 				<attribute name="STIFF" 					data="FLOAT" type="RENDERER" value = "3.0" />
 				<attribute name="DECLIVE" 					data="FLOAT" type="RENDERER" value = "0.0" />
 				<attribute name="MASS" 						data="FLOAT" type="RENDERER" value = "0.02" />
@@ -301,15 +302,17 @@
             <var label="BallSize" 			type="RENDERER" context="CURRENT" component="BallSize" def="min=0.1 max=1 step=0.01"/>
 			<var label="TIMESTEP" 			type="RENDERER" context="CURRENT" component="TIMESTEP" def="min=0.001 step=0.001 max=0.05"/>
 			<var label="SURFACETENSION" 	type="RENDERER" context="CURRENT" component="SURFACETENSION" def="min=0.0001 max=2 step=0.0001" />
-			<var label="H" 					type="RENDERER" context="CURRENT" component="H" def="min=0.0457 max=100 step=0.0001"/>
-			<var label="STIFF" 				type="RENDERER" context="CURRENT" component="STIFF" def="min=1 max=100 step=1"/>
+			<var label="H" 					type="RENDERER" context="CURRENT" component="H" def="min=0.0001 max=0.0457 step=0.0001"/>
+			<var label="STIFF" 				type="RENDERER" context="CURRENT" component="STIFF" def="min=0.1 max=10 step=0.1"/>
 			<var label="DECLIVE" 			type="RENDERER" context="CURRENT" component="DECLIVE" def="min=-1.0 max=1 step=0.05"/>
+			<var label="MASS" 			type="RENDERER" context="CURRENT" component="MASS" def="min=0.005 max=0.4 step=0.005"/>
 			<var label="Wall damping" 			type="RENDERER" context="CURRENT" component="WALL_DAMPING" def="min=0 max=1 step=0.1"/>
 			<var label="RESTDENSITY" 		type="RENDERER" context="CURRENT" component="RESTDENSITY" def="min=100 max=10000 step=100"/>
 			<var label="VISCOSITY" 			type="RENDERER" context="CURRENT" component="VISCOSITY" def="min=3 max=25 step=0.1"/>
 			<var label="GRAVITY" 			type="RENDERER" context="CURRENT" component="GRAVITY" def="min=-20 max=20 step=1"/>
 			<var label="RESTITUTION" 		type="RENDERER" context="CURRENT" component="RESTITUTION" def="min=0 max=1 step=0.1"/>
 			<var label="SIMULATIONSCALE" 		type="RENDERER" context="CURRENT" component="SIMULATIONSCALE" def="min=0 max=1 step=0.05"/>
+			<var label="SIMULATIONSCALE_FORCE" 		type="RENDERER" context="CURRENT" component="SIMULATIONSCALEFORCE" def="min=0 max=2 step=0.05"/>
 			<var label="COLLISIONTYPE (0-fast 1-realistic)" 		type="RENDERER" context="CURRENT" component="COLLISIONTYPE" def="min=0 max=1"/>
 			
 			

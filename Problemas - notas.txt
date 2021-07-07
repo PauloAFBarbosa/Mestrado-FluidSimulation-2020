@@ -1,0 +1,30 @@
+1 - Verificar as posições de particulas com densidades diferentes. 
+	Para ver se particulas do centro tem maior densidade que particulas perto das borders
+
+	Particula 0 - 	8739 densidade
+			Pos -2.1 -2  -2.87
+			esta a bater no Y mas no X e Z nao esta bem
+	particula 7 -	4151
+			pos -2.13 -1.9 -2.86
+			Não esta em nenhuma das pontas
+
+	Parece que esta a acontecer o contrário do que estava a espera. Maior densidade nas borders
+	e menor densidade no centro do fluido
+
+	particula 4 - densidade 8375, assim, é esperado estar numa ponta
+			pos -2.12 -2 -2.84
+	
+	particula 1593976 esta no meio do fluido e tem densidade -> 1499 (esta perto da densidade de repouso, ou seja,
+			o algoritmo esta bem. As particulas estão é a ser esmagadas para baixo)
+	
+2 - Normalizar as densidades
+	Estava a pensar em normalizar as densidades caso faço -> maior densidade no centro e menor densidade nas borders
+	visto que é o oposto que acontece. Tenho de pensar no que devo fazer para evitar este esmagamento.
+
+	Possiveis soluções:
+		-reduzir a gravidade a ver o efeito que tem no fluido (ma solução)
+		-inserir as particulas fantasmas para criar uma força para repelir as particulas que estão
+		todas a ser mandadas para as borders
+
+Visto que o problema é exatamente o oposto do que estava a espera, tenho de pensar melhor no que se esta a passar
+e no que fazer

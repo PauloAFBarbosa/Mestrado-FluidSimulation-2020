@@ -45,7 +45,7 @@ uniform float H;
 uniform int Number_Particles;
 uniform vec3 External_Force;
 uniform int Pause;
-uniform float SIMULATIONSCALE;
+uniform float SIMULATIONSCALEFORCE;
 
 layout(std430, binding = 0) readonly restrict buffer Position
 {
@@ -508,7 +508,7 @@ void main()
             arg = p - position[adji];
 
             //sumViscosity += useViscosityKernel_laplacian(arg, H) * (velocity[adji] - v) * (MASS / density[adji]) ;
-            sumViscosity += useViscosityKernel_laplacian(arg, H) * (velocity[adji] - v) ;
+            sumViscosity += useViscosityKernel_laplacian(arg, H) * (velocity[adji] - v)*(MASS/density[adji]) ;
 
             //Force
             vec4 ret_kernel = vec4(0);
@@ -516,7 +516,10 @@ void main()
             
             usePressureKernel_gradient(arg, H, ret_kernel);
             
-            sumForce +=SIMULATIONSCALE* ret_kernel * ((press / (dens * dens)) + (pressure[adji] / (density[adji] * density[adji])));
+            //sumForce += ret_kernel * ((press / (dens * dens)) + (pressure[adji] / (density[adji] * density[adji])));
+
+            //Esta é a formula que esta no kelegar06 equação 4.11
+            sumForce += SIMULATIONSCALEFORCE* ret_kernel *((pressure[adji]+press)/(2))*(MASS/density[adji]);
             
             //SurfaceNormal ------------ nao faz diferença
 
@@ -529,11 +532,16 @@ void main()
     }
 
     
+    
 
     
-    viscosity[index]= sumViscosity * (VISCOSITY/dens)*MASS;
+    viscosity[index]= sumViscosity * (VISCOSITY);
     
-    force[index]= -(sumForce*dens*MASS);
+    force[index]= -sumForce; //force[index]= -(sumForce*SIMULATIONSCALEFORCE*MASS*dens);
+
+    //if (p.y < -2 + H)
+    //    force[index].y= 50000;
+
     //debug[index] = vec4(density[index]);
 
     //tempp=vec4(sumForce[0],sumForce[1],sumForce[2 ],0);
