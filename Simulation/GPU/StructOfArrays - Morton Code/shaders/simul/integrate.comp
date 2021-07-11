@@ -51,6 +51,7 @@ uniform vec4 GRAVITY;
 uniform vec4 Ball;
 uniform float BallSize;
 uniform int COLLISIONTYPE;
+uniform int computeGravity;
 
 layout(std430, binding = 0) buffer Position
 {
@@ -378,8 +379,11 @@ void main()
 
     //retirado surfaceTension
     // aqui se tiver GRAVITY * density cada particula vai ter uma gravidade diferente, e assim as de baixo sofrem mais gravidade (visto que tem mais gravidade)
-    totalForce = force[index] + viscosity[index] + GRAVITY * 1000; //+ surfaceTension[index];
-
+    
+    if (computeGravity==0)
+        totalForce = force[index] + viscosity[index] + GRAVITY * 1000; //+ surfaceTension[index];
+    else
+        totalForce = force[index] + viscosity[index] + GRAVITY * density[index]; //+ surfaceTension[index];
     
 
     //employEulerIntegrator

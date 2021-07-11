@@ -67,6 +67,7 @@
 				<attribute name="WAVE_STRENGTH" data="FLOAT" type="RENDERER" value="3"  />
 			<!-- Atributos Simulaçao -->
 				<attribute name="Pause"						data="INT" 	type="RENDERER" value="1" />
+				<attribute name="computeGravity"						data="INT" 	type="RENDERER" value="0" />
 				<attribute name="External_Force" 			data="VEC3" 	type="RENDERER" x="0" y="0.0" z="0.0" />
 				<attribute name="Viscosity"					data="FLOAT" 	type="RENDERER" value="3000" />
 				<attribute name="RESTITUTION"				data="FLOAT" type="RENDERER" value="0.5"/>
@@ -314,6 +315,7 @@
 			<var label="SIMULATIONSCALE" 		type="RENDERER" context="CURRENT" component="SIMULATIONSCALE" def="min=0 max=1 step=0.05"/>
 			<var label="SIMULATIONSCALE_FORCE" 		type="RENDERER" context="CURRENT" component="SIMULATIONSCALEFORCE" def="min=0 max=2 step=0.05"/>
 			<var label="COLLISIONTYPE (0-fast 1-realistic)" 		type="RENDERER" context="CURRENT" component="COLLISIONTYPE" def="min=0 max=1"/>
+			<var label="computeGravity" 		type="RENDERER" context="CURRENT" component="computeGravity" def="min=0 max=1"/>
 			
 			
         </window>

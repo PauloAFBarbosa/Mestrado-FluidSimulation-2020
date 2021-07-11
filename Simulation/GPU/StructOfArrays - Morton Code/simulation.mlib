@@ -352,6 +352,7 @@
 					<valueof uniform="BallSize" 		type="RENDERER" 		context="CURRENT" 		component="BallSize" />
 					<valueof uniform="WALL_DAMPING" 		type="RENDERER" 		context="CURRENT" 		component="WALL_DAMPING" />
 					<valueof uniform="COLLISIONTYPE" 		type="RENDERER" 		context="CURRENT" 		component="COLLISIONTYPE" />
+					<valueof uniform="computeGravity" 		type="RENDERER" 		context="CURRENT" 		component="computeGravity" />
 				</values>
 		    </shader>
 			<buffers>
