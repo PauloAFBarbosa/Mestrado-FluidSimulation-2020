@@ -533,22 +533,52 @@ void main()
             
             //useDefaultKernel_gradient(arg, H, ret2);
             //sumSurfaceNormal += ret2 * (MASS / density[adji]);
-    }
+    }    
+    viscosity[index]= sumViscosity * (VISCOSITY);
+    
+    force[index]= -sumForce;
 
     float factor=0.0;
     
+    //Alguma coisa esta a fazer as particulas irem para as posições negativas de YY XX e ZZ
+    //yy
     if (p.y < -2.0 + H){
-        factor = map(p.y*(-1),2.0-H,2.0,0,1);
+        //Aqui fica -2.1 para assim apanhar alguma particula que possa estar em -2.01 por exemplo 
+        factor = map(p.y,-2.1,-2.0+H,0,1);
+        force[index].y = force[index].y + factor* (100000);
+    }
+    else if (p.y > 2-H){
+        
+        factor = map(p.y,2.0-H,2.0,0,1);
+        force[index].y = force[index].y + factor* (-100000);
+    }
+    
+    //xx
+    if (p.x < -2.17 + H){
+        factor = map(p.x,-2.20,-2.17+H,0,1);
+        force[index].x = force[index].x + factor* (100000);
+    }
+    else if (p.x > 2.17-H){
+        
+        factor = map(p.x,2.17-H,2.20,0,1);
+        force[index].x = force[index].x + factor* (-100000);
+    }
+    //zz
+    if (p.z < -2.9 + H){
+        factor = map(p.z,-2.95,-2.9+H,0,1);
+        force[index].z = force[index].z + factor* (100000);
+    }
+    else if (p.z > 2.95-H){
+        
+        factor = map(p.z,2.9-H,2.95,0,1);
+        force[index].z = force[index].z + factor* (-100000);
     }
 
-    
-    debug[index] = vec4(p.y,0,0,factor);
-    
-    viscosity[index]= sumViscosity * (VISCOSITY);
-    
-    force[index]= -sumForce; //force[index]= -(sumForce*SIMULATIONSCALEFORCE*MASS*dens);
 
-    force[index].y = force[index].y + factor* (100000);
+
+    //force[index]= -(sumForce*SIMULATIONSCALEFORCE*MASS*dens);
+
+    
 
     //if (p.y < -2 + H)
     //    force[index].y= 50000;
