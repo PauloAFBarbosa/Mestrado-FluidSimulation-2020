@@ -47,6 +47,14 @@ uniform vec3 External_Force;
 uniform int Pause;
 uniform float SIMULATIONSCALEFORCE;
 
+uniform float XMAX;
+uniform float YMAX;
+uniform float ZMAX;
+
+uniform float XMIN;
+uniform float YMIN;
+uniform float ZMIN;
+
 layout(std430, binding = 0) readonly restrict buffer Position
 {
     vec4 position[];
@@ -542,35 +550,38 @@ void main()
     
     //Alguma coisa esta a fazer as particulas irem para as posições negativas de YY XX e ZZ
     //yy
-    if (p.y < -2.0 + H){
+    if (p.y < YMIN + H){
         //Aqui fica -2.1 para assim apanhar alguma particula que possa estar em -2.01 por exemplo 
-        factor = map(p.y,-2.1,-2.0+H,0,1);
+        factor = map(p.y,YMIN-0.1,YMIN+H,1,0);
         force[index].y = force[index].y + factor* (100000);
     }
-    else if (p.y > 2-H){
+    else if (p.y > YMAX-H){
         
-        factor = map(p.y,2.0-H,2.0,0,1);
+        factor = map(p.y,YMAX-H,YMAX+0.1,0,1);
         force[index].y = force[index].y + factor* (-100000);
     }
     
     //xx
-    if (p.x < -2.17 + H){
-        factor = map(p.x,-2.20,-2.17+H,0,1);
+    if (p.x < XMIN + H){
+
+        factor = map(p.x,XMIN -0.1,XMIN+H,1,0);
+        
         force[index].x = force[index].x + factor* (100000);
     }
-    else if (p.x > 2.17-H){
+    else if (p.x > XMAX-H){
         
-        factor = map(p.x,2.17-H,2.20,0,1);
+        factor = map(p.x,XMAX-H,XMAX+0.1,0,1);
+        
         force[index].x = force[index].x + factor* (-100000);
     }
     //zz
-    if (p.z < -2.9 + H){
-        factor = map(p.z,-2.95,-2.9+H,0,1);
+    if (p.z < ZMIN + H){
+        factor = map(p.z,ZMIN-0.1,ZMIN+H,1,0);
         force[index].z = force[index].z + factor* (100000);
     }
-    else if (p.z > 2.95-H){
+    else if (p.z > ZMAX-H){
         
-        factor = map(p.z,2.9-H,2.95,0,1);
+        factor = map(p.z,ZMAX-H,ZMAX+0.1,0,1);
         force[index].z = force[index].z + factor* (-100000);
     }
 

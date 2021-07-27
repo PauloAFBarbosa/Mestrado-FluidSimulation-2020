@@ -338,6 +338,10 @@ float random (vec2 uv)
     return fract(sin(dot(uv,vec2(12.9898,78.233)))*43758.5453123);
 }
 
+float map(float value, float min1, float max1, float min2, float max2) {
+  return min2 + (value - min1) * (max2 - min2) / (max1 - min1);
+}
+
 void main()
 {
     
@@ -419,7 +423,6 @@ void main()
     adj[index*MAXADJ]=vizinhos;
     
     density[index] = sum*MASS*SIMULATIONSCALE;
-    
     // compute pressure
     pressure[index] = STIFF * ((sum*MASS*SIMULATIONSCALE) - RESTDENSITY);
 

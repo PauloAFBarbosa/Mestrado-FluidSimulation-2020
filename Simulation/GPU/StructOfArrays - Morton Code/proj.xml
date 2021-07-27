@@ -64,7 +64,7 @@
 				<attribute name="WAVE_CLEAR" data="INT" type="RENDERER" value="0"  />
 				<attribute name="WAVE_NUM_DIR" data="INT" type="RENDERER" value="0"  />
 				<attribute name="WAVE_PERIOD" 	data="FLOAT" type="RENDERER" value="1000"  />
-				<attribute name="WAVE_STRENGTH" data="FLOAT" type="RENDERER" value="3"  />
+				<attribute name="WAVE_STRENGTH" data="FLOAT" type="RENDERER" value="0.3"  />
 			<!-- Atributos Simulaçao -->
 				<attribute name="Pause"						data="INT" 	type="RENDERER" value="1" />
 				<attribute name="computeGravity"						data="INT" 	type="RENDERER" value="0" />
@@ -100,6 +100,9 @@
 				<attribute name="YMAX" 						data="FLOAT" 		type="RENDERER" value="2.0"/>
 				<attribute name="ZMIN" 						data="FLOAT" 		type="RENDERER" value="-2.9"/>
 				<attribute name="ZMAX" 						data="FLOAT" 		type="RENDERER" value="2.9"/>
+				
+				<attribute name="SAVEXMIN" 						data="FLOAT" 		type="RENDERER" value="-2.17"/>
+				<attribute name="SAVEZMIN" 						data="FLOAT" 		type="RENDERER" value="-2.9"/>
 		</attributes>
 
 		<scenes>
@@ -294,7 +297,7 @@
 		<window label="Wave Controller">
 			<var label="WAVE_NUM_DIR" 		type="RENDERER" context="CURRENT" component="WAVE_NUM_DIR" def="min=0 max=2" 	/>
 			<var label="WAVE_PERIOD" 		type="RENDERER" context="CURRENT" component="WAVE_PERIOD" 	/>
-			<var label="WAVE_STRENGTH" 		type="RENDERER" context="CURRENT" component="WAVE_STRENGTH" 	/>
+			<var label="WAVE_STRENGTH" 		type="RENDERER" context="CURRENT" component="WAVE_STRENGTH" def="min=0 max=1 step=0.01"	/>
 			<var label="WAVE_CLEAR_BUTTON" 	type="RENDERER" context="CURRENT" component="WAVE_CLEAR" def="min=0 max=1"	/>
 		</window>
 		<window label = "Simulation">
@@ -316,7 +319,7 @@
 			<var label="SIMULATIONSCALE_FORCE" 		type="RENDERER" context="CURRENT" component="SIMULATIONSCALEFORCE" def="min=0 max=2 step=0.05"/>
 			<var label="COLLISIONTYPE (0-fast 1-realistic)" 		type="RENDERER" context="CURRENT" component="COLLISIONTYPE" def="min=0 max=1"/>
 			<var label="computeGravity" 		type="RENDERER" context="CURRENT" component="computeGravity" def="min=0 max=1"/>
-			
+			<var label="XMIN" 					type="RENDERER" context="CURRENT" component="XMIN" def="min=-10 max=10 step=0.01"/>
 			
         </window>
     </interface>

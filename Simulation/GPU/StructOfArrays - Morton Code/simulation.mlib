@@ -275,6 +275,12 @@
 					<valueof uniform="THRESHOLD" 		type="RENDERER" 		context="CURRENT" 		component="THRESHOLD" />
 					<valueof uniform="SURFACETENSION" 		type="RENDERER" 		context="CURRENT" 		component="SURFACETENSION" />
 					<valueof uniform="SIMULATIONSCALEFORCE" 		type="RENDERER" 		context="CURRENT" 		component="SIMULATIONSCALEFORCE" />
+					<valueof uniform="XMAX" 		type="RENDERER" 		context="CURRENT" 		component="XMAX" />
+					<valueof uniform="YMAX" 		type="RENDERER" 		context="CURRENT" 		component="YMAX" />
+					<valueof uniform="ZMAX" 		type="RENDERER" 		context="CURRENT" 		component="ZMAX" />
+					<valueof uniform="XMIN" 		type="RENDERER" 		context="CURRENT" 		component="XMIN" />
+					<valueof uniform="YMIN" 		type="RENDERER" 		context="CURRENT" 		component="YMIN" />
+					<valueof uniform="ZMIN" 		type="RENDERER" 		context="CURRENT" 		component="ZMIN" />
 					
 					
 				</values>

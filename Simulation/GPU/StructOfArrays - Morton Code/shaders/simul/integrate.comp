@@ -381,9 +381,9 @@ void main()
     // aqui se tiver GRAVITY * density cada particula vai ter uma gravidade diferente, e assim as de baixo sofrem mais gravidade (visto que tem mais gravidade)
     
     if (computeGravity==0)
-        totalForce = force[index] + viscosity[index] + GRAVITY * 1000; //+ surfaceTension[index];
+        totalForce = force[index] + viscosity[index] + GRAVITY * 1000 + surfaceTension[index];
     else
-        totalForce = force[index] + viscosity[index] + GRAVITY * density[index]; //+ surfaceTension[index];
+        totalForce = force[index] + viscosity[index] + GRAVITY * density[index]+ surfaceTension[index];
     
 
     //employEulerIntegrator
