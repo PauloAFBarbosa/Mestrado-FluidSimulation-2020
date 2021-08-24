@@ -281,8 +281,6 @@ bool detectCollisionV3(in vec4 oldPos,in vec4 pos,in vec4 vel,in uint index,out 
 
     vec2 textPos = vec2(map(pos.x,XMIN,XMAX,0.01,0.99),map(pos.z,ZMIN,ZMAX,0.01,0.99));
     debug[index] = vec4 (pos.x,pos.y,pos.z,map(pos.x,XMIN,XMAX,0.01,0.99));
-    
-    texture(river, textPos);
 
     float newy = YMIN + pow(texture(river, textPos).x,2);
 
@@ -311,35 +309,7 @@ bool detectCollisionV3(in vec4 oldPos,in vec4 pos,in vec4 vel,in uint index,out 
             
 
     }
-    if (pos.y < newy) {
-            contactPoint.y =newy;
-            //compute normal
-            float tstep =0.0001;
-            vec3 top =vec3(textPos.x,0,textPos.y+tstep);
-            top.y = texture(river, vec2(textPos.x,textPos.y+tstep)).x;
-
-            vec3 bot = vec3(textPos.x,0,textPos.y-tstep);
-            bot.y= texture(river,vec2(textPos.x,textPos.y-tstep)).x;
-            
-            vec3 left = vec3(textPos.x-tstep,0,textPos.y); 
-            left.y= texture(river,vec2(textPos.x-tstep,textPos.y)).x;
-            
-            vec3 right = vec3(textPos.x+tstep,0,textPos.y); 
-            right.y= texture(river,vec2(textPos.x+tstep,textPos.y)).x;
-
-            vec3 v1 = normalize(top-bot);
-            vec3 v2 = normalize(left - right);
-
-            vec3 result =normalize(cross(v2,v1));
-
-            //debug[index] = vec4(result.x,result.y,result.z,0);
-
-            //unitSurfaceNormal = normalize(unitSurfaceNormal+vec4(result.x,result.y,result.z,0));
-            
-            unitSurfaceNormal = vec4(result.x,result.y,result.z,0);
-            
-        }
-        else if (pos.y > YMAX) {
+    if (pos.y > YMAX) {
             contactPoint.y =YMAX;
             
             unitSurfaceNormal = normalize(unitSurfaceNormal+vec4(0,-1,0,0));
@@ -415,6 +385,84 @@ void main()
         totalForce = force[index] + viscosity[index] + GRAVITY * 1000 + surfaceTension[index];
     else
         totalForce = force[index] + viscosity[index] + GRAVITY * density[index]+ surfaceTension[index];
+
+    //Simple sample - 6 neighbours
+
+    
+    vec4 top = position[index];
+    top.y += 0.04;
+
+    vec4 bot = position[index];
+    bot.y -=0.04;
+
+    vec4 left = position[index];
+    left.x -=0.04;
+
+    vec4 right = position[index];
+    right.x +=0.04;
+
+    vec4 front = position[index];
+    front.z -=0.04;
+
+    vec4 back = position[index];
+    back.z +=0.04;
+
+
+    vec2 textPos = vec2(map(top.x,XMIN,XMAX,0.01,0.99),map(top.z,ZMIN,ZMAX,0.01,0.99));
+    float newy = YMIN + texture(river, textPos).x;
+
+    if (newy > top.y || newy > bot.y){
+        //colisao top
+        if(totalForce.y<0){
+            totalForce.y=0;
+            if(velocity[index].y < 0)
+                velocity[index].y=0;
+        }
+    }
+
+    textPos = vec2(map(left.x,XMIN,XMAX,0.01,0.99),map(left.z,ZMIN,ZMAX,0.01,0.99));
+    newy = YMIN + texture(river, textPos).x;
+    if(newy > left.y){
+        //colisao left
+        if(totalForce.x < 0){
+            totalForce.x =0;
+            if(velocity[index].x < 0)
+                velocity[index].x=0;
+        }
+    }
+
+    textPos = vec2(map(right.x,XMIN,XMAX,0.01,0.99),map(right.z,ZMIN,ZMAX,0.01,0.99));
+    newy = YMIN + texture(river, textPos).x;
+    if(newy > right.y){
+        //colisao right
+        if(totalForce.x > 0){
+            totalForce.x =0;
+            if(velocity[index].x > 0)
+                velocity[index].x=0;
+        }
+    }
+
+    textPos = vec2(map(front.x,XMIN,XMAX,0.01,0.99),map(front.z,ZMIN,ZMAX,0.01,0.99));
+    newy = YMIN + texture(river, textPos).x;
+    if(newy > front.y){
+        //colisao front
+        if(totalForce.z < 0){
+            totalForce.z =0;
+            if(velocity[index].z < 0)
+                velocity[index].z=0;
+        }
+    }
+
+    textPos = vec2(map(back.x,XMIN,XMAX,0.01,0.99),map(back.z,ZMIN,ZMAX,0.01,0.99));
+    newy = YMIN + texture(river, textPos).x;
+    if(newy > back.y){
+        //colisao back
+        if(totalForce.z > 0){
+            totalForce.z =0;
+            if(velocity[index].z > 0)
+                velocity[index].z=0;
+        }
+    }
     
 
     //employEulerIntegrator
