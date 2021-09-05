@@ -346,6 +346,8 @@
 					<valueof uniform="Pause" 			type="RENDERER" 		context="CURRENT" 		component="Pause" />
 					<valueof uniform="Open" 			type="RENDERER" 		context="CURRENT" 		component="Open" />
 					<valueof uniform="OpenSize" 			type="RENDERER" 		context="CURRENT" 		component="OpenSize" />
+					<valueof uniform="OpenSide" 			type="RENDERER" 		context="CURRENT" 		component="OpenSide" />
+					<valueof uniform="OpenSizeSide" 			type="RENDERER" 		context="CURRENT" 		component="OpenSizeSide" />
 					<valueof uniform="TIMESTEP" 		type="RENDERER" 		context="CURRENT" 		component="TIMESTEP" />
 					<valueof uniform="XMAX" 		type="RENDERER" 		context="CURRENT" 		component="XMAX" />
 					<valueof uniform="YMAX" 		type="RENDERER" 		context="CURRENT" 		component="YMAX" />

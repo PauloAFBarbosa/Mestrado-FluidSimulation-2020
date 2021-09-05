@@ -69,6 +69,8 @@
 				<attribute name="Pause"						data="INT" 	type="RENDERER" value="1" />
 				<attribute name="Open"						data="INT" 	type="RENDERER" value="0" />
 				<attribute name="OpenSize"						data="FLOAT" 	type="RENDERER" value="0.2" />
+				<attribute name="OpenSide"						data="INT" 	type="RENDERER" value="0" />
+				<attribute name="OpenSizeSide"						data="FLOAT" 	type="RENDERER" value="0.2" />
 				<attribute name="computeGravity"						data="INT" 	type="RENDERER" value="0" />
 				<attribute name="External_Force" 			data="VEC3" 	type="RENDERER" x="0" y="0.0" z="0.0" />
 				<attribute name="Viscosity"					data="FLOAT" 	type="RENDERER" value="3000" />
@@ -306,6 +308,8 @@
             <var label="Pause"				type="RENDERER" context="CURRENT" component="Pause" 	def="min=0 max=1" />
             <var label="Open"				type="RENDERER" context="CURRENT" component="Open" 	def="min=0 max=1" />
             <var label="OpenSize"				type="RENDERER" context="CURRENT" component="OpenSize" 	def="min=0 max=1 step=0.05" />
+            <var label="OpenSide"				type="RENDERER" context="CURRENT" component="OpenSide" 	def="min=0 max=1" />
+            <var label="OpenSizeSide"				type="RENDERER" context="CURRENT" component="OpenSizeSide" 	def="min=0 max=0.2 step=0.05" />
             <var label="Ball" 			type="RENDERER" context="CURRENT" component="Ball" def="min=-2 max=2 step=0.05"/>
             <var label="BallSize" 			type="RENDERER" context="CURRENT" component="BallSize" def="min=0.1 max=1 step=0.01"/>
 			<var label="TIMESTEP" 			type="RENDERER" context="CURRENT" component="TIMESTEP" def="min=0.001 step=0.001 max=0.05"/>

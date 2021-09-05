@@ -35,6 +35,8 @@ uniform int Number_Particles;
 uniform int Pause;
 uniform int Open;
 uniform float OpenSize;
+uniform int OpenSide;
+uniform float OpenSizeSide;
 uniform float WALL_DAMPING;
 uniform float time;
 uniform float XMAX;
@@ -303,9 +305,21 @@ bool detectCollisionV2Tap(in vec4 pos,in vec4 vel,in uint index, out vec4 contac
         unitSurfaceNormal = normalize(unitSurfaceNormal+vec4(0,-1,0,0));
     }
     if (pos.z < localZMIN) {
-        collision=1;
-        contactPoint.z =localZMIN;
-        unitSurfaceNormal = normalize(unitSurfaceNormal+vec4(0,0,1,0));
+
+
+        if ( (pow((pos.x),2)+pow((pos.y-(-0.7)),2) < OpenSizeSide *OpenSizeSide) && OpenSide  == 1){
+            
+            contactPoint = pos;
+            retVelocity= vel;
+            return false;
+        }
+        else{
+            collision=1;
+            contactPoint.z =localZMIN;
+            unitSurfaceNormal = normalize(unitSurfaceNormal+vec4(0,0,1,0));
+        }
+
+        
     }
     else if (pos.z > localZMAX) {
         collision=1;
