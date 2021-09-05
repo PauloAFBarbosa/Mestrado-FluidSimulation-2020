@@ -337,8 +337,8 @@ bool detectCollisionV2Tap(in vec4 pos,in vec4 vel,in uint index, out vec4 contac
 }
 
 bool detectCollisionV2Plataform(in vec4 pos,in vec4 oldPosition,in vec4 vel,in uint index, out vec4 contactPoint, out vec4 unitSurfaceNormal,out vec4 retVelocity) {
-    float localXMAX = 2.2;
-    float localXMIN = -2.2;
+    float localXMAX = 2.3;
+    float localXMIN = -2.3;
 
     float localYMAX = -1.2;
     float localYMIN = -1.3;
