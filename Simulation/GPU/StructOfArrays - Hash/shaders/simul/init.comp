@@ -1,0 +1,138 @@
+
+#version 460
+
+#define WORK_GROUP_SIZE 1
+
+layout (local_size_x = WORK_GROUP_SIZE) in;
+
+#define PARTICLE_RADIUS 0.005f
+
+uniform int Number_Particles;
+uniform mat4 m_model;
+
+uniform float MASS;
+uniform float RESTDENSITY;
+uniform int HASHSIZE;
+uniform int PONTOS_LADO;
+uniform float H;
+
+layout(std430, binding = 0) buffer Position
+{
+    vec4 position[];
+};
+
+
+
+layout(std430, binding = 1) buffer TempPosition
+{
+    vec4 tempPosition[];
+};
+
+layout(std430, binding = 2) buffer BucketSizes
+{
+    int bucketSizes[];
+};
+
+layout(std430, binding = 3) buffer Offsets
+{
+    int offsets[];
+};
+layout(std430, binding = 4) buffer TempBucketSizes
+{
+    int tempBucketSizes[];
+};
+
+
+float rand(vec2 co){
+    return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
+}
+
+uint hashFunction(vec4 pos,double H,int size,int index) {
+    
+    int p1 = 2693;
+    int p2 = 3163;
+    int p3 = 4091;
+
+    int part1 = (int ((pos.x / H)) * p1);
+    int part2 = (int ((pos.y / H)) * p2);
+    int part3 = (int ((pos.z / H)) * p3);
+
+    
+    
+
+    uint ret = uint((part1 ^ part2 ^ part3) % size);
+    
+    //tempPosition[index]= vec4 (part1,part2,0,0);
+
+    return ret;
+}
+
+bool contains(uint arr[27], int size, uint member) {
+    bool ret = false;
+
+    for (int i = 0; i < size; i++)
+    {
+        if (arr[i] == member)
+            ret = true;
+    }
+    return ret;
+}
+
+
+
+void main()
+{
+
+    float fluidVolume = 1000 * MASS / RESTDENSITY;
+    float particleDiameter = pow(fluidVolume, 1.0f / 3.0f) / 10;
+    float particleRadius = particleDiameter / 2;
+
+    int x_pontos = 0;
+    int y_pontos = 0;
+    int z_pontos = 0;
+
+    int inseridos=0;
+    
+    int conta=0;
+    int myoffset = 0;
+
+    for(int i =0 ; i <HASHSIZE;i++){
+        tempBucketSizes[i]=0;
+        bucketSizes[i]=0;
+    }
+    //Cria as particulas e poe no array temporario
+    //calcula o tamanho de cada bucket, tambem temporario
+    for (float x = -particleRadius * PONTOS_LADO; x_pontos < PONTOS_LADO ; x += particleDiameter,x_pontos++) {
+            for (float y = -particleRadius * PONTOS_LADO, y_pontos = 0; y_pontos < PONTOS_LADO; y += particleDiameter, y_pontos++) {
+                for (float z = -particleRadius * PONTOS_LADO, z_pontos = 0; z_pontos < PONTOS_LADO; z += particleDiameter, z_pontos++) {
+                    tempPosition[inseridos] = vec4(x,y,z,0);
+                    
+
+                    uint b =hashFunction(vec4(x,y,z,0),H,HASHSIZE,inseridos);
+
+                    //tempPosition[0] = vec4(b,0,0,0);
+                    
+                    inseridos++;
+
+                    tempBucketSizes[ b]++;
+                    
+            }
+        }
+    }
+
+    //Calcula os offsets
+    offsets[0] = 0;
+
+    for (int i = 1; i < HASHSIZE; i++)
+    {
+        offsets[i] = offsets[i - 1] + tempBucketSizes[i - 1];
+    }
+
+    
+    
+
+    
+
+    
+
+}

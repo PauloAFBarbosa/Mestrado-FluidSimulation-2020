@@ -155,7 +155,7 @@
 				<field value="INT" />
 			</structure>
 			<CLEAR value="NEVER" />
-			<file name="adj.txt"/>
+			<file name="../adj.txt"/>
 		</buffer>
 		
 
