@@ -570,6 +570,7 @@ void main()
     }
     
     //xx
+    /* desativar os limites no XX
     if (p.x < XMIN + H){
 
         factor = map(p.x,XMIN -0.1,XMIN+H,1,0);
@@ -582,6 +583,7 @@ void main()
         
         force[index].x = force[index].x + factor* (-100000);
     }
+    */
     //zz
     if (p.z < ZMIN + H){
         factor = map(p.z,ZMIN-0.1,ZMIN+H,1,0);

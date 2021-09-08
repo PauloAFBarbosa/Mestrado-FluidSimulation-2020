@@ -54,6 +54,7 @@ uniform float ZMAX;
 uniform float XMIN;
 uniform float YMIN;
 uniform float ZMIN;
+uniform sampler2D river;
 
 layout(std430, binding = 0) readonly restrict buffer Position
 {
@@ -541,13 +542,45 @@ void main()
             
             //useDefaultKernel_gradient(arg, H, ret2);
             //sumSurfaceNormal += ret2 * (MASS / density[adji]);
-    }    
+    } 
+
     viscosity[index]= sumViscosity * (VISCOSITY);
     
     force[index]= -sumForce;
 
+	//add normal force
+	vec2 textp = vec2(map(p.x,XMIN,XMAX,0.01,0.99),map(p.z,ZMIN,ZMAX,0.2,0.99));
+    float newy = YMIN + texture(river, textp).x;
     
+    if (p.y < newy + H){
+    	float factor = map(p.y,newy-0.05,newy+H,1,0);
+    	//compute normal
+	    float tstep =0.001;
+	    vec3 top =vec3(p.x,0,p.z+tstep);
+	    vec2 temp = vec2(map(top.x,XMIN,XMAX,0.01,0.99),map(top.z,ZMIN,ZMAX,0.2,0.99));
+	    top.y = texture(river, vec2(temp.x,temp.y)).x;
 
+	    vec3 bot = vec3(p.x,0,p.z-tstep);
+	    temp = vec2(map(bot.x,XMIN,XMAX,0.01,0.99),map(bot.z,ZMIN,ZMAX,0.2,0.99));
+	    bot.y= texture(river,vec2(temp.x,temp.y)).x;
+	    
+	    vec3 left = vec3(p.x-tstep,0,p.z); 
+	    temp = vec2(map(left.x,XMIN,XMAX,0.01,0.99),map(left.z,ZMIN,ZMAX,0.2,0.99));
+	    left.y= texture(river,vec2(temp.x,temp.y)).x;
+	    
+	    vec3 right = vec3(p.x+tstep,0,p.z); 
+	    temp = vec2(map(right.x,XMIN,XMAX,0.01,0.99),map(right.z,ZMIN,ZMAX,0.2,0.99));
+	    right.y= texture(river,vec2(temp.x,temp.y)).x;
+
+	    vec3 v1 = normalize(top-bot);
+	    vec3 v2 = normalize(left - right);
+
+	    vec3 n =normalize(cross(v2,v1));
+
+	    vec4 normalv4 = vec4(n.x,n.y,n.z,0);
+	    force[index] = force[index] + normalv4 *factor*100000; 	
+    }    
+    
 
 
     //force[index]= -(sumForce*SIMULATIONSCALEFORCE*MASS*dens);

@@ -128,6 +128,7 @@ bool detectCollisionV2(in vec4 pos,in vec4 vel,in uint index,out int hitBall, ou
 
     int zx =0;
     retVelocity=vel;
+    /* desativar os limites no XX
     if (pos.x < XMIN) {
         zx=1;
             contactPoint.x = XMIN;
@@ -146,6 +147,7 @@ bool detectCollisionV2(in vec4 pos,in vec4 vel,in uint index,out int hitBall, ou
             
 
     }
+    */
     if (pos.y < YMIN) {
             contactPoint.y =YMIN;
             unitSurfaceNormal = normalize(unitSurfaceNormal+vec4(0,1,0,0));

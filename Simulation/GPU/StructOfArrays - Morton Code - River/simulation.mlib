@@ -284,10 +284,14 @@
 					<valueof uniform="XMIN" 		type="RENDERER" 		context="CURRENT" 		component="XMIN" />
 					<valueof uniform="YMIN" 		type="RENDERER" 		context="CURRENT" 		component="YMIN" />
 					<valueof uniform="ZMIN" 		type="RENDERER" 		context="CURRENT" 		component="ZMIN" />
+					<valueof uniform="river"		type="TEXTURE_BINDING" 	context="CURRENT" 		component="UNIT" id="0" />
 					
 					
 				</values>
 		    </shader>
+		    <textures>
+				<texture name="river" UNIT="0"/>
+			</textures>
 			<buffers>
 					<buffer name="Position" >
 						<TYPE value="SHADER_STORAGE" />
