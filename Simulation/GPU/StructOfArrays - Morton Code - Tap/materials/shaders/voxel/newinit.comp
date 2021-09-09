@@ -1,0 +1,124 @@
+#version 430
+
+
+#define WORK_GROUP_SIZE_X 32
+#define WORK_GROUP_SIZE_Y 32
+#define WORK_GROUP_SIZE_Z 1
+
+layout (local_size_x = 32,local_size_y = 32) in;
+
+
+layout(std430, binding = 1) buffer Position
+{
+    vec4 ParticlePos[];
+};
+
+layout(r16f,binding = 3) uniform image3D voxelRep;
+layout(r16f,binding = 2) uniform image3D voxelRepAux;
+
+
+uniform vec3 voxdimvec;
+uniform vec3 simmin;
+uniform vec3 simmax;
+uniform vec3 voxmin;
+uniform vec3 voxmax;
+
+void checkNeighboor(ivec3 pos, ivec3 dir,int radius,inout vec3 aux, inout float weight){
+
+    for(int i = -radius; i <= radius; i++){
+            //if (i != 0.0){
+                ivec3 posijk = pos+(i*dir);
+                vec3 val = imageLoad(voxelRepAux, posijk).xyz;
+
+                //vec3 d = ((i*dir)) / radius;
+			    //float sqrDist = dot(d, d);
+			    //float w = (-sqrDist / (0.5f * 0.5f));
+                float tol = 0.000001;
+
+                vec3 worldpos = (voxmax-voxmin)*(pos+(i*dir)/voxdimvec) + voxmin ;
+                
+                if (posijk.x-1 < voxdimvec.x && posijk.y-1 < voxdimvec.y && posijk.z-1 < voxdimvec.z
+                 && posijk.x >=0 && posijk.y >=0 && posijk.z >=0
+                ){
+
+               
+                    float w = 1.0;
+                    aux += val * w;
+                    weight += w;
+                }
+
+
+                    }
+            //}
+    
+}
+
+
+
+void checkNeighboorBrute(ivec3 pos,int radius,inout float aux, inout float weight){
+for(int i = -radius; i <= radius; i++)
+for(int j = -radius; j <= radius; j++)
+    for(int k = -radius; k <= radius; k++){
+                ivec3 posijk =  pos+ivec3(i,j,k);
+                //if posijk >  
+                float tol = 0.1;
+
+                vec3 worldpos = (voxmax-voxmin)*(posijk/voxdimvec) + voxmin ;
+                
+                if(worldpos.x > simmax.x - tol || worldpos.y > simmax.y - tol || worldpos.z > simmax.z - tol 
+                || worldpos.x < simmin.x - tol || worldpos.y < simmin.y - tol || worldpos.z < simmin.z - tol)
+                    {
+                        
+                    }
+                else{
+
+                    float val = imageLoad(voxelRepAux, pos+ivec3(i,j,k)).x;
+
+                     vec3 d = ((ivec3(i,j,k))) / radius;
+			         float sqrDist = dot(d, d);
+			        float w = (-sqrDist / (0.5f * 0.5f));
+
+                    //float w = 1.0;
+                    aux += val * w;
+                    weight += w;
+                }
+        
+    }
+}
+
+
+uniform int blurradius;
+
+uniform int pingpangpong;
+
+void main(){    
+    ivec3 pos = ivec3(gl_GlobalInvocationID.xyz); 
+    // if(pos.x > voxdimvec.x || pos.y > voxdimvec.y || pos.z > voxdimvec.z )
+    
+    vec3 worldpos = (voxmax-voxmin)*(pos/voxdimvec) + voxmin ;
+    float tol = 0.0;
+    if(worldpos.x > simmax.x - tol || worldpos.y > simmax.y - tol || worldpos.z > simmax.z - tol 
+    || worldpos.x < simmin.x - tol || worldpos.y < simmin.y - tol || worldpos.z < simmin.z - tol)
+        return ;
+    int side = 3 ;
+    vec3 aux = vec3(0.0);
+
+    
+    // int d = 2;
+    float weight = 0;
+    if(pingpangpong == 0)
+         checkNeighboor(pos,ivec3(1,0,0), blurradius, aux, weight);
+    else 
+        if(pingpangpong == 1)
+            checkNeighboor(pos,ivec3(0,1,0), blurradius, aux, weight);
+    else
+        if(pingpangpong == 2)
+            checkNeighboor(pos,ivec3(0,0,1), blurradius, aux, weight);
+    //checkNeighboor(pos,ivec3(1,0,1), d, aux, weight);
+    //checkNeighboor(pos,ivec3(1,0,-1),d, aux, weight);
+    //checkNeighboorBrute(pos, blurradius, aux, weight);
+    aux /= weight;
+    imageStore(voxelRep, pos, vec4(aux.xyz,1.0) );
+  
+
+}

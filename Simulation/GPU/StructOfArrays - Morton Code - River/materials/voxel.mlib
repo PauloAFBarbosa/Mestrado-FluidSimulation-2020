@@ -1,0 +1,289 @@
+<?xml version="1.0" ?>
+<materialLib name="voxelLib">
+    <textures>
+
+        <texture name="voxelRep">
+            <WIDTH  value="VOX_SIDE_X"/>
+            <HEIGHT value="VOX_SIDE_Y"/>
+            <DEPTH  value="VOX_SIDE_Z"/>
+            <INTERNAL_FORMAT value="R16F"/>
+            
+        </texture>
+        <texture name="voxelRepAux">
+            <WIDTH  value="VOX_SIDE_X"/>
+            <HEIGHT value="VOX_SIDE_Y"/>
+            <DEPTH  value="VOX_SIDE_Z"/>
+            <INTERNAL_FORMAT value="R16F"/>
+            
+        </texture>
+
+        <texture name="ground" filename="textures/sand.jpg"/>
+        <texture name="height" filename="textures/river.jpg">
+            <MIPMAP value="TRUE"/>
+        </texture>
+        
+        <cubeMap name="skybox" 
+            fileNegX="TextureCubeMaps/Sky/nx.bmp"
+            fileNegZ="TextureCubeMaps/Sky/nz.bmp"	
+            filePosY="TextureCubeMaps/Sky/py.bmp"
+            filePosX="TextureCubeMaps/Sky/px.bmp"
+            fileNegY="TextureCubeMaps/Sky/ny.bmp"
+            filePosZ="TextureCubeMaps/Sky/pz.bmp"
+        />
+         
+
+        <cubeMap name="skybox2" 
+            fileNegX="TextureCubeMaps/Ulmer/nx.png"
+            fileNegZ="TextureCubeMaps/Ulmer/nz.png"	
+            filePosY="TextureCubeMaps/Ulmer/ny.png"
+            filePosX="TextureCubeMaps/Ulmer/px.png"
+            fileNegY="TextureCubeMaps/Ulmer/py.png"
+            filePosZ="TextureCubeMaps/Ulmer/pz.png"
+            />
+        
+    </textures>
+
+    <renderTargets>
+
+    </renderTargets>
+
+    <shaders>
+        <shader name="init" 
+            cs="shaders/voxel/init.comp"
+        />
+        <shader name="newinit" 
+            cs="shaders/voxel/newinit.comp"
+        />
+        <shader name="quad"
+            vs="shaders/voxel/quad.vert"
+            ps="shaders/voxel/quad.frag"
+        />
+    </shaders>
+
+    <buffers>
+
+       
+    </buffers>
+
+    <states>
+
+    </states>
+
+    <materials>
+        <material name="init">
+            <shader name="init">
+                <values>
+                    <valueof uniform="voxDim" 		        type="RENDERER" 		context="CURRENT" 		component="voxDim" />
+                    <valueof uniform="voxdimvec" 	        type="RENDERER" 		context="CURRENT" 		component="voxDimVec" />
+                    <valueof uniform="simmin" 		        type="RENDERER" 		context="CURRENT" 		component="simmin" />
+                    <valueof uniform="simmax" 		        type="RENDERER" 		context="CURRENT" 		component="simmax" />
+                    <valueof uniform="voxmin" 		        type="RENDERER" 		context="CURRENT" 		component="voxmin" />
+                    <valueof uniform="voxmax" 		        type="RENDERER" 		context="CURRENT" 		component="voxmax" />
+                    <valueof uniform="particleradius" 		type="RENDERER" 		context="CURRENT" 		component="particleradius" />
+                    <valueof uniform="voxelRep" 	        type="IMAGE_TEXTURE" 	context="CURRENT" 		component="UNIT"    id="3"/>
+                    <valueof uniform="voxelRepAux" 	        type="IMAGE_TEXTURE" 	context="CURRENT" 		component="UNIT"    id="2"/>
+                </values>
+            </shader>
+            <imageTextures>
+                <imageTexture UNIT="3" texture="voxelRep" >
+                    <ACCESS value="READ_WRITE" />
+                    <LEVEL value="0" />
+                    <CLEAR value="true" />
+                </imageTexture>
+                <imageTexture UNIT="2" texture="voxelRepAux" >
+                    <ACCESS value="READ_WRITE" />
+                    <LEVEL value="0" />
+                    <CLEAR value="true" />
+                </imageTexture>
+            </imageTextures>
+            <buffers>
+                
+                <buffer name="simulationLib::Position" >
+					<TYPE value="SHADER_STORAGE" />
+					<BINDING_POINT value="1" />
+				</buffer>
+                <buffer name="simulationLib::Velocity" >
+					<TYPE value="SHADER_STORAGE" />
+					<BINDING_POINT value="2" />
+				</buffer>
+            </buffers>
+        </material>
+
+        <material name="newinitping">
+            <shader name="newinit">
+                <values>
+                    <valueof uniform="voxDim" 		type="RENDERER" 		context="CURRENT" 		component="voxDim" />
+                    <valueof uniform="voxdimvec" 		type="RENDERER" 		context="CURRENT" 		component="voxDimVec" />
+                    <valueof uniform="simmin" 		type="RENDERER" 		context="CURRENT" 		component="simmin" />
+                    <valueof uniform="simmax" 		type="RENDERER" 		context="CURRENT" 		component="simmax" />
+                    <valueof uniform="voxmin" 		type="RENDERER" 		context="CURRENT" 		component="voxmin" />
+                    <valueof uniform="voxmax" 		type="RENDERER" 		context="CURRENT" 		component="voxmax" />
+
+                    <valueof uniform="voxelRep" 	type="IMAGE_TEXTURE" 	context="CURRENT" 		component="UNIT"    id="3"/>
+                    <valueof uniform="voxelRepAux" 	type="IMAGE_TEXTURE" 	context="CURRENT" 		component="UNIT"    id="2"/>
+                    <valueof uniform="pingpangpong" 		type="RENDERER" 		context="CURRENT" 		component="ping" />
+                    <valueof uniform="blurradius" 		type="RENDERER" 		context="CURRENT" 		component="blurradius" />
+                </values>
+            </shader>
+            <imageTextures>
+                <imageTexture UNIT="3" texture="voxelRep" >
+                    <ACCESS value="READ_WRITE" />
+                    <LEVEL value="0" />
+                    <CLEAR value="false" />
+                </imageTexture>
+                <imageTexture UNIT="2" texture="voxelRepAux" >
+                    <ACCESS value="READ_WRITE" />
+                    <LEVEL value="0" />
+                    <CLEAR value="false" />
+                </imageTexture>
+            </imageTextures>
+            
+            <buffers>
+                
+                <buffer name="simulationLib::Position" >
+					<TYPE value="SHADER_STORAGE" />
+					<BINDING_POINT value="1" />
+				</buffer>
+            </buffers>
+        </material>
+        
+        <material name="newinitpang">
+            <shader name="newinit">
+                <values>
+                    <valueof uniform="voxDim" 		type="RENDERER" 		context="CURRENT" 		component="voxDim" />
+                    <valueof uniform="voxdimvec" 		type="RENDERER" 		context="CURRENT" 		component="voxDimVec" />
+                    <valueof uniform="simmin" 		type="RENDERER" 		context="CURRENT" 		component="simmin" />
+                    <valueof uniform="simmax" 		type="RENDERER" 		context="CURRENT" 		component="simmax" />
+                    <valueof uniform="voxmin" 		type="RENDERER" 		context="CURRENT" 		component="voxmin" />
+                    <valueof uniform="voxmax" 		type="RENDERER" 		context="CURRENT" 		component="voxmax" />
+
+                    <valueof uniform="voxelRep" 	type="IMAGE_TEXTURE" 	context="CURRENT" 		component="UNIT"    id="3"/>
+                    <valueof uniform="voxelRepAux" 	type="IMAGE_TEXTURE" 	context="CURRENT" 		component="UNIT"    id="2"/>
+                    <valueof uniform="pingpangpong" 		type="RENDERER" 		context="CURRENT" 		component="pang" />
+                    <valueof uniform="blurradius" 		type="RENDERER" 		context="CURRENT" 		component="blurradius" />
+                </values>
+            </shader>
+            <imageTextures>
+                <imageTexture UNIT="3" texture="voxelRepAux" >
+                    <ACCESS value="READ_WRITE" />
+                    <LEVEL value="0" />
+                    <CLEAR value="false" />
+                </imageTexture>
+                <imageTexture UNIT="2" texture="voxelRep" >
+                    <ACCESS value="READ_WRITE" />
+                    <LEVEL value="0" />
+                    <CLEAR value="false" />
+                </imageTexture>
+            </imageTextures>
+            
+            <buffers>
+                
+                <buffer name="simulationLib::Position" >
+					<TYPE value="SHADER_STORAGE" />
+					<BINDING_POINT value="1" />
+				</buffer>
+            </buffers>
+        </material>
+
+        <material name="newinitpong">
+            <shader name="newinit">
+                <values>
+                    <valueof uniform="voxDim" 		type="RENDERER" 		context="CURRENT" 		component="voxDim" />
+                    <valueof uniform="voxdimvec" 		type="RENDERER" 		context="CURRENT" 		component="voxDimVec" />
+                    <valueof uniform="simmin" 		type="RENDERER" 		context="CURRENT" 		component="simmin" />
+                    <valueof uniform="simmax" 		type="RENDERER" 		context="CURRENT" 		component="simmax" />
+                    <valueof uniform="voxmin" 		type="RENDERER" 		context="CURRENT" 		component="voxmin" />
+                    <valueof uniform="voxmax" 		type="RENDERER" 		context="CURRENT" 		component="voxmax" />
+
+                    <valueof uniform="voxelRep" 	type="IMAGE_TEXTURE" 	context="CURRENT" 		component="UNIT"    id="3"/>
+                    <valueof uniform="voxelRepAux" 	type="IMAGE_TEXTURE" 	context="CURRENT" 		component="UNIT"    id="2"/>
+                    <valueof uniform="pingpangpong" 		type="RENDERER" 		context="CURRENT" 		component="pong" />
+                    <valueof uniform="blurradius" 		type="RENDERER" 		context="CURRENT" 		component="blurradius" />
+                </values>
+            </shader>
+            <imageTextures>
+                <imageTexture UNIT="3" texture="voxelRep" >
+                    <ACCESS value="READ_WRITE" />
+                    <LEVEL value="0" />
+                    <CLEAR value="false" />
+                </imageTexture>
+                <imageTexture UNIT="2" texture="voxelRepAux" >
+                    <ACCESS value="READ_WRITE" />
+                    <LEVEL value="0" />
+                    <CLEAR value="false" />
+                </imageTexture>
+            </imageTextures>
+            
+            <buffers>
+                
+                <buffer name="simulationLib::Position" >
+					<TYPE value="SHADER_STORAGE" />
+					<BINDING_POINT value="1" />
+				</buffer>
+            </buffers>
+        </material>
+        <material name="quad">
+            <shader name="quad">
+                <values>
+                    <valueof uniform="m_view_inv" 		type="CAMERA" 		context="CURRENT" 		component="VIEW_INVERSE_MATRIX" />
+                    <valueof uniform="m_proj_inv" 		type="CAMERA" 		context="CURRENT" 		component="PROJECTION_INVERSE_MATRIX" />
+                    <valueof uniform="cam_pos" 		    type="CAMERA" 		context="CURRENT" 		component="POSITION" />    
+                    
+                    <valueof uniform="voxDim" 		    type="RENDERER" 	context="CURRENT" 		component="voxDim" />
+                    <valueof uniform="voxdimvec" 		type="RENDERER" 		context="CURRENT" 		component="voxDimVec" />
+                    <valueof uniform="simmin" 		type="RENDERER" 		context="CURRENT" 		component="simmin" />
+                    <valueof uniform="simmax" 		type="RENDERER" 		context="CURRENT" 		component="simmax" />
+                    <valueof uniform="voxmin" 		type="RENDERER" 		context="CURRENT" 		component="voxmin" />
+                    <valueof uniform="voxmax" 		type="RENDERER" 		context="CURRENT" 		component="voxmax" />
+
+                    <valueof uniform="RayOrigin"        type="CAMERA"       context="CURRENT"       component="POSITION" />
+                    <valueof uniform="FOV"			    type="CAMERA"       context="CURRENT"       component="FOV" />
+                    <valueof uniform="RATIO"		    type="VIEWPORT"     context="CURRENT"       component="ABSOLUTE_RATIO" />
+                    <valueof uniform="PVM"              type="RENDERER"     context="CURRENT"       component="PROJECTION_VIEW_MODEL" />
+                    <valueof uniform="VM"         	    type="RENDERER"     context="CURRENT"       component="VIEW_MODEL" />
+                    <valueof uniform="WindowSize"	    type="VIEWPORT"     context="CURRENT"       component="ABSOLUTE_SIZE" />
+
+					<valueof uniform="lightDir"		type="LIGHT" 			context="Sun" 			component="DIRECTION" />
+					<valueof uniform="view"			type="CAMERA"			context="CURRENT"	component="VIEW" />
+					<valueof uniform="right"		type="CAMERA"			context="CURRENT"	component="NORMALIZED_RIGHT" />
+					<valueof uniform="up"			type="CAMERA"			context="CURRENT"	component="NORMALIZED_UP" />
+					<valueof uniform="position"		type="CAMERA"			context="CURRENT"	component="POSITION" />
+					<valueof uniform="zNear"		type="CAMERA"			context="CURRENT"	component="NEAR" />
+					<valueof uniform="zFar"			type="CAMERA"			context="CURRENT"	component="FAR" />
+					<valueof uniform="m_pvm" 		type="RENDERER" 		context="CURRENT" 		component="PROJECTION_VIEW_MODEL" />
+					<valueof uniform="m_pv" 		type="RENDERER" 		context="CURRENT" 		component="PROJECTION_VIEW" />
+					<valueof uniform="fov"			type="CAMERA"			context="CURRENT"	component="FOV" />
+					<valueof uniform="windowSize"	type="VIEWPORT"			context="CURRENT"	component="SIZE" />
+					
+					<valueof uniform="eta" 	    			type="RENDERER" 		context="CURRENT" 		component="ETA" />
+
+                    <!-- TEXTURE-->
+                    <valueof uniform="voxelRep"		type="TEXTURE_BINDING" 	context="CURRENT" 		component="UNIT" id="0" />      
+					<valueof uniform="skybox"		type="TEXTURE_BINDING" 	context="CURRENT" 		component="UNIT" id="1" />
+                    <valueof uniform="ground" 		type="TEXTURE_BINDING" 	context="CURRENT" 		component="UNIT" id="2"/>
+                    <valueof uniform="height" 		type="TEXTURE_BINDING" 	context="CURRENT" 		component="UNIT" id="3"/>
+                
+					<valueof uniform="SkyboxType" 		    type="RENDERER" 		context="CURRENT" 		component="SkyboxType" />
+                    <valueof uniform="DebugParticles" 		type="RENDERER" 		context="CURRENT" 		component="DebugParticles" />
+                    <valueof uniform="maxrefrat" 		    type="RENDERER" 		context="CURRENT" 		component="maxrefrat" />
+
+                    <valueof uniform="densityThreshold" 	type="RENDERER" 		context="CURRENT" 		component="densityThreshold" />
+                    <valueof uniform="Particle_Thickness" 	type="RENDERER" 		context="CURRENT" 		component="Particle_Thickness" />
+                    <valueof uniform="Particle_Color" 		type="RENDERER" 		context="CURRENT" 		component="Particle_Color" />
+                    <valueof uniform="Thin_Color" 		    type="RENDERER" 		context="CURRENT" 		component="Thin_Color" />
+                    <valueof uniform="shlickpower" 		    type="RENDERER" 		context="CURRENT" 		component="shlickpower" />
+                    <valueof uniform="specular_power" 		type="RENDERER" 		context="CURRENT" 		component="specular_power" />
+                    <valueof uniform="stepmultiplier" 		type="RENDERER" 		context="CURRENT" 		component="stepmultiplier" />
+                </values>
+            </shader>
+            <textures>
+                <texture name="voxelRep" UNIT="0"/>
+				<texture name="skybox"  UNIT="1"/>
+                <texture name="ground" UNIT="2"/>
+                <texture name="height" UNIT="3"/>
+                
+            </textures>
+           
+        </material>
+    </materials>
+</materialLib>

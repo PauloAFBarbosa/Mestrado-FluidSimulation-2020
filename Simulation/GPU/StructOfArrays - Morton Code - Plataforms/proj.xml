@@ -4,68 +4,78 @@
 		<constants>
 			<constant name="NUMBER_OF_PARTICLES" value="1000000" />
 			<constant name="NUMBER_OF_VERTICES"  value="6000000" />
-			<!-- tem wg com tamanho 32-->
+			<!-- Lança com 625 workgroups. Cada workgroup vai ter 25 threads-->
 			<constant name="NUMBER_OF_WORK_GROUPS" value="31250" />
-			
-			<!-- density pressure tem wg com tamanho 64-->
-			<!-- 64*NUMBER_OF_WORK_GROUPS_DENSITY_PRESSURE tem de dar igual ao nr de particulas-->
 			<constant name="NUMBER_OF_WORK_GROUPS_DENSITY_PRESSURE" value="15625" />
+
+			<constant name="NUMBER_OF_WORK_GROUPS_DENSITY_PRESSURE" value="27000" />
 
 			<constant name="HASH_SIZE" value="20000" />
 
 			
+			
 			<constant name="FLUID_RES_W" value="1280"/> <constant name="FLUID_RES_H" value="720"/>
-
-
-
-			
-			
-			<constant name="SMOOTH_GROUP_X" value="1"/><constant name="SMOOTH_GROUP_Y" value="1"/>
 			<!-->
-				<constant name="FLUID_RES_W" value="1024"/><constant name="FLUID_RES_H" value="576"/>
-				<constant name="FLUID_RES_W" value="1024"/><constant name="FLUID_RES_H" value="576"/>
-				<constant name="SMOOTH_GROUP_X" value="32"/><constant name="SMOOTH_GROUP_Y" value="18"/>
-				<constant name="FLUID_RES_W" value="1024"/><constant name="FLUID_RES_H" value="576"/>
-
+				<constant name="FLUID_RES_W" value="960"/><constant name="FLUID_RES_H" value="540"/>
 				<constant name="FLUID_RES_W" value="512"/>	<constant name="FLUID_RES_H" value="288"/>
-				<constant name="SMOOTH_GROUP_X" value="16"/><constant name="SMOOTH_GROUP_Y" value="9"/>
-
 				<constant name="FLUID_RES_W" value="1920"/> <constant name="FLUID_RES_H" value="1080"/>
-				<constant name="SMOOTH_GROUP_X" value="60"/><constant name="SMOOTH_GROUP_Y" value="34"/>nao multiplo
-
-				<constant name="FLUID_RES_W" value="1280"/> <constant name="FLUID_RES_H" value="720"/>
-				<constant name="SMOOTH_GROUP_X" value="40"/><constant name="SMOOTH_GROUP_Y" value="23"/>nao multiplo
+				<constant name="FLUID_RES_W" value="1024"/><constant name="FLUID_RES_H" value="576"/>		
+				<constant name="FLUID_RES_W" value="1024"/><constant name="FLUID_RES_H" value="576"/>
 			<-->
+			<constant name="XMI" value="-2.17" />
+			<constant name="XMA" value=" 2.17" />
+			<constant name="YMI" value="-2.0" />
+			<constant name="YMA" value=" 2.0" />
+			<constant name="ZMI" value="-2.9" />
+			<constant name="ZMA" value=" 2.9" />
+			
 		</constants>
         <attributes>
 			<!-- Atributos Rendering -->
-				<attribute name="Particle_Radius" 			data="FLOAT" 	type="RENDERER" value="0.005"/>
-				<attribute name="Particle_Resting_Density" 	data="INT" 		type="RENDERER" value="1000" />
-				<attribute name="Particle_Mass" 			data="FLOAT" 	type="RENDERER" value="0.02" />
-				<attribute name="Particle_Stiffness" 		data="INT" 		type="RENDERER" value="2000" />
-				<attribute name="Number_Particles" 			data="INT" 		type="RENDERER" value="NUMBER_OF_PARTICLES"/>
-				<attribute name="Particle_Color" 			data="VEC4" 	type="RENDERER" x="0.0" y="0.3" z="0.3" w="1"/>
-				<attribute name="Thin_Color" 				data="VEC4" 	type="RENDERER" x="0.8" y="1.0" z="1.0" w="1"/>
-				<attribute name="ETA"						data="FLOAT" 	type="RENDERER" value="1.1" />
-				<attribute name="Blur"						data="INT" 		type="RENDERER" value="0" />
-				<attribute name="DebugParticles"			data="INT" 		type="RENDERER" value="1" />
-				<attribute name="Particle_alpha"			data="FLOAT" 	type="RENDERER" value="0.02" />
-				<attribute name="Particle_Size"				data="VEC3" 	type="RENDERER" x="0.015" y="0.01" z="0.01" />
-				<attribute name="ThickType" 				data="INT"		type="RENDERER" value="2"  />
-				<attribute name="Blur_Quality" 				data="FLOAT" 	type="RENDERER" value="6"  />
-				<attribute name="Blur_Size" 				data="FLOAT" 	type="RENDERER" value="18"  />
-				<attribute name="FLUID_RES" 				data="VEC2" 	type="RENDERER" x="FLUID_RES_W" y="FLUID_RES_H"  />
-				<attribute name="Surface_Num" 				data="INT" 		type="RENDERER" value="2"  />
+			<attribute name="Particle_Radius" 			data="FLOAT" 	type="RENDERER" value="0.005"/>
+			<attribute name="Particle_Resting_Density" 	data="INT" 		type="RENDERER" value="1000" />
+			<attribute name="Particle_Mass" 			data="FLOAT" 	type="RENDERER" value="0.02" />
+			<attribute name="Particle_Stiffness" 		data="INT" 		type="RENDERER" value="2000" />
+			<attribute name="Number_Particles" 			data="INT" 		type="RENDERER" value="NUMBER_OF_PARTICLES"/>
+			<attribute name="Particle_Color" 			data="VEC4" 	type="RENDERER" x="0.0" y="0.6" z="0.7" w="1"/>
+			<attribute name="Thin_Color" 				data="VEC4" 	type="RENDERER" x="0.3" y="1.0" z="1.0" w="0.3"/>
+			<attribute name="ETA"						data="FLOAT" 	type="RENDERER" value="0.77" />
+			<attribute name="Blur"						data="INT" 		type="RENDERER" value="3" />
+			<attribute name="DebugParticles"			data="INT" 		type="RENDERER" value="0" />
+			<attribute name="Particle_Thickness"		data="FLOAT" 	type="RENDERER" value="0.5" />
+			<attribute name="Particle_Size"				data="VEC3" 	type="RENDERER" x="0.015" y="0.015" z="0.015" />
+			<attribute name="ThickType" 				data="INT"		type="RENDERER" value="2"  />
+			<attribute name="Blur_Quality" 				data="FLOAT" 	type="RENDERER" value="4"  />
+			<attribute name="Blur_Size" 				data="FLOAT" 	type="RENDERER" value="2"  />
+			<attribute name="FLUID_RES" 				data="VEC2" 	type="RENDERER" x="FLUID_RES_W" y="FLUID_RES_H"  />
+			<attribute name="Surface_Num" 				data="INT" 		type="RENDERER" value="2"  />
 
-				<attribute name="filterRadius" 		 data="INT" type="RENDERER" value="4"  />
-				<attribute name="sphereRadius" 		 data="FLOAT" type="RENDERER" value="0.0100"  />
-				<attribute name="bilateralParameter" data="FLOAT" type="RENDERER" value="0.08000"  />
+			<attribute name="filterRadius" 		 data="INT" type="RENDERER" value="6"  />
+			<attribute name="sphereRadius" 		 data="FLOAT" type="RENDERER" value="0.01500"  />
+			<attribute name="bilateralParameter" data="FLOAT" type="RENDERER" value="10.000"  />
+			<attribute name="narrow_threshold"   data="FLOAT" type="RENDERER" value="0.05"  />
+			<attribute name="narrow_threshold_far"   data="FLOAT" type="RENDERER" value="0.200000"  />
+			<attribute name="narrow_threshold_close"   data="FLOAT" type="RENDERER" value="0.050000"  />
 
-				<attribute name="WAVE_CLEAR" data="INT" type="RENDERER" value="0"  />
-				<attribute name="WAVE_NUM_DIR" data="INT" type="RENDERER" value="0"  />
-				<attribute name="WAVE_PERIOD" 	data="FLOAT" type="RENDERER" value="1000"  />
-				<attribute name="WAVE_STRENGTH" data="FLOAT" type="RENDERER" value="0.3"  />
-			<!-- Atributos Simulaçao -->
+			<attribute name="stepSize" 	data="FLOAT" type="RENDERER" value="0.0500"  />
+			<attribute name="maxSteps" 	data="INT"	 type="RENDERER" value="1000"  />
+			<attribute name="power" 	data="INT" type="RENDERER" value="5"  />
+			<attribute name="specular_power" data="INT" type="RENDERER" value="128"  />
+
+			<attribute name="dt" data="FLOAT" type="RENDERER" value="0.000200"  />
+			<attribute name="dzt" data="FLOAT" type="RENDERER" value="1000.0"  />
+			
+
+			<attribute name="WAVE_CLEAR" data="INT" type="RENDERER" value="0"  />
+			<attribute name="WAVE_NUM_DIR" data="INT" type="RENDERER" value="0"  />
+			<attribute name="WAVE_PERIOD" 	data="FLOAT" type="RENDERER" value="1000"  />
+			<attribute name="WAVE_STRENGTH" data="FLOAT" type="RENDERER" value="0.3"  />
+
+			<!-- LUA ATTRIBUTES -->
+				<attribute name="Blur_PingPong" 	data="INT" 		type="RENDERER" value="0"  />
+				<attribute name="Sim_Iters" 		data="INT" 		type="RENDERER" value="0"  />
+				<attribute name="Sim_MaxIters" 		data="INT" 		type="RENDERER" value="400"  />
+                <!-- Atributos Simulaçao -->
 				<attribute name="Pause"						data="INT" 	type="RENDERER" value="1" />
 				<attribute name="Open"						data="INT" 	type="RENDERER" value="0" />
 				<attribute name="OpenSize"						data="FLOAT" 	type="RENDERER" value="0.2" />
@@ -107,7 +117,7 @@
 				
 				<attribute name="SAVEXMIN" 						data="FLOAT" 		type="RENDERER" value="-2.17"/>
 				<attribute name="SAVEZMIN" 						data="FLOAT" 		type="RENDERER" value="-2.9"/>
-		</attributes>
+            </attributes>
 
 		<scenes>
 			<scene name="Sphere">
@@ -126,70 +136,81 @@
 			</scene>
 		</scenes>
 		
-		<viewports>
+				<viewports>
 			<viewport name="MainViewport">
 			</viewport>
 		</viewports>
 		
 		<cameras>
-			<camera name="MainCamera" >
+			<camera name="MainCamera">
 				<viewport name="MainViewport" />
-				<POSITION x="0.0" y="0.0" z="4.0" />
+				<POSITION x="-0.298" y="-0.873" z="0.274" />
 				<NEAR 	value="0.02" />
 				<FAR 	value="100" /> 
-				<LOOK_AT_POINT x="-0.053" y="-1.0" z="0.936"/>
+				<LOOK_AT_POINT x="0.154" y="-1.278" z="-0.521"/>
 			</camera>
+			<!--camera name="MainCamera" >
+				<viewport name="MainViewport" />
+				<POSITION x="-0.0" y="1.70" z="3.5" />
+				<NEAR 	value="0.02" />
+				<FAR 	value="100" /> 
+				<LOOK_AT_POINT x="0." y="-1." z="0."/>
+			</camera-->
 		</cameras>
 		
 		<lights>
 			<light name="Sun">
-				<DIRECTION x="0" y="-1" z="-1" />
+				<DIRECTION x="0.5" y="-0.8" z="0.5" />
 			</light>
 		</lights>
 
         <materialLibs>
-			<materialLib filename="simulation.mlib" />
-			<materialLib filename="rendering.mlib" />
+			<materialLib filename="materials/simulation.mlib" />
+			<materialLib filename="materials/rendering.mlib" />
 		</materialLibs>
 	</assets>
 	
-	<pipelines default="pip">
+	<pipelines default="pip" mode="RUN_SEQUENTIAL">
 		<pipeline name="pip">
+            <testScript file="scripts/pipelines.lua" script="SimController" />
 			<!-- SIMULATION -->
-			<pass class="compute" name="Init">
-				<mode value="RUN_ONCE"/>
-				<material name="Init" fromLibrary="simulationLib" dimX="1" dimY="1" dimZ="1"/>
-			</pass >
+            <pass class="compute" name="Init">
+                <mode value="RUN_ONCE"/>
+                <material name="Init" fromLibrary="simulationLib" dimX="1" dimY="1" dimZ="1"/>
+            </pass >
 
-			
-			<pass class="cudaPI" name="MyNewSort">
-				
-				<materialMaps>
-					<map fromMaterial="*" toMaterial="MyNewSort" toLibrary="simulationLib" />
-				</materialMaps>
-				
-			</pass>
+            
+            <pass class="cudaPI" name="MyNewSort">
+                
+                <materialMaps>
+                    <map fromMaterial="*" toMaterial="MyNewSort" toLibrary="simulationLib" />
+                </materialMaps>
+                
+            </pass>
 
-			
-			
-			<pass class="compute" name="DensityPressure">
-				<material name="density_pressure" fromLibrary="simulationLib" dimX="NUMBER_OF_WORK_GROUPS_DENSITY_PRESSURE" dimY="1" dimZ="1"/>
-			</pass>
-			<pass class="compute" name="Force">
-				<material name="force" fromLibrary="simulationLib" dimX="NUMBER_OF_WORK_GROUPS" dimY="1" dimZ="1"/>
-			</pass>
-			<pass class="compute" name="Integrate">
-				<material name="integrate" fromLibrary="simulationLib" dimX="NUMBER_OF_WORK_GROUPS" dimY="1" dimZ="1"/>
-			</pass>
+            
+            
+            <pass class="compute" name="DensityPressure">
+                <material name="density_pressure" fromLibrary="simulationLib" dimX="NUMBER_OF_WORK_GROUPS_DENSITY_PRESSURE" dimY="1" dimZ="1"/>
+            </pass>
+            <pass class="compute" name="Force">
+                <material name="force" fromLibrary="simulationLib" dimX="NUMBER_OF_WORK_GROUPS" dimY="1" dimZ="1"/>
+            </pass>
+            <pass class="compute" name="Integrate">
+                <material name="integrate" fromLibrary="simulationLib" dimX="NUMBER_OF_WORK_GROUPS" dimY="1" dimZ="1"/>
+            </pass>
 
 
-			<pass class="compute" name="UpdateIndex">
-				<material name="UpdateIndex" fromLibrary="simulationLib" dimX="NUMBER_OF_WORK_GROUPS" dimY="1" dimZ="1"/>
-			</pass>
-
+            <pass class="compute" name="UpdateIndex">
+                <material name="UpdateIndex" fromLibrary="simulationLib" dimX="NUMBER_OF_WORK_GROUPS" dimY="1" dimZ="1"/>
+            </pass>
+		</pipeline>
+		<pipeline name="pip2">
 			<!-- RENDERING -->
 			<pass class="default" name="background">
-				<preScript file="scripts/waves.lua" script="waves"/>
+
+                <preScript file="scripts/waves.lua" script="waves"/>
+
 
 				<scenes>
 					<scene name="Skybox" />
@@ -222,7 +243,11 @@
 				</lights>
 				<renderTarget name="deferred_particles" fromLibrary="renderingLib" />
 			</pass>
-
+			<pass class="quad" name="invertFrontDepth">
+				<camera 		name="MainCamera" />
+				<material 		name="invert_frontal_depth" 	fromLibrary="renderingLib"/>
+				<renderTarget 	name="invert_frontal_depth" 	fromLibrary="renderingLib" />
+			</pass>
 			<pass class="default" name="Thickness">
 				<scenes>
 					<scene name="New_Particles"/>
@@ -236,99 +261,121 @@
 				</lights>
 				<renderTarget name="Render" fromLibrary="renderingLib" />
 			</pass>
-			<pass class="quad" name="smooth_Depth">
-				<camera name="MainCamera" />
-				<material name="Smooth_Init" fromLibrary="renderingLib"/>
-				<renderTarget name="Smoothing_Init" fromLibrary="renderingLib" />
+
+			<pass class="quad" name="Blur Thickness">
+				<material name="ThicknessBlur" fromLibrary="renderingLib"/>
+				<renderTarget name="SmoothThick" fromLibrary="renderingLib" />
 			</pass>
+
+			<pass class="quad" name="smooth_Depth">
+				<camera 		name="MainCamera" />
+				<material		name="Smooth_Init" 		fromLibrary="renderingLib"/>
+				<renderTarget 	name="Smoothing_Init" 	fromLibrary="renderingLib" />
+			</pass>
+		</pipeline>
+
+		<pipeline name="PingPong" repetitions="10000">
+			<preScript file="scripts/pipelines.lua" script="SmoothPre" />
+			<testScript file="scripts/pipelines.lua" script="SmoothPipeline" />
+
 			<pass class="quad" name="smooth_Depth">
 				<camera name="MainCamera" />
 				<material name="Smooth_Ping" fromLibrary="renderingLib"/>
 				<renderTarget name="Smoothing_Ping" fromLibrary="renderingLib" />
 			</pass>
+
 			<pass class="quad" name="smooth_Depth">
 				<camera name="MainCamera" />
 				<material name="Smooth_Pong" fromLibrary="renderingLib"/>
 				<renderTarget name="Smoothing_Pong" fromLibrary="renderingLib" />
 			</pass>
-			
-		
-			
-			
-			
-			<!-- >
-				<pass class="quad" name="smooth_Depth">
-					<camera name="MainCamera" />
-					<material name="Smooth_Ping" fromLibrary="renderingLib"/>
-					<renderTarget name="Smoothing_Ping" fromLibrary="renderingLib" />
-				</pass>
-				<pass class="quad" name="smooth_Depth">
-					<camera name="MainCamera" />
-					<material name="Smooth_Pong" fromLibrary="renderingLib"/>
-				<renderTarget name="Smoothing_Pong" fromLibrary="renderingLib" />
-			</pass>
-			
-			</-->
+
+		</pipeline>
+
+		<pipeline name="FinalStep">
 			<pass class="quad" name="particlesQuad">
 				<camera name="MainCamera" />
 				<viewport name="MainViewport" />
 				<material name="FinalStep" fromLibrary="renderingLib" />
 			</pass>		
 		</pipeline>
+
 	</pipelines>
 
     <interface> 
 		<window label = "Render Mode">
-            <var label="Color"   			type="RENDERER" context="CURRENT" component="Particle_Color" 	mode="COLOR"/>
-            <var label="Thin Color"   		type="RENDERER" context="CURRENT" component="Thin_Color" 	mode="COLOR"/>
-            <var label="ETA"				type="RENDERER" context="CURRENT" component="ETA" 	/>
-            <var label="Particle_alpha"		type="RENDERER" context="CURRENT" component="Particle_alpha" def="min=0.01 max=0.3" />
-            <var label="Particle_Size"		type="RENDERER" context="CURRENT" component="Particle_Size" def="min=0.005 max=0.05"/>
-			<var label="ThickType" 			type="RENDERER" context="CURRENT" component="ThickType" 	def="min=1 max=3"/>
-			<var label="DebugParticles"		type="RENDERER" context="CURRENT" component="DebugParticles" def="min=0 max=4"/>
-            <var label="Blur"				type="RENDERER" context="CURRENT" component="Blur" def="min=0 max=3" />
+            <var label="Color"   			type="RENDERER" context="CURRENT" component="Particle_Color" 		 mode="COLOR"/>
+            <var label="Thin Color"   		type="RENDERER" context="CURRENT" component="Thin_Color" 			 mode="COLOR"/>
+            <var label="Particle_Thickness"		type="RENDERER" context="CURRENT" component="Particle_Thickness" def="min=0.0 max=10" />
+            <var label="Particle_Size"		type="RENDERER" context="CURRENT" component="Particle_Size"  def="min=0.005 max=0.05"/>
+			<var label="ThickType" 			type="RENDERER" context="CURRENT" component="ThickType" 	 def="min=1 max=3"/>            
+			<var label="DebugParticles"     type="RENDERER" context="CURRENT" component="DebugParticles" strings="Regular,Lighting,Positions,Normals,Thickness,Raycast - Iterations"/>
+			<var label="Blur Type"          type="RENDERER" context="CURRENT" component="Blur"       	 strings="None,Gaussian,Bilateral,Narrow-Gaussian,Curvature-Flow,Narrow-Curvature-Flow,Box"/>
+			<var label="PingPong_Iter_num" 	type="RENDERER" context="CURRENT" component="Blur_PingPong"  def="min=0 max=100"/>
+		</window>
+		<window label="Surfaces/Refraction">
+			<var label="ETA"				type="RENDERER" context="CURRENT" component="ETA"  def="min=0 max=1"	/>
 			<var label="Number of Surfaces"	type="RENDERER" context="CURRENT" component="Surface_Num" def="min=1 max=2" 	/>
-        </window>
+			<var label="stepSize" 			type="RENDERER" context="CURRENT" component="stepSize" 	/>
+			<var label="maxSteps" 			type="RENDERER" context="CURRENT" component="maxSteps" 	/>
+			<var label="Shlick power" 		type="RENDERER" context="CURRENT" component="power" 	def="min=0 max=200"/>
+			<var label="specular power" 	type="RENDERER" context="CURRENT" component="specular_power" def="min=0 max=200"	/>
+		</window>
 		<window label="Old Blur Params">
 			<var label="Blur Radious" 		type="RENDERER" context="CURRENT" component="Blur_Size" 	def="min=4.0 max=32.0"/>
 			<var label="Blur_Quality" 		type="RENDERER" context="CURRENT" component="Blur_Quality" 	def="min=1.0 max=20.0"/>
 		</window>
 		<window label="Bilateral Params">
-			<var label="filterRadius" 			type="RENDERER" context="CURRENT" component="filterRadius" 	/>
+			<var label="filterRadius" 			type="RENDERER" context="CURRENT" component="filterRadius" def="min=1 max=20"	/>
 			<var label="sphereRadius" 			type="RENDERER" context="CURRENT" component="sphereRadius" 	/>
 			<var label="bilateralParameter" 	type="RENDERER" context="CURRENT" component="bilateralParameter" 	/>
+		</window>
+		<window label="Narrow Params">
+			<var label="narrow_threshold_curvature" 	type="RENDERER" context="CURRENT" component="narrow_threshold" 	/>
+			<var label="narrow_threshold_far" 		    type="RENDERER" context="CURRENT" component="narrow_threshold_far" 	/>
+			<var label="narrow_threshold_close" 		type="RENDERER" context="CURRENT" component="narrow_threshold_close" 	/>
+
+		</window>
+		<window label="Curvature Flow Params">
+			<var label="dt" 	type="RENDERER" context="CURRENT" component="dt" 	/>
+			<var label="dzt" 	type="RENDERER" context="CURRENT" component="dzt" 	/>
 		</window>
 		<window label="Wave Controller">
 			<var label="WAVE_NUM_DIR" 		type="RENDERER" context="CURRENT" component="WAVE_NUM_DIR" def="min=0 max=2" 	/>
 			<var label="WAVE_PERIOD" 		type="RENDERER" context="CURRENT" component="WAVE_PERIOD" 	/>
-			<var label="WAVE_STRENGTH" 		type="RENDERER" context="CURRENT" component="WAVE_STRENGTH" def="min=0 max=1 step=0.01"	/>
+			<var label="WAVE_STRENGTH" 		type="RENDERER" context="CURRENT" component="WAVE_STRENGTH" 	/>
 			<var label="WAVE_CLEAR_BUTTON" 	type="RENDERER" context="CURRENT" component="WAVE_CLEAR" def="min=0 max=1"	/>
 		</window>
-		<window label = "Simulation">
-            <var label="Pause"				type="RENDERER" context="CURRENT" component="Pause" 	def="min=0 max=1" />
-            <var label="Open"				type="RENDERER" context="CURRENT" component="Open" 	def="min=0 max=1" />
-            <var label="OpenSize"				type="RENDERER" context="CURRENT" component="OpenSize" 	def="min=0 max=1 step=0.05" />
-            <var label="OpenSide"				type="RENDERER" context="CURRENT" component="OpenSide" 	def="min=0 max=1" />
-            <var label="OpenSizeSide"				type="RENDERER" context="CURRENT" component="OpenSizeSide" 	def="min=0 max=0.2 step=0.05" />
-            <var label="Ball" 			type="RENDERER" context="CURRENT" component="Ball" def="min=-2 max=2 step=0.05"/>
-            <var label="BallSize" 			type="RENDERER" context="CURRENT" component="BallSize" def="min=0.1 max=1 step=0.01"/>
-			<var label="TIMESTEP" 			type="RENDERER" context="CURRENT" component="TIMESTEP" def="min=0.001 step=0.001 max=0.05"/>
-			<var label="SURFACETENSION" 	type="RENDERER" context="CURRENT" component="SURFACETENSION" def="min=0.0001 max=2 step=0.0001" />
-			<var label="H" 					type="RENDERER" context="CURRENT" component="H" def="min=0.0001 max=0.0457 step=0.0001"/>
-			<var label="STIFF" 				type="RENDERER" context="CURRENT" component="STIFF" def="min=0.1 max=10 step=0.1"/>
-			<var label="DECLIVE" 			type="RENDERER" context="CURRENT" component="DECLIVE" def="min=-1.0 max=1 step=0.05"/>
-			<var label="MASS" 			type="RENDERER" context="CURRENT" component="MASS" def="min=0.005 max=0.4 step=0.005"/>
-			<var label="Wall damping" 			type="RENDERER" context="CURRENT" component="WALL_DAMPING" def="min=0 max=1 step=0.1"/>
-			<var label="RESTDENSITY" 		type="RENDERER" context="CURRENT" component="RESTDENSITY" def="min=100 max=10000 step=100"/>
-			<var label="VISCOSITY" 			type="RENDERER" context="CURRENT" component="VISCOSITY" def="min=3 max=25 step=0.1"/>
-			<var label="GRAVITY" 			type="RENDERER" context="CURRENT" component="GRAVITY" def="min=-20 max=20 step=1"/>
-			<var label="RESTITUTION" 		type="RENDERER" context="CURRENT" component="RESTITUTION" def="min=0 max=1 step=0.1"/>
-			<var label="SIMULATIONSCALE" 		type="RENDERER" context="CURRENT" component="SIMULATIONSCALE" def="min=0 max=1 step=0.05"/>
-			<var label="SIMULATIONSCALE_FORCE" 		type="RENDERER" context="CURRENT" component="SIMULATIONSCALEFORCE" def="min=0 max=2 step=0.05"/>
-			<var label="COLLISIONTYPE (0-fast 1-realistic)" 		type="RENDERER" context="CURRENT" component="COLLISIONTYPE" def="min=0 max=1"/>
-			<var label="computeGravity" 		type="RENDERER" context="CURRENT" component="computeGravity" def="min=0 max=1"/>
-			<var label="XMIN" 					type="RENDERER" context="CURRENT" component="XMIN" def="min=-10 max=10 step=0.01"/>
-			
+		        <window label = "Simulation">
+            <var label="Pause"                        type="RENDERER" context="CURRENT" component="Pause"   def="min=0 max=1" />
+            <var label="Open"                   type="RENDERER" context="CURRENT" component="Open"    def="min=0 max=1" />
+            <var label="OpenSize"                     type="RENDERER" context="CURRENT" component="OpenSize"      def="min=0 max=1 step=0.05" />
+            <var label="OpenSide"                     type="RENDERER" context="CURRENT" component="OpenSide"      def="min=0 max=1" />
+            <var label="OpenSizeSide"                       type="RENDERER" context="CURRENT" component="OpenSizeSide"  def="min=0 max=0.2 step=0.05" />
+            <var label="Ball"                   type="RENDERER" context="CURRENT" component="Ball" def="min=-2 max=2 step=0.05"/>
+            <var label="BallSize"               type="RENDERER" context="CURRENT" component="BallSize" def="min=0.1 max=1 step=0.01"/>
+                  <var label="TIMESTEP"               type="RENDERER" context="CURRENT" component="TIMESTEP" def="min=0.001 step=0.001 max=0.05"/>
+                  <var label="SURFACETENSION"   type="RENDERER" context="CURRENT" component="SURFACETENSION" def="min=0.0001 max=2 step=0.0001" />
+                  <var label="H"                            type="RENDERER" context="CURRENT" component="H" def="min=0.0001 max=0.0457 step=0.0001"/>
+                  <var label="STIFF"                        type="RENDERER" context="CURRENT" component="STIFF" def="min=0.1 max=10 step=0.1"/>
+                  <var label="DECLIVE"                type="RENDERER" context="CURRENT" component="DECLIVE" def="min=-1.0 max=1 step=0.05"/>
+                  <var label="MASS"                   type="RENDERER" context="CURRENT" component="MASS" def="min=0.005 max=0.4 step=0.005"/>
+                  <var label="Wall damping"                 type="RENDERER" context="CURRENT" component="WALL_DAMPING" def="min=0 max=1 step=0.1"/>
+                  <var label="RESTDENSITY"            type="RENDERER" context="CURRENT" component="RESTDENSITY" def="min=100 max=10000 step=100"/>
+                  <var label="VISCOSITY"              type="RENDERER" context="CURRENT" component="VISCOSITY" def="min=3 max=25 step=0.1"/>
+                  <var label="GRAVITY"                type="RENDERER" context="CURRENT" component="GRAVITY" def="min=-20 max=20 step=1"/>
+                  <var label="RESTITUTION"            type="RENDERER" context="CURRENT" component="RESTITUTION" def="min=0 max=1 step=0.1"/>
+                  <var label="SIMULATIONSCALE"        type="RENDERER" context="CURRENT" component="SIMULATIONSCALE" def="min=0 max=1 step=0.05"/>
+                  <var label="SIMULATIONSCALE_FORCE"        type="RENDERER" context="CURRENT" component="SIMULATIONSCALEFORCE" def="min=0 max=2 step=0.05"/>
+                  <var label="COLLISIONTYPE (0-fast 1-realistic)"             type="RENDERER" context="CURRENT" component="COLLISIONTYPE" def="min=0 max=1"/>
+                  <var label="computeGravity"         type="RENDERER" context="CURRENT" component="computeGravity" def="min=0 max=1"/>
+                  <var label="XMIN"                               type="RENDERER" context="CURRENT" component="XMIN" def="min=-10 max=10 step=0.01"/>
+                  
         </window>
+		<window label= "lua_sim_controller">
+            <var label="Pause"				type="RENDERER" context="CURRENT" component="Pause" 	def="min=0 max=1" />
+			<var label="Sim_Iters" 	type="RENDERER" context="CURRENT" component="Sim_Iters" 	/>
+			<var label="Sim_MaxIters" 	type="RENDERER" context="CURRENT" component="Sim_MaxIters" 	/>
+		</window>
     </interface>
 </project>
