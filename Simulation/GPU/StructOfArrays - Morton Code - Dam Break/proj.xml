@@ -31,7 +31,7 @@
 			
 		</constants>
         <attributes>
-			<!-- Atributos Rendering -->
+			<!-- Atributos Rendering -->\
 			<attribute name="Particle_Radius" 			data="FLOAT" 	type="RENDERER" value="0.005"/>
 			<attribute name="Particle_Resting_Density" 	data="INT" 		type="RENDERER" value="1000" />
 			<attribute name="Particle_Mass" 			data="FLOAT" 	type="RENDERER" value="0.02" />
@@ -168,7 +168,7 @@
 	
 	<pipelines default="pip" mode="RUN_SEQUENTIAL">
 		<pipeline name="pip">
-            <testScript file="scripts/pipelines.lua" script="SimController" />
+            <!--testScript file="scripts/pipelines.lua" script="SimController" /-->
 			<!-- SIMULATION -->
             <pass class="compute" name="Init">
                 <mode value="RUN_ONCE"/>

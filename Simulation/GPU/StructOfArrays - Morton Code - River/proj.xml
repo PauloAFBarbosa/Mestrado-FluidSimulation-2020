@@ -167,7 +167,7 @@
 	
 	<pipelines default="pip" mode="RUN_SEQUENTIAL">
 		<pipeline name="pip">
-            <!--testScript file="scripts/pipelines.lua" script="SimController" /-->
+            <testScript file="scripts/pipelines.lua" script="SimController" />
 			            <pass class="compute" name="Init">
                 <mode value="RUN_ONCE"/>
                 <material name="Init" fromLibrary="simulationLib" dimX="1" dimY="1" dimZ="1"/>
