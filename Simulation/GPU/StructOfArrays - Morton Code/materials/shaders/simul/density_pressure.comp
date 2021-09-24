@@ -382,7 +382,10 @@ void main()
     // compute density
     float sum=1;
 
-    int vizinhos=0;    
+    int vizinhos=0;
+
+    float distance=0;
+    float c =1.0;
 
     for (int j = 0; j < retSize; j++)
         {
@@ -394,7 +397,7 @@ void main()
             int from = cellStart[cell];
             int to = from + cellEnd[cell];
 
-            
+
             
             for (int i = from; i < to; i++)
             {
@@ -406,7 +409,12 @@ void main()
                 float ker_res = useDefaultKernel(arg, H);
 
                 if (ker_res!=0 ){
-                    
+                    //calcular a distancia que se vai percorrer para testar todos os vizinhos
+                    //Vamos usar isto para saber qual dos metodos trabalha melhor com a cache
+                    //Teoria, menor distancia media = melhor desempenho
+                    //float d =float(abs(int(i)-int(index)));
+                    //distance += d;
+                    //c+=1.0;
                     
                     //int vizinhos = adj[index*MAXADJ];
                     //Aqui é MAXADJ porque no maximo vai dar para guardar 99 vizinhos mais 1 posição para dizer quantos vizinhos se guardou
@@ -426,5 +434,9 @@ void main()
     // compute pressure
     pressure[index] = STIFF * ((sum*MASS*SIMULATIONSCALE) - RESTDENSITY);
 
+    //if(debug[index].y <500){
+    //    debug[index] = vec4(debug[index].x+(distance/c),debug[index].y+1,debug[index].z,debug[index].w); 
+    //}
+    
     
 }

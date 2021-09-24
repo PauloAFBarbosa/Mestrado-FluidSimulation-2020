@@ -449,6 +449,10 @@ void main()
 
     vec4 p= position[index];
 
+    
+    float distance=0;
+    int total =0;
+    float c= 1.0;
     for (int j = 0; j < retSize; j++)
         {
             //uint bucket = uint(adjMat[(28*b)+(j+1)]) ;
@@ -458,7 +462,7 @@ void main()
             int bucketSize = bucketSizes[bucket];
             for (int i = 0; i < bucketSize; i++)
             {
-
+                
                 vec4 arg;
                 arg = p - position[offset + i];
                 
@@ -466,7 +470,9 @@ void main()
 
                 if (ker_res!=0 ){
                 	
-                	
+                	//float d =float(abs(int(offset+i)-int(index)));
+                    //distance += d;
+                    //c+=1.0;
                 	//int vizinhos = adj[index*MAXADJ];
                 	//Aqui é MAXADJ porque no maximo vai dar para guardar 99 vizinhos mais 1 posição para dizer quantos vizinhos se guardou
                 	adj[index*MAXADJ + vizinhos + 1]= offset + i;
@@ -485,5 +491,10 @@ void main()
     // compute pressure
     pressure[index] = STIFF * ((sum*MASS*SIMULATIONSCALE) - RESTDENSITY);
 
+    
+    //if(debug[index].y <500){
+    //    debug[index] = vec4(debug[index].x+(distance/c),debug[index].y+1,debug[index].z,debug[index].w);
+    //}
+    
     
 }

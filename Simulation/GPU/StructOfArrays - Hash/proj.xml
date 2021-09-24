@@ -2,10 +2,10 @@
 <project name="SPH_Fluid_Sim" width = "1280" height = "720">
 	<assets>
 		<constants>
-			<constant name="NUMBER_OF_PARTICLES" value="1000000" />
-			<constant name="NUMBER_OF_VERTICES"  value="6000000" />
+			<constant name="NUMBER_OF_PARTICLES" value="1728000" />
+			<constant name="NUMBER_OF_VERTICES"  value="10368000" />
 			<!-- Lança com 625 workgroups. Cada workgroup vai ter 32 threads-->
-			<constant name="NUMBER_OF_WORK_GROUPS" value="31250" />
+			<constant name="NUMBER_OF_WORK_GROUPS" value="54000" />
 			<!-- Lança com 100 workgroups. Cada workgroup vai ter 32 threads-->
 			<!-- NUMBER_OF_WORK_GROUPS_HASH * 32 =Hash_Size -->
 			<constant name="NUMBER_OF_WORK_GROUPS_HASH" value="625" />
@@ -82,7 +82,7 @@
 				<attribute name="VISCOSITY" 				data="FLOAT" type="RENDERER" value = "4.5" />
 				<attribute name="GRAVITY" 					data="VEC4" type="RENDERER" x = "0" y = "-9.8" z = "0" w="0" />
 				<attribute name="WALL_DAMPING"				data="FLOAT" type="RENDERER" value="0.5"/>
-				<attribute name="PONTOS_LADO" 				data="INT" 		type="RENDERER" value="100"/>
+				<attribute name="PONTOS_LADO" 				data="INT" 		type="RENDERER" value="120z"/>
 				<attribute name="HASHSIZE" 					data="INT" 		type="RENDERER" value="HASH_SIZE"/>
 				<attribute name="Ball" 					data="VEC4" type="RENDERER" x = "2" y = "2" z = "2" w="0" />
 				<attribute name="BallSize" 					data="FLOAT" type="RENDERER" value="0.1" />
