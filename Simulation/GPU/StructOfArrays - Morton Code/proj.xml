@@ -168,7 +168,7 @@
 	
 	<pipelines default="pip" mode="RUN_SEQUENTIAL">
 		<pipeline name="pip">
-            <testScript file="scripts/pipelines.lua" script="SimController" />
+            
 			<!-- SIMULATION -->
             <pass class="compute" name="Init">
                 <mode value="RUN_ONCE"/>

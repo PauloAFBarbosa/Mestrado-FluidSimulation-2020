@@ -386,6 +386,8 @@ void main()
 
     float distance=0;
     float c =1.0;
+    float tras =0;
+    int indexAnterior=int(index);
 
     for (int j = 0; j < retSize; j++)
         {
@@ -412,9 +414,14 @@ void main()
                     //calcular a distancia que se vai percorrer para testar todos os vizinhos
                     //Vamos usar isto para saber qual dos metodos trabalha melhor com a cache
                     //Teoria, menor distancia media = melhor desempenho
-                    //float d =float(abs(int(i)-int(index)));
-                    //distance += d;
-                    //c+=1.0;
+                    float d =float(abs(int(i)-int(indexAnterior)));
+
+                    if (indexAnterior > i)
+                    	tras +=1.0;
+
+                    distance += d;
+                    c+=1.0;
+                    indexAnterior=i;
                     
                     //int vizinhos = adj[index*MAXADJ];
                     //Aqui é MAXADJ porque no maximo vai dar para guardar 99 vizinhos mais 1 posição para dizer quantos vizinhos se guardou
@@ -434,9 +441,9 @@ void main()
     // compute pressure
     pressure[index] = STIFF * ((sum*MASS*SIMULATIONSCALE) - RESTDENSITY);
 
-    //if(debug[index].y <500){
-    //    debug[index] = vec4(debug[index].x+(distance/c),debug[index].y+1,debug[index].z,debug[index].w); 
-    //}
+    if(debug[index].y <500){
+        debug[index] = vec4(debug[index].x+(distance/c),debug[index].y+1,debug[index].z+tras,debug[index].w); 
+    }
     
     
 }
