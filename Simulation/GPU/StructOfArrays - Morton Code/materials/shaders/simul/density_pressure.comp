@@ -384,6 +384,8 @@ void main()
 
     int vizinhos=0;
 
+    int total =0;
+
     float distance=0;
     float c =1.0;
     float tras =0;
@@ -403,7 +405,7 @@ void main()
             
             for (int i = from; i < to; i++)
             {
-                
+                total++;
 
                 vec4 arg;
                 arg = p - position[i];
@@ -440,7 +442,7 @@ void main()
     density[index] = sum*MASS*SIMULATIONSCALE;
     // compute pressure
     pressure[index] = STIFF * ((sum*MASS*SIMULATIONSCALE) - RESTDENSITY);
-
+    debug[index].w=total;
     if(debug[index].y <500){
         debug[index] = vec4(debug[index].x+(distance/c),debug[index].y+1,debug[index].z+tras,debug[index].w); 
     }

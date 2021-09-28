@@ -27,31 +27,15 @@ layout(std430, binding = 1) buffer Velocity
 
 
 
-layout(std430, binding = 2) buffer TempPosition
+layout(std430, binding = 2) buffer IndexPosition
 {
-    vec4 tempPosition[];
-};
-
-layout(std430, binding = 3) buffer BucketSizes
-{
-    int bucketSizes[];
+    int indexPosition[];
 };
 
 
-
-layout(std430, binding = 4) buffer TempVelocity
+layout(std430, binding = 3) buffer IndexVelocity
 {
-    vec4 tempvelocity[];
-};
-
-layout(std430, binding = 5) buffer TempBucketSizes
-{
-    int tempBucketSizes[];
-};
-
-layout(std430, binding = 6) buffer Offsets
-{
-    int offsets[];
+    int indexVelocity[];
 };
 
 
@@ -86,16 +70,11 @@ void main()
     // e no final vai hazer o compute dos offsets
     
 
-    uint bucket = hashFunction(tempPosition[index], H, HASHSIZE);
-    int bucketSize= atomicAdd(bucketSizes[bucket],1);
-    int offset = offsets[bucket];
+    uint bucket = hashFunction(position[index], H, HASHSIZE);
     //vai correr o array com os tamanhos dos buckets até chegar ao bucket atual
-    
-
-    position[offset+bucketSize] = tempPosition[index];
-    velocity[offset+bucketSize] = tempvelocity[index];
         
-
+    indexPosition[index]= int(bucket);
+    indexVelocity[index]= int(bucket);
     
 
 

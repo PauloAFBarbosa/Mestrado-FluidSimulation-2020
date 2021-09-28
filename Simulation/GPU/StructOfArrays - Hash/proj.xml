@@ -7,12 +7,7 @@
 			<!-- Lança com 625 workgroups. Cada workgroup vai ter 32 threads-->
 			<constant name="NUMBER_OF_WORK_GROUPS" value="54000" />
 			<!-- Lança com 100 workgroups. Cada workgroup vai ter 32 threads-->
-			<!-- NUMBER_OF_WORK_GROUPS_HASH * 32 =Hash_Size -->
-			<constant name="NUMBER_OF_WORK_GROUPS_HASH" value="625" />
-
-			<constant name="HASH_SIZE" value="20000" />
-
-			
+			<constant name="HASH_SIZE" value="200000" />
 			<constant name="FLUID_RES_W" value="1280"/> <constant name="FLUID_RES_H" value="720"/>
 
 
@@ -151,10 +146,13 @@
 				<mode value="RUN_ONCE"/>
 				<material name="Init" fromLibrary="simulationLib" dimX="1" dimY="1" dimZ="1"/>
 			</pass >
-			<pass class="compute" name="Populate">
-				<mode value="RUN_ONCE"/>
-				<material name="Populate" fromLibrary="simulationLib" dimX="NUMBER_OF_WORK_GROUPS" dimY="1" dimZ="1"/>
-			</pass >
+			
+			<pass class="cudaPIHash" name="MyNewSortHash">
+                <materialMaps>
+                    <map fromMaterial="*" toMaterial="MyNewSortHash" toLibrary="simulationLib" />
+                </materialMaps>
+            </pass>
+
 			<pass class="compute" name="DensityPressure">
 				
 				<material name="density_pressure" fromLibrary="simulationLib" dimX="NUMBER_OF_WORK_GROUPS" dimY="1" dimZ="1"/>
@@ -167,7 +165,12 @@
 				
 				<material name="integrate" fromLibrary="simulationLib" dimX="NUMBER_OF_WORK_GROUPS" dimY="1" dimZ="1"/>
 			</pass>
-			<pass class="compute" name="ZeroBuffers">
+			<pass class="compute" name="UpdateHash">
+				<!-- Vai fazer update dos indexes -->
+				<material name="UpdateHash" fromLibrary="simulationLib" dimX="NUMBER_OF_WORK_GROUPS" dimY="1" dimZ="1"/>
+			</pass>
+
+			<!--pass class="compute" name="ZeroBuffers">
 				
 				<material name="ZeroBuffers" fromLibrary="simulationLib" dimX="NUMBER_OF_WORK_GROUPS_HASH" dimY="1" dimZ="1"/>
 			</pass>
@@ -185,7 +188,7 @@
 			<pass class="compute" name="UpdateHash">
 
 				<material name="UpdateHash" fromLibrary="simulationLib" dimX="NUMBER_OF_WORK_GROUPS" dimY="1" dimZ="1"/>
-			</pass>
+			</pass -->
 
 			<!-- RENDERING -->
 			<pass class="default" name="background">

@@ -1,0 +1,511 @@
+// Copyright (c) 2017-2018, Samuel Ivan Gunadi
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+
+#version 460
+
+#define WORK_GROUP_SIZE 32
+
+layout (local_size_x = WORK_GROUP_SIZE) in;
+
+// constants
+
+#define PI_FLOAT 3.1415927410125732421875f
+#define PARTICLE_RADIUS 0.005f
+#define PARTICLE_RESTING_DENSITY 4000
+#define MAXADJ 500
+// Mass = Density * Volume
+#define PARTICLE_MASS 0.02
+#define SMOOTHING_LENGTH (4 * PARTICLE_RADIUS)
+
+#define PARTICLE_STIFFNESS 2000
+
+uniform int Pause;
+uniform int Number_Particles;
+uniform int HASHSIZE;
+uniform float RESTDENSITY;
+uniform float H;
+uniform float MASS;
+uniform float STIFF;
+uniform float SIMULATIONSCALE;
+
+layout(std430, binding = 0) buffer Position
+{
+    vec4 position[];
+};
+
+
+layout(std430, binding = 1) buffer Density
+{
+    float density[];
+};
+
+layout(std430, binding = 2) buffer Pressure
+{
+    float pressure[];
+};
+
+
+
+layout(std430, binding = 3) buffer BucketSizes
+{
+    int bucketSizes[];
+};
+
+layout(std430, binding = 4) buffer Offsets
+{
+    int offsets[];
+};
+
+layout(std430, binding = 5) buffer Debug
+{
+    vec4 debug[];
+};
+
+layout(std430, binding = 6) buffer Adj
+{
+    int adj[];
+};
+
+
+
+bool contains(uint arr[27], int size, uint member) {
+    bool ret = false;
+
+    for (int i = 0; i < size; i++)
+    {
+        if (arr[i] == member)
+            ret = true;
+    }
+    return ret;
+}
+
+int getAdj(vec4 pos, float H, out uint ret[27]) {
+    
+    int p1 = 2693;
+    int p2 = 3163;
+    int p3 = 4091;
+    int part1, part2, part3;
+    int cell[3];
+    cell[0] = int(pos.x / H);
+    cell[1] = int(pos.y / H);
+    cell[2] = int(pos.z / H);
+
+    uint tempBucket;
+    int retSize = 0;
+
+    //bucket recebido
+    part1 = int(cell[0] * p1);
+    part2 = int(cell[1] * p2);
+    part3 = int(cell[2] * p3);
+    tempBucket = uint((part1 ^ part2 ^ part3) % HASHSIZE);
+    ret[0] = tempBucket;
+    
+    retSize++;
+    //bucket right
+    part1 = ((cell[0] + 1) * p1);
+    part2 = ((cell[1]) * p2);
+    part3 = ((cell[2]) * p3);
+    tempBucket = uint((part1 ^ part2 ^ part3) % HASHSIZE);
+    //tempPosition[0]=vec4(tempBucket);
+    if (contains(ret,retSize,tempBucket)==false) {
+        ret[retSize] = tempBucket;
+        retSize++;
+    }
+
+    //bucket left
+    part1 = ((cell[0] - 1) * p1);
+    part2 = ((cell[1]) * p2);
+    part3 = ((cell[2]) * p3);
+    tempBucket = uint((part1 ^ part2 ^ part3) % HASHSIZE);
+    if (contains(ret, retSize, tempBucket) == false) {
+        ret[retSize] = tempBucket;
+        retSize++;
+    }
+
+    //bucket right front
+    part1 = ((cell[0] + 1) * p1);
+    part2 = ((cell[1]) * p2);
+    part3 = ((cell[2] - 1) * p3);
+    tempBucket = uint((part1 ^ part2 ^ part3) % HASHSIZE);
+    if (contains(ret, retSize, tempBucket) == false) {
+        ret[retSize] = tempBucket;
+        retSize++;
+    }
+
+    //bucket right back
+    part1 = ((cell[0] + 1) * p1);
+    part2 = ((cell[1]) * p2);
+    part3 = ((cell[2] + 1) * p3);
+    tempBucket = uint((part1 ^ part2 ^ part3) % HASHSIZE);
+    if (contains(ret, retSize, tempBucket) == false) {
+        ret[retSize] = tempBucket;
+        retSize++;
+    }
+
+    //bucket front
+    part1 = ((cell[0]) * p1);
+    part2 = ((cell[1]) * p2);
+    part3 = ((cell[2] - 1) * p3);
+    tempBucket = uint((part1 ^ part2 ^ part3) % HASHSIZE);
+    if (contains(ret, retSize, tempBucket) == false) {
+        ret[retSize] = tempBucket;
+        retSize++;
+    }
+
+    //bucket back
+    part1 = ((cell[0]) * p1);
+    part2 = ((cell[1]) * p2);
+    part3 = ((cell[2] + 1) * p3);
+    tempBucket = uint((part1 ^ part2 ^ part3) % HASHSIZE);
+    if (contains(ret, retSize, tempBucket) == false) {
+        ret[retSize] = tempBucket;
+        retSize++;
+    }
+
+    //bucket left front
+    part1 = ((cell[0] - 1) * p1);
+    part2 = ((cell[1]) * p2);
+    part3 = ((cell[2] - 1) * p3);
+    tempBucket = uint((part1 ^ part2 ^ part3) % HASHSIZE);
+    if (contains(ret, retSize, tempBucket) == false) {
+        ret[retSize] = tempBucket;
+        retSize++;
+    }
+
+    //bucket left back 
+    part1 = ((cell[0] - 1) * p1);
+    part2 = ((cell[1]) * p2);
+    part3 = ((cell[2] + 1) * p3);
+    tempBucket = uint((part1 ^ part2 ^ part3) % HASHSIZE);
+    if (contains(ret, retSize, tempBucket) == false) {
+        ret[retSize] = tempBucket;
+        retSize++;
+    }
+
+    //-----O mesmo mas para os buckets de cima
+    //bucket recebido cima
+    part1 = ((cell[0]) * p1);
+    part2 = ((cell[1] + 1) * p2);
+    part3 = ((cell[2]) * p3);
+    tempBucket = uint((part1 ^ part2 ^ part3) % HASHSIZE);
+    if (contains(ret, retSize, tempBucket) == false) {
+        ret[retSize] = tempBucket;
+        retSize++;
+    }
+
+    //bucket right cima
+    part1 = ((cell[0] + 1) * p1);
+    part2 = ((cell[1] + 1) * p2);
+    part3 = ((cell[2]) * p3);
+    tempBucket = uint((part1 ^ part2 ^ part3) % HASHSIZE);
+    if (contains(ret, retSize, tempBucket) == false) {
+        ret[retSize] = tempBucket;
+        retSize++;
+    }
+
+    //bucket left cima
+    part1 = ((cell[0] - 1) * p1);
+    part2 = ((cell[1] + 1) * p2);
+    part3 = ((cell[2]) * p3);
+    tempBucket = uint((part1 ^ part2 ^ part3) % HASHSIZE);
+    if (contains(ret, retSize, tempBucket) == false) {
+        ret[retSize] = tempBucket;
+        retSize++;
+    }
+
+    //bucket right front cima
+    part1 = ((cell[0] + 1) * p1);
+    part2 = ((cell[1] + 1) * p2);
+    part3 = ((cell[2] - 1) * p3);
+    tempBucket = uint((part1 ^ part2 ^ part3) % HASHSIZE);
+    if (contains(ret, retSize, tempBucket) == false) {
+        ret[retSize] = tempBucket;
+        retSize++;
+    }
+
+    //bucket right back cima
+    part1 = ((cell[0] + 1) * p1);
+    part2 = ((cell[1] + 1) * p2);
+    part3 = ((cell[2] + 1) * p3);
+    tempBucket = uint((part1 ^ part2 ^ part3) % HASHSIZE);
+    if (contains(ret, retSize, tempBucket) == false) {
+        ret[retSize] = tempBucket;
+        retSize++;
+    }
+
+    //bucket front cima
+    part1 = ((cell[0]) * p1);
+    part2 = ((cell[1] + 1) * p2);
+    part3 = ((cell[2] - 1) * p3);
+    tempBucket = uint((part1 ^ part2 ^ part3) % HASHSIZE);
+    if (contains(ret, retSize, tempBucket) == false) {
+        ret[retSize] = tempBucket;
+        retSize++;
+    }
+
+    //bucket back cima
+    part1 = ((cell[0]) * p1);
+    part2 = ((cell[1] + 1) * p2);
+    part3 = ((cell[2] + 1) * p3);
+    tempBucket = uint((part1 ^ part2 ^ part3) % HASHSIZE);
+    if (contains(ret, retSize, tempBucket) == false) {
+        ret[retSize] = tempBucket;
+        retSize++;
+    }
+
+    //bucket left front cima
+    part1 = ((cell[0] - 1) * p1);
+    part2 = ((cell[1] + 1) * p2);
+    part3 = ((cell[2] - 1) * p3);
+    tempBucket = uint((part1 ^ part2 ^ part3) % HASHSIZE);
+    if (contains(ret, retSize, tempBucket) == false) {
+        ret[retSize] = tempBucket;
+        retSize++;
+    }
+
+    //bucket left back cima 
+    part1 = ((cell[0] - 1) * p1);
+    part2 = ((cell[1] + 1) * p2);
+    part3 = ((cell[2] + 1) * p3);
+    tempBucket = uint((part1 ^ part2 ^ part3) % HASHSIZE);
+    if (contains(ret, retSize, tempBucket) == false) {
+        ret[retSize] = tempBucket;
+        retSize++;
+    }
+
+
+    //-----O mesmo mas para os buckets de baixo
+    //bucket recebido baixo
+    part1 = ((cell[0]) * p1);
+    part2 = ((cell[1] - 1) * p2);
+    part3 = ((cell[2]) * p3);
+    tempBucket = uint((part1 ^ part2 ^ part3) % HASHSIZE);
+    if (contains(ret, retSize, tempBucket) == false) {
+        ret[retSize] = tempBucket;
+        retSize++;
+    }
+
+    //bucket right baixo
+    part1 = ((cell[0] + 1) * p1);
+    part2 = ((cell[1] - 1) * p2);
+    part3 = ((cell[2]) * p3);
+    tempBucket = uint((part1 ^ part2 ^ part3) % HASHSIZE);
+    if (contains(ret, retSize, tempBucket) == false) {
+        ret[retSize] = tempBucket;
+        retSize++;
+    }
+
+    //bucket left baixo
+    part1 = ((cell[0] - 1) * p1);
+    part2 = ((cell[1] - 1) * p2);
+    part3 = ((cell[2]) * p3);
+    tempBucket = uint((part1 ^ part2 ^ part3) % HASHSIZE);
+    if (contains(ret, retSize, tempBucket) == false) {
+        ret[retSize] = tempBucket;
+        retSize++;
+    }
+
+    //bucket right front baixo
+    part1 = ((cell[0] + 1) * p1);
+    part2 = ((cell[1] - 1) * p2);
+    part3 = ((cell[2] - 1) * p3);
+    tempBucket = uint((part1 ^ part2 ^ part3) % HASHSIZE);
+    if (contains(ret, retSize, tempBucket) == false) {
+        ret[retSize] = tempBucket;
+        retSize++;
+    }
+
+    //bucket right back baixo
+    part1 = ((cell[0] + 1) * p1);
+    part2 = ((cell[1] - 1) * p2);
+    part3 = ((cell[2] + 1) * p3);
+    tempBucket = uint((part1 ^ part2 ^ part3) % HASHSIZE);
+    if (contains(ret, retSize, tempBucket) == false) {
+        ret[retSize] = tempBucket;
+        retSize++;
+    }
+
+    //bucket front baixo
+    part1 = ((cell[0]) * p1);
+    part2 = ((cell[1] - 1) * p2);
+    part3 = ((cell[2] - 1) * p3);
+    tempBucket = uint((part1 ^ part2 ^ part3) % HASHSIZE);
+    if (contains(ret, retSize, tempBucket) == false) {
+        ret[retSize] = tempBucket;
+        retSize++;
+    }
+
+    //bucket back baixo
+    part1 = ((cell[0]) * p1);
+    part2 = ((cell[1] - 1) * p2);
+    part3 = ((cell[2] + 1) * p3);
+    tempBucket = uint((part1 ^ part2 ^ part3) % HASHSIZE);
+    if (contains(ret, retSize, tempBucket) == false) {
+        ret[retSize] = tempBucket;
+        retSize++;
+    }
+
+    //bucket left front baixo
+    part1 = ((cell[0] - 1) * p1);
+    part2 = ((cell[1] - 1) * p2);
+    part3 = ((cell[2] - 1) * p3);
+    tempBucket = uint((part1 ^ part2 ^ part3) % HASHSIZE);
+    if (contains(ret, retSize, tempBucket) == false) {
+        ret[retSize] = tempBucket;
+        retSize++;
+    }
+
+    //bucket left back baixo 
+    part1 = ((cell[0] - 1) * p1);
+    part2 = ((cell[1] - 1) * p2);
+    part3 = ((cell[2] + 1) * p3);
+    tempBucket = uint((part1 ^ part2 ^ part3) % HASHSIZE);
+    if (contains(ret, retSize, tempBucket) == false) {
+        ret[retSize] = tempBucket;
+        retSize++;
+    }
+
+    
+
+    return retSize;
+    
+}
+
+float useDefaultKernel(vec4 distVector, float supportRadius) {
+    float dist = length(distVector);
+    
+    if (dist > supportRadius) {
+        
+        return 0.0;
+    }
+    else {
+        return (315 / (64 * PI_FLOAT * pow(supportRadius, 9.0f))) * pow(supportRadius * supportRadius - dist * dist, 3.0f);
+    }
+}
+
+uint hashFunction(vec4 pos,double H,int size) {
+    
+    int p1 = 2693;
+    int p2 = 3163;
+    int p3 = 4091;
+
+    int part1 = (int((pos.x / H)) * p1);
+    int part2 = (int((pos.y / H)) * p2);
+    int part3 = (int ((pos.z / H)) * p3);
+    
+    uint ret = uint((part1 ^ part2 ^ part3) % size);
+    
+    return ret;
+}
+
+float random (vec2 uv)
+{
+    return fract(sin(dot(uv,vec2(12.9898,78.233)))*43758.5453123);
+}
+
+void main()
+{
+    if (Pause == 1)
+        return;
+
+    int conta=0;
+    
+    uint index = gl_GlobalInvocationID.x;
+
+    if (index > Number_Particles)
+        return;
+    
+    
+    uint ret[27];
+    int retSize=0;
+
+    
+
+    retSize=getAdj(position[index], H, ret);
+    // compute density
+    float sum=1;
+
+    //mudar isto para um var local
+    //adj[index*MAXADJ ]=0;
+
+    int vizinhos=0;
+
+    vec4 p= position[index];
+
+    
+    float distance=0;
+    float c =1.0;
+    float tras =0;
+    int indexAnterior=int(index);
+    
+    for (int j = 0; j < retSize; j++)
+        {
+            //uint bucket = uint(adjMat[(28*b)+(j+1)]) ;
+            uint bucket = ret[j];
+    
+            int offset = offsets[bucket];
+            int bucketSize = bucketSizes[bucket];
+            for (int i = 0; i < bucketSize; i++)
+            {
+                
+                vec4 arg;
+                arg = p - position[offset + i];
+                
+                float ker_res = useDefaultKernel(arg, H);
+
+                if (ker_res!=0 ){
+                	
+                	//calcular a distancia que se vai percorrer para testar todos os vizinhos
+                    //Vamos usar isto para saber qual dos metodos trabalha melhor com a cache
+                    //Teoria, menor distancia media = melhor desempenho
+                    float d =float(abs(int(offset + i)-int(indexAnterior)));
+
+                    if (indexAnterior > offset + i)
+                        tras +=1.0;
+
+                    distance += d;
+                    c+=1.0;
+                    indexAnterior=offset + i;
+
+                	//int vizinhos = adj[index*MAXADJ];
+                	//Aqui é MAXADJ porque no maximo vai dar para guardar 99 vizinhos mais 1 posição para dizer quantos vizinhos se guardou
+                	adj[index*MAXADJ + vizinhos + 1]= offset + i;
+                	//adj[index*MAXADJ ]++;
+                	vizinhos++;
+                    sum += ker_res;
+                }
+                
+            }
+        }
+    
+    adj[index*MAXADJ]=vizinhos;
+
+    //debug[index] = vec4(sim,0,0,nao);
+    density[index] = sum*MASS*SIMULATIONSCALE;
+    // compute pressure
+    pressure[index] = STIFF * ((sum*MASS*SIMULATIONSCALE) - RESTDENSITY);
+
+    
+    if(debug[index].y <500){
+        debug[index] = vec4(debug[index].x+(distance/c),debug[index].y+1,debug[index].z+tras,debug[index].w); 
+    }
+    
+    
+}

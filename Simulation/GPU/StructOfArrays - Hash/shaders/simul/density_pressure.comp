@@ -460,13 +460,13 @@ void main()
             //uint bucket = uint(adjMat[(28*b)+(j+1)]) ;
             uint bucket = ret[j];
     
-            int offset = offsets[bucket];
-            int bucketSize = bucketSizes[bucket];
-            for (int i = 0; i < bucketSize; i++)
+            int from = offsets[bucket];
+            int to = from+  bucketSizes[bucket];
+            for (int i = from; i < to; i++)
             {
                 
                 vec4 arg;
-                arg = p - position[offset + i];
+                arg = p - position[i];
                 
                 float ker_res = useDefaultKernel(arg, H);
 
@@ -475,18 +475,18 @@ void main()
                 	//calcular a distancia que se vai percorrer para testar todos os vizinhos
                     //Vamos usar isto para saber qual dos metodos trabalha melhor com a cache
                     //Teoria, menor distancia media = melhor desempenho
-                    float d =float(abs(int(offset + i)-int(indexAnterior)));
+                    float d =float(abs(int(i)-int(indexAnterior)));
 
-                    if (indexAnterior > offset + i)
+                    if (indexAnterior > i)
                         tras +=1.0;
 
                     distance += d;
                     c+=1.0;
-                    indexAnterior=offset + i;
+                    indexAnterior=i;
 
                 	//int vizinhos = adj[index*MAXADJ];
                 	//Aqui é MAXADJ porque no maximo vai dar para guardar 99 vizinhos mais 1 posição para dizer quantos vizinhos se guardou
-                	adj[index*MAXADJ + vizinhos + 1]= offset + i;
+                	adj[index*MAXADJ + vizinhos + 1]= i;
                 	//adj[index*MAXADJ ]++;
                 	vizinhos++;
                     sum += ker_res;

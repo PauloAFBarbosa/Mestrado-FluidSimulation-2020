@@ -20,27 +20,17 @@ layout(std430, binding = 0) buffer Position
 {
     vec4 position[];
 };
-
-
-
-layout(std430, binding = 1) buffer TempPosition
+layout(std430, binding = 1) buffer IndexPosition
 {
-    vec4 tempPosition[];
+    int indexPosition[];
 };
 
-layout(std430, binding = 2) buffer BucketSizes
+layout(std430, binding = 2) buffer IndexVelocity
 {
-    int bucketSizes[];
+    int indexVelocity[];
 };
 
-layout(std430, binding = 3) buffer Offsets
-{
-    int offsets[];
-};
-layout(std430, binding = 4) buffer TempBucketSizes
-{
-    int tempBucketSizes[];
-};
+
 
 
 float rand(vec2 co){
@@ -95,38 +85,26 @@ void main()
     
     int conta=0;
     int myoffset = 0;
-
-    for(int i =0 ; i <HASHSIZE;i++){
-        tempBucketSizes[i]=0;
-        bucketSizes[i]=0;
-    }
     //Cria as particulas e poe no array temporario
     //calcula o tamanho de cada bucket, tambem temporario
     for (float x = -particleRadius * PONTOS_LADO; x_pontos < PONTOS_LADO ; x += particleDiameter,x_pontos++) {
             for (float y = -particleRadius * PONTOS_LADO, y_pontos = 0; y_pontos < PONTOS_LADO; y += particleDiameter, y_pontos++) {
                 for (float z = -particleRadius * PONTOS_LADO, z_pontos = 0; z_pontos < PONTOS_LADO; z += particleDiameter, z_pontos++) {
-                    tempPosition[inseridos] = vec4(x,y,z,0);
+                    
+                    position[inseridos] = vec4(x,y,z,0);
                     
 
                     uint b =hashFunction(vec4(x,y,z,0),H,HASHSIZE,inseridos);
 
-                    //tempPosition[0] = vec4(b,0,0,0);
+                    indexVelocity[inseridos] = int(b);
+                    indexPosition[inseridos] = int(b);
                     
                     inseridos++;
-
-                    tempBucketSizes[ b]++;
                     
             }
         }
     }
 
-    //Calcula os offsets
-    offsets[0] = 0;
-
-    for (int i = 1; i < HASHSIZE; i++)
-    {
-        offsets[i] = offsets[i - 1] + tempBucketSizes[i - 1];
-    }
 
     
     
