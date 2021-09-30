@@ -7,7 +7,7 @@
 			<!-- Lança com 625 workgroups. Cada workgroup vai ter 32 threads-->
 			<constant name="NUMBER_OF_WORK_GROUPS" value="54000" />
 			<!-- Lança com 100 workgroups. Cada workgroup vai ter 32 threads-->
-			<constant name="HASH_SIZE" value="200000" />
+			<constant name="HASH_SIZE" value="1000000" />
 			<constant name="FLUID_RES_W" value="1280"/> <constant name="FLUID_RES_H" value="720"/>
 
 
