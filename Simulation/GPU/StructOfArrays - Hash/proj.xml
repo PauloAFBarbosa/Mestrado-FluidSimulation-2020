@@ -77,7 +77,7 @@
 				<attribute name="VISCOSITY" 				data="FLOAT" type="RENDERER" value = "4.5" />
 				<attribute name="GRAVITY" 					data="VEC4" type="RENDERER" x = "0" y = "-9.8" z = "0" w="0" />
 				<attribute name="WALL_DAMPING"				data="FLOAT" type="RENDERER" value="0.5"/>
-				<attribute name="PONTOS_LADO" 				data="INT" 		type="RENDERER" value="120z"/>
+				<attribute name="PONTOS_LADO" 				data="INT" 		type="RENDERER" value="120"/>
 				<attribute name="HASHSIZE" 					data="INT" 		type="RENDERER" value="HASH_SIZE"/>
 				<attribute name="Ball" 					data="VEC4" type="RENDERER" x = "2" y = "2" z = "2" w="0" />
 				<attribute name="BallSize" 					data="FLOAT" type="RENDERER" value="0.1" />

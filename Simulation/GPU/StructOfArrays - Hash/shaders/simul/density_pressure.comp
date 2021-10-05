@@ -441,7 +441,7 @@ void main()
     retSize=getAdj(position[index], H, ret);
     // compute density
     float sum=1;
-
+    
     //mudar isto para um var local
     //adj[index*MAXADJ ]=0;
 
@@ -471,7 +471,7 @@ void main()
                 arg = p - position[i];
                 
                 float ker_res = useDefaultKernel(arg, H);
-                total++;
+                //total++;
                 if (ker_res!=0 ){
                 	
                 	//calcular a distancia que se vai percorrer para testar todos os vizinhos
@@ -504,8 +504,8 @@ void main()
     // compute pressure
     pressure[index] = STIFF * ((sum*MASS*SIMULATIONSCALE) - RESTDENSITY);
 
-    if (debug[index].w <500)
-        debug[index] = vec4(total+debug[index].x,vizinhos+debug[index].y,0,debug[index].w+1.0);
+    //if (debug[index].w <500)
+        //debug[index] = vec4(total+debug[index].x,vizinhos+debug[index].y,0,debug[index].w+1.0);
     
     //if(debug[index].y <500){
     //    debug[index] = vec4(debug[index].x+(distance/c),debug[index].y+1,debug[index].z+tras,debug[index].w); 
