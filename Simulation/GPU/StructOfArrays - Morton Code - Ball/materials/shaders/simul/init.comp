@@ -1,0 +1,306 @@
+
+#version 460
+
+#define WORK_GROUP_SIZE 1
+
+layout (local_size_x = WORK_GROUP_SIZE) in;
+
+#define PARTICLE_RADIUS 0.005f
+
+uniform int Number_Particles;
+uniform mat4 m_model;
+
+uniform float MASS;
+uniform float RESTDENSITY;
+uniform int HASHSIZE;
+uniform int PONTOS_LADO;
+uniform float H;
+
+layout(std430, binding = 0) buffer Position
+{
+    vec4 position[];
+};
+
+
+
+layout(std430, binding = 1) buffer TempPosition
+{
+    vec4 tempPosition[];
+};
+
+layout(std430, binding = 2) buffer Index
+{
+    uint index[];
+};
+
+
+layout(std430, binding = 3) buffer TempIndex
+{
+    uint tempIndex[];
+};
+
+layout(std430, binding = 4) buffer AdjV2
+{
+    int adjV2[];
+};
+
+layout(std430, binding = 5) buffer BallInfo
+{
+    vec4 ballInfo[];
+};
+
+
+//Morton code --------------------------------------------
+
+
+
+uint part1by2(uint n) {
+    n &= 0x000003ff;
+    n = (n ^ (n << 16)) & 0xff0000ff;
+    n = (n ^ (n << 8)) & 0x0300f00f;
+    n = (n ^ (n << 4)) & 0x030c30c3;
+    n = (n ^ (n << 2)) & 0x09249249;
+    return n;
+}
+
+
+uint unpart1by2(uint n) {
+    n &= 0x09249249;
+    n = (n ^ (n >> 2)) & 0x030c30c3;
+    n = (n ^ (n >> 4)) & 0x0300f00f;
+    n = (n ^ (n >> 8)) & 0xff0000ff;
+    n = (n ^ (n >> 16)) & 0x000003ff;
+    return n;
+}
+
+
+uint  interleave3(uint x, uint y, uint z) {
+    return part1by2(x) | (part1by2(y) << 1) | (part1by2(z) << 2);
+}
+
+
+void deinterleave3(uint n, uint x, uint y, uint z) {
+    x = unpart1by2(n);
+    y = unpart1by2(n >> 1);
+    z = unpart1by2(n >> 2);
+}
+
+//Morton code --------------------------------------------
+
+
+int getAdj(uint x,uint y,uint z, float H, out uint ret[27]) {
+    
+    int retSize=0;
+    uint offset = 43;
+    uint morton_x = x;
+    uint morton_y = y;
+    uint morton_z = z;
+
+    uint morton_cell;
+    
+    if (morton_x > 0 && morton_y > 0 && morton_z > 0){
+        morton_cell = interleave3(morton_x-1, morton_y-1, morton_z-1);
+        ret[retSize] = morton_cell;
+        retSize++;
+    }
+    if (morton_y > 0 && morton_z > 0){
+        morton_cell = interleave3(morton_x, morton_y-1, morton_z-1);
+        ret[retSize] = morton_cell;
+        retSize++;
+    }
+    if (morton_x > 0 && morton_z > 0){
+        morton_cell = interleave3(morton_x-1, morton_y, morton_z-1);
+        ret[retSize] = morton_cell;
+        retSize++;
+    }
+    if (morton_z > 0){
+        morton_cell = interleave3(morton_x, morton_y, morton_z-1);
+        ret[retSize] = morton_cell;
+        retSize++;
+    }
+    if (morton_x > 0 && morton_y > 0){
+        morton_cell = interleave3(morton_x-1, morton_y-1, morton_z);
+        ret[retSize] = morton_cell;
+        retSize++;
+    }
+    if (morton_y > 0){
+        morton_cell = interleave3(morton_x, morton_y-1, morton_z);
+        ret[retSize] = morton_cell;
+        retSize++;
+    }
+    if (morton_x > 0){
+        morton_cell = interleave3(morton_x-1, morton_y, morton_z);
+        ret[retSize] = morton_cell;
+        retSize++;
+    }
+
+    morton_cell= interleave3(morton_x, morton_y, morton_z);
+    ret[retSize] = morton_cell;
+    retSize++;
+
+    //1864184 é o numero maximo que o morton code pode devolver num cubo de -2 a 2 
+    if (morton_x < 1864184 && morton_y > 0 && morton_z > 0){
+        morton_cell = interleave3(morton_x+1, morton_y-1, morton_z-1);
+        ret[retSize] = morton_cell;
+        retSize++;
+    }
+    if (morton_x < 1864184  && morton_z > 0){
+        morton_cell = interleave3(morton_x+1, morton_y, morton_z-1);
+        ret[retSize] = morton_cell;
+        retSize++;
+    }
+    if (morton_x < 1864184  && morton_y > 0){
+        morton_cell = interleave3(morton_x+1, morton_y-1, morton_z);
+        ret[retSize] = morton_cell;
+        retSize++;
+    }
+
+    if (morton_x < 1864184  ){
+        morton_cell = interleave3(morton_x+1, morton_y, morton_z);
+        ret[retSize] = morton_cell;
+        retSize++;
+    }
+
+    if (morton_x  > 0  && morton_y < 1864184 && morton_z > 0){
+        morton_cell = interleave3(morton_x-1, morton_y+1, morton_z-1);
+        ret[retSize] = morton_cell;
+        retSize++;
+    }
+
+    if (morton_y < 1864184 && morton_z > 0){
+        morton_cell = interleave3(morton_x, morton_y+1, morton_z-1);
+        ret[retSize] = morton_cell;
+        retSize++;
+    }
+
+    if (morton_y < 1864184 && morton_x > 0){
+        morton_cell = interleave3(morton_x-1, morton_y+1, morton_z);
+        ret[retSize] = morton_cell;
+        retSize++;
+    }
+    if (morton_y < 1864184 ){
+        morton_cell = interleave3(morton_x, morton_y+1, morton_z);
+        ret[retSize] = morton_cell;
+        retSize++;
+    }
+
+    if (morton_x  < 1864184  && morton_y < 1864184 && morton_z > 0){
+        morton_cell = interleave3(morton_x+1, morton_y+1, morton_z-1);
+        ret[retSize] = morton_cell;
+        retSize++;
+    }
+
+    if (morton_x  < 1864184  && morton_y < 1864184){
+        morton_cell = interleave3(morton_x+1, morton_y+1, morton_z);
+        ret[retSize] = morton_cell;
+        retSize++;
+    }
+
+    if (morton_x  >0  && morton_y >0 && morton_z < 1864184){
+        morton_cell = interleave3(morton_x-1, morton_y-1, morton_z+1);
+        ret[retSize] = morton_cell;
+        retSize++;
+    }
+    if (morton_y >0 && morton_z < 1864184){
+        morton_cell = interleave3(morton_x, morton_y-1, morton_z+1);
+        ret[retSize] = morton_cell;
+        retSize++;
+    }
+    if (morton_x >0 && morton_z < 1864184){
+        morton_cell = interleave3(morton_x-1, morton_y, morton_z+1);
+        ret[retSize] = morton_cell;
+        retSize++;
+    }
+
+    if (morton_z < 1864184){
+        morton_cell = interleave3(morton_x, morton_y, morton_z+1);
+        ret[retSize] = morton_cell;
+        retSize++;
+    }
+
+    if (morton_x  < 1864184  && morton_y >0 && morton_z < 1864184 ){
+        morton_cell = interleave3(morton_x+1, morton_y-1, morton_z+1);
+        ret[retSize] = morton_cell;
+        retSize++;
+    }
+    if (morton_x  < 1864184  && morton_z < 1864184 ){
+        morton_cell = interleave3(morton_x+1, morton_y, morton_z+1);
+        ret[retSize] = morton_cell;
+        retSize++;
+    }
+
+    if (morton_x >0 && morton_y < 1864184 && morton_z < 1864184 ){
+        morton_cell = interleave3(morton_x-1, morton_y+1, morton_z+1);
+        ret[retSize] = morton_cell;
+        retSize++;
+    }
+
+    if (morton_y < 1864184 && morton_z < 1864184 ){
+        morton_cell = interleave3(morton_x, morton_y+1, morton_z+1);
+        ret[retSize] = morton_cell;
+        retSize++;
+    }
+
+    if (morton_x <1864184 && morton_y < 1864184 && morton_z < 1864184 ){
+        morton_cell = interleave3(morton_x+1, morton_y+1, morton_z+1);
+        ret[retSize] = morton_cell;
+        retSize++;
+    }
+
+    return retSize;
+    
+}
+
+void main()
+{
+
+    float fluidVolume = 1000 * MASS / RESTDENSITY;
+    float particleDiameter = pow(fluidVolume, 1.0f / 3.0f) / 10;
+    float particleRadius = particleDiameter / 2;
+
+    int x_pontos = 0;
+    int y_pontos = 0;
+    int z_pontos = 0;
+
+    int inseridos=0;
+    
+    int conta=0;
+    
+
+    
+    
+
+    //Cria as particulas e poe no array temporario
+    //calcula o tamanho de cada bucket, tambem temporario
+    for (float x = -particleRadius * PONTOS_LADO; x_pontos < PONTOS_LADO ; x += particleDiameter,x_pontos++) {
+            for (float y = -particleRadius * PONTOS_LADO, y_pontos = 0; y_pontos < PONTOS_LADO; y += particleDiameter, y_pontos++) {
+                for (float z = -particleRadius * PONTOS_LADO, z_pontos = 0; z_pontos < PONTOS_LADO; z += particleDiameter, z_pontos++) {
+                    
+                    //Este offset é calculado assim: como temos os pontos -2 isso da a celula -43 (-2 / H), assim para os valores enviados para a funcao que calcula o morton code serem sempre 0 ou maior, temos de somar esses 43
+                    uint offsetx = 47;
+                    uint offsety = 43;
+                    uint offsetz = 63;
+
+                    uint morton_x = uint((x / H) +offsetx);
+                    uint morton_y = uint((y / H) +offsety);
+                    uint morton_z = uint((z / H) +offsetz);
+
+                    uint morton_cell = interleave3(morton_x, morton_y, morton_z);
+                    
+                    
+                    
+                    //tempPosition agora vai guardar o index do codigo morton e o position guarda a posição normal
+                    index[inseridos] = morton_cell;
+                    tempIndex[inseridos] = morton_cell;
+                    position[inseridos] = vec4(x,y,z,0);
+                    inseridos++;
+                   
+                    
+            }
+        }
+    }    
+
+    
+    ballInfo[0] = vec4(0,0,0,0);
+
+}

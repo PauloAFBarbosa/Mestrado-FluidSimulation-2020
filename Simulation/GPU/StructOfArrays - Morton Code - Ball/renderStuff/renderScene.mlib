@@ -1,0 +1,72 @@
+<?xml version="1.0" ?>
+<materialLib name="renderScene">
+    <textures>
+    </textures>
+
+    <renderTargets>
+        
+        <renderTarget name="scene">
+            <SIZE width="1920" height="1080" />
+            <colors>
+                <color name="color" internalFormat="RGBA32F"/>
+                <color name="depth" internalFormat="RGBA32F"/>
+            </colors>
+            <depth name="sceneDepth" internalFormat="DEPTH_COMPONENT32F" />
+        </renderTarget>
+
+    </renderTargets>
+
+    <shaders>
+        
+        <shader name="default"
+            vs="shaders/renderScene/default.vert"
+            ps="shaders/renderScene/default.frag"
+        />
+
+        <shader name="Final"
+            vs="shaders/renderScene/Final.vert"
+            ps="shaders/renderScene/Final.frag"
+        />
+
+    </shaders>
+
+    <materials>
+
+        <material name="default">
+            <shader name="default">
+                <values>
+                    
+                    <!-- VERT VALUES-->
+                    <valueof uniform="PVM" 		        type="RENDERER" 		context="CURRENT" 		component="PROJECTION_VIEW_MODEL" />
+                    <valueof uniform="VM" 		        type="RENDERER" 		context="CURRENT" 		component="VIEW_MODEL" />
+                    <valueof uniform="lightDirection" 	type="LIGHT"     		context="CURRENT" 		component="DIRECTION" id="0"/>
+                    
+                    <!-- FRAG VALUES-->
+                    <valueof uniform="diffuse" 		    type="COLOR" 		context="CURRENT" 		component="DIFFUSE" />
+                    <valueof uniform="specular" 		type="COLOR" 		context="CURRENT" 		component="SPECULAR" />
+                    <valueof uniform="emission" 		type="COLOR" 		context="CURRENT" 		component="EMISSION" />
+                    <valueof uniform="shininess" 		type="COLOR" 		context="CURRENT" 		component="SHININESS" />
+
+                </values>
+            </shader>
+        </material>
+
+        <material name="Final">
+            <shader name="Final">
+                <values>
+
+                    <!-- Textures -->
+                    <valueof uniform="color" 		type="TEXTURE_BINDING" 		context="CURRENT" 		component="UNIT" id="0" />
+                    <valueof uniform="depth" 		type="TEXTURE_BINDING" 		context="CURRENT" 		component="UNIT" id="1" />
+
+                </values>
+            </shader>
+            <textures>
+				<texture name="color" UNIT="0"/>
+				<texture name="depth" UNIT="1"/>
+
+            </textures>
+        </material>
+
+    </materials>
+</materialLib>

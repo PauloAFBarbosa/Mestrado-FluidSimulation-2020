@@ -1,0 +1,504 @@
+// Copyright (c) 2017-2018, Samuel Ivan Gunadi
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+
+#version 460
+
+#define WORK_GROUP_SIZE 32
+
+layout (local_size_x = WORK_GROUP_SIZE) in;
+
+// constants
+
+#define TIME_STEP 0.0001f
+
+#define WALL_SIZEX 0.5
+#define WALL_SIZEZ 0.5
+
+uniform int Number_Particles;
+uniform int Pause;
+uniform float WALL_DAMPING;
+uniform float time;
+uniform float XMAX;
+uniform float YMAX;
+uniform float ZMAX;
+
+uniform float XMIN;
+uniform float YMIN;
+uniform float ZMIN;
+
+uniform float DECLIVE;
+uniform float RESTITUTION;
+uniform float TIMESTEP;
+uniform vec4 GRAVITY;
+
+uniform vec4 Ball;
+uniform float BallSize;
+uniform int COLLISIONTYPE;
+uniform int computeGravity;
+
+uniform float BALLDENSITY;
+uniform float BALLR;
+
+layout(std430, binding = 0) buffer Position
+{
+    vec4 position[];
+};
+
+layout(std430, binding = 1) buffer Velocity
+{
+    vec4 velocity[];
+};
+
+layout(std430, binding = 2) buffer Force
+{
+    vec4 force[];
+};
+
+layout(std430, binding = 3) buffer Density
+{
+    float density[];
+};
+
+
+
+layout(std430, binding = 4) buffer Acceleration
+{
+    vec4 acceleration[];
+};
+
+layout(std430, binding = 5) buffer Gravity
+{
+    vec4 gravity[];
+};
+
+
+
+layout(std430, binding = 6) buffer SurfaceTension
+{
+    vec4 surfaceTension[];
+};
+
+layout(std430, binding = 7) buffer Viscosity
+{
+    vec4 viscosity[];
+};
+
+layout(std430, binding = 8) buffer Debug
+{
+    vec4 debug[];
+};
+
+layout(std430, binding = 9) buffer BallInfo
+{
+    vec4 ballInfo[];
+};
+
+
+bool detectCollisionV2(in vec4 pos,in vec4 vel,in uint index,out int hitBall, out vec4 contactPoint, out vec4 unitSurfaceNormal,out vec4 retVelocity) {
+    //o cubo esta centrado em 0,0,0
+    float newx = pos.x + XMAX;
+    float temp = (XMAX + XMAX) - newx;
+    temp = temp / (XMAX + XMAX); //devolve 1 quando newx é 0, ou seja, a particula esta encostada a parede esquerda
+                                // devolve 0 quando esta encostada a parede direita
+
+    float newy = YMIN + (temp * DECLIVE);
+    if (pos.x <= XMAX && pos.x >= XMIN && pos.y <= YMAX && pos.y >= newy && pos.z <= ZMAX && pos.z >= ZMIN){
+        
+        //Colission with the ball
+        float dist=length(Ball-pos);
+        
+        if(dist<BallSize){
+            vec4 pointer=normalize(pos-Ball);
+            contactPoint = Ball + pointer*BallSize;
+            unitSurfaceNormal=pointer;
+            //Como o contact point agora pode estar fora no volume tenho de verificar isso
+
+            if (contactPoint.x < XMIN) {
+                    contactPoint.x = XMIN;
+            }
+            else if (contactPoint.x > XMAX) {
+                    contactPoint.x = XMAX;
+            }
+            if (contactPoint.y < newy) {
+                    contactPoint.y =newy;
+                }
+                else if (contactPoint.y > YMAX) {
+                    contactPoint.y =YMAX;
+                }
+                
+            
+                if (contactPoint.z < ZMIN) {
+                    contactPoint.z =ZMIN;                    
+                }
+                else if (contactPoint.z > ZMAX) {
+                    contactPoint.z =ZMAX;                       
+                }
+
+            float penetrationDepth = length(pos - contactPoint);
+        if (COLLISIONTYPE == 0){
+            retVelocity= vel-(2) * dot(unitSurfaceNormal, (vel))*unitSurfaceNormal;
+            retVelocity *=0.5;
+        }
+        else
+            retVelocity= vel -  (1+RESTITUTION *(penetrationDepth/(TIMESTEP*length(vel)))) * dot(unitSurfaceNormal, vel)*unitSurfaceNormal;
+            hitBall=1;
+            return true;
+        }
+        else{
+            contactPoint=pos;
+            retVelocity=vel;
+            hitBall=0;
+            return false;
+        }
+    }
+
+
+    contactPoint = pos;
+
+    unitSurfaceNormal= vec4(0);
+
+    int zx =0;
+    retVelocity=vel;
+    if (pos.x < XMIN) {
+        zx=1;
+            contactPoint.x = XMIN;
+            
+            unitSurfaceNormal = normalize(unitSurfaceNormal+vec4(1,0,0,0));
+            
+
+            
+            
+    }
+    else if (pos.x > XMAX) {
+        zx=1;
+            contactPoint.x = XMAX;
+            
+            unitSurfaceNormal = normalize(unitSurfaceNormal+vec4(-1,0,0,0));
+            
+
+    }
+    if (pos.y < newy) {
+            contactPoint.y =newy;
+            unitSurfaceNormal = normalize(unitSurfaceNormal+vec4(DECLIVE,1-DECLIVE,0,0));
+            
+            
+        }
+        else if (pos.y > YMAX) {
+            contactPoint.y =YMAX;
+            
+            unitSurfaceNormal = normalize(unitSurfaceNormal+vec4(0,-1,0,0));
+            
+            
+        }
+        
+    
+        if (pos.z < ZMIN) {
+            zx=1;
+            contactPoint.z =ZMIN;
+            unitSurfaceNormal = normalize(unitSurfaceNormal+vec4(0,0,1,0));
+            
+            
+            
+        }
+        else if (pos.z > ZMAX) {
+            zx=1;
+            contactPoint.z =ZMAX;
+            unitSurfaceNormal = normalize(unitSurfaceNormal+vec4(0,0,-1,0));
+            
+             
+        }
+
+        float dist=length(Ball-pos);
+        if(dist<BallSize){
+            vec4 pointer=normalize(pos-Ball);
+            //contactPoint = Ball + pointer*BallSize;
+            unitSurfaceNormal=normalize(unitSurfaceNormal+pointer);
+            
+        }
+        
+        float penetrationDepth = length(pos - contactPoint);
+        if (COLLISIONTYPE == 0)
+            retVelocity= vel-(2) * dot(unitSurfaceNormal, (vel))*unitSurfaceNormal;
+        else
+            retVelocity= vel -  (1+RESTITUTION *(penetrationDepth/(TIMESTEP*length(vel)))) * dot(unitSurfaceNormal, vel)*unitSurfaceNormal;
+        //retVelocity *= RESTITUTION;
+        
+        //
+        
+        //retVelocity=retVelocity*RESTITUTION;
+        hitBall=0;
+        return true;
+}
+
+
+bool detectCollisionBall(in vec4 pos,in vec4 vel,in uint index,out int hitBall, out vec4 contactPoint, out vec4 unitSurfaceNormal,out vec4 retVelocity) {
+    
+    vec4 ballPosition = ballInfo[0];
+
+    float d= length(pos-ballPosition);
+
+    if (d > BALLR){
+
+        contactPoint = pos;
+        retVelocity=vel;
+        
+        return false;
+    }
+
+    unitSurfaceNormal = normalize(pos - ballPosition);
+
+    contactPoint = ballPosition + unitSurfaceNormal * BALLR;
+
+    retVelocity=vel;
+
+    
+    float penetrationDepth = length(pos - contactPoint);
+
+    if (COLLISIONTYPE == 0)
+        retVelocity= vel-(2) * dot(unitSurfaceNormal, (vel))*unitSurfaceNormal;
+    else
+        retVelocity= vel -  (1+RESTITUTION *(penetrationDepth/(TIMESTEP*length(vel)))) * dot(unitSurfaceNormal, vel)*unitSurfaceNormal;
+    
+    //Aqui vou somar a força, mas tenho que garantir que é atomico
+    //ver https://www.khronos.org/opengl/wiki/Shader_Storage_Buffer_Object     Memory qualifiers
+    ballInfo[1]= vec4(ballInfo[1].x+1,0,0,0);
+
+    return true;
+}
+
+
+bool detectCollision(vec4 pos, out vec4 contactPoint, out vec4 unitSurfaceNormal) {
+    //o cubo esta centrado em 0,0,0
+    float newx = pos.x + XMAX;
+    float temp = (XMAX + XMAX) - newx;
+    temp = temp / (XMAX + XMAX); //devolve 1 quando newx é 0, ou seja, a particula esta encostada a parede esquerda
+                                // devolve 0 quando esta encostada a parede direita
+
+    float newy = YMIN + (temp * DECLIVE);
+
+    if (pos.x <= XMAX && pos.x >= XMIN && pos.y <= YMAX && pos.y >= newy && pos.z <= ZMAX && pos.z >= ZMIN)
+        return false;
+
+    int maxComponent = 0;
+    float maxValue = abs(pos.x);
+    //Por causa do declive temos de ter isso em conta ao encontrar o maxvalue. (se nao fizer + temp*declive as vezes da como max component o Z quando na realidade deveria ter sido o Y, so nao foi por causa do declive)
+    if (maxValue < abs(pos.y)+(temp*DECLIVE)) {
+        maxComponent = 1;
+        maxValue = abs(pos.y) + (temp * DECLIVE);
+    }
+    if (maxValue < abs(pos.z)) {
+        maxComponent = 2;
+        maxValue = abs(pos.z);
+    }
+    // 'unitSurfaceNormal' is based on the current position component with the largest absolute value
+    
+    switch (maxComponent) {
+    case 0:
+        if (pos.x < XMIN) {
+            contactPoint = vec4(XMIN,pos.y,pos.z,0) ;
+            
+            if (pos.y < newy)     contactPoint.y = newy;
+            else if (pos.y > YMAX) contactPoint.y = YMAX;
+            if (pos.z < ZMIN)     contactPoint.z = ZMIN;
+            else if (pos.z > ZMAX) contactPoint.z = ZMAX;
+            
+            unitSurfaceNormal = vec4(1,0,0,0);
+            
+            
+        }
+        else if (pos.x > XMAX) {
+            contactPoint = vec4 (XMAX,pos.y,pos.z,0);
+
+            if (pos.y < newy)     contactPoint.y = newy;
+            else if (pos.y > YMAX) contactPoint.y = YMAX;
+            if (pos.z < ZMIN)     contactPoint.z = ZMIN;
+            else if (pos.z > ZMAX) contactPoint.z = ZMAX;
+            
+            unitSurfaceNormal = vec4(-1,0,0,0);
+            
+
+        }
+        break;
+    case 1:
+        if (pos.y < newy) {
+            contactPoint = vec4(pos.x,newy,pos.z,0);
+
+            if (pos.x < XMIN)     contactPoint.x = XMIN;
+            else if (pos.x > XMAX) contactPoint.x = XMAX;
+            if (pos.z < ZMIN)     contactPoint.z = ZMIN;
+            else if (pos.z > ZMAX) contactPoint.z = ZMAX;
+
+            //unitSurfaceNormal = vec4(DECLIVE,1-DECLIVE,0,0);
+            unitSurfaceNormal = vec4(DECLIVE,1-DECLIVE,0,0);
+            
+        }
+        else if (pos.y > YMAX) {
+            contactPoint = vec4(pos.x,YMAX,pos.z,0);
+
+            if (pos.x < XMIN)     contactPoint.x = XMIN;
+            else if (pos.x > XMAX) contactPoint.x = XMAX;
+            if (pos.z < ZMIN)     contactPoint.z = ZMIN;
+            else if (pos.z > ZMAX) contactPoint.z = ZMAX;
+
+            unitSurfaceNormal = vec4(0,-1,0,0);
+            
+        }
+        break;
+    case 2:
+        if (pos.z < ZMIN) {
+
+            contactPoint=vec4(pos.x,pos.y,ZMIN,0);
+
+            if (pos.x < XMIN)     contactPoint.x = XMIN;
+            else if (pos.x > XMAX) contactPoint.x = XMAX;
+            if (pos.y < newy)     contactPoint.y = newy;
+            else if (pos.y > YMAX) contactPoint.y = YMAX;
+            unitSurfaceNormal = vec4(0,0,1,0);
+            
+            
+        }
+        else if (pos.z > ZMAX) {
+            contactPoint = vec4(pos.x,pos.y,ZMAX,0);
+
+            if (pos.x < XMIN)     contactPoint.x = XMIN;
+            else if (pos.x > XMAX) contactPoint.x = XMAX;
+            if (pos.y < newy)     contactPoint.y = newy;
+            else if (pos.y > YMAX) contactPoint.y = YMAX;
+            unitSurfaceNormal = vec4(0,0,-1,0);
+               
+        }
+        break;
+    }
+
+        
+    return true;
+}
+
+
+
+void updateVelocity(vec4 velocity, vec4 unitSurfaceNormal, float penetrationDepth, out vec4 ret) {
+    //ret = velocity - unitSurfaceNormal * (1 + RESTITUTION * penetrationDepth / (TIMESTEP * glm::length(velocity))) * glm::dot(velocity, unitSurfaceNormal);
+    
+    ret= velocity -  (2) * dot(unitSurfaceNormal, normalize(velocity))*unitSurfaceNormal;
+}
+
+void updateVelocityV2(vec4 velocity, vec4 unitSurfaceNormal, float penetrationDepth, out vec4 ret) {
+    //ret = velocity - unitSurfaceNormal * (1 + RESTITUTION * penetrationDepth / (TIMESTEP * glm::length(velocity))) * glm::dot(velocity, unitSurfaceNormal);
+    
+    ret= velocity -  (1+RESTITUTION *(penetrationDepth/(TIMESTEP*length(velocity)))) * dot(unitSurfaceNormal, normalize(velocity))*unitSurfaceNormal;
+}
+
+float map(float value, float min1, float max1, float min2, float max2) {
+  return min2 + (value - min1) * (max2 - min2) / (max1 - min1);
+}
+
+void main()
+{
+    if (Pause == 1)
+        return;
+    uint index = gl_GlobalInvocationID.x;
+
+    if (index > Number_Particles)
+        return;
+
+    vec4 totalForce= vec4(0);
+
+    //retirado surfaceTension
+    // aqui se tiver GRAVITY * density cada particula vai ter uma gravidade diferente, e assim as de baixo sofrem mais gravidade (visto que tem mais gravidade)
+    
+    if (computeGravity==0)
+        totalForce = force[index] + viscosity[index] + GRAVITY * 1000 + surfaceTension[index];
+    else
+        totalForce = force[index] + viscosity[index] + GRAVITY * density[index]+ surfaceTension[index];
+    
+
+    //employEulerIntegrator
+    vec4 acc= (totalForce / density[index]);
+
+    vec4 oldPosition = position[index];
+    /*
+    if(oldPosition.y < (-1.9)){
+        velocity[index].y=0;        
+        acc.y=0;
+
+    }
+
+    if(oldPosition.x < (-2.07)){
+        velocity[index].x=0;        
+        acc.x=0;
+    }
+
+    if(oldPosition.x > (2.07)){
+        velocity[index].x=0;        
+        acc.x=0;
+    }
+
+    if(oldPosition.z < (-2.8)){
+        velocity[index].z=0;        
+        acc.z=0;
+    }
+
+    if(oldPosition.z > (2.8)){
+        velocity[index].z=0;        
+        acc.z=0;
+    }
+    */
+
+    vec4 vel = velocity[index]*0.99 + acc * TIMESTEP;
+    
+    
+    vec4 pos = oldPosition + vel * TIMESTEP;
+    /*
+    if(pos.y < (-1.9)){
+        pos.y=-1.85;
+    }
+
+    if(pos.x < (-2.07)){
+        pos.x=0;
+    }
+
+    if(pos.x > (2.07)){
+        pos.x=0;
+    }
+
+    if(pos.z < (-2.8)){
+        pos.z=0;
+    }
+
+    if(pos.z > (2.8)){
+        pos.z=0;
+    }
+    */
+    vec4 contactPoint= vec4(0);
+    vec4 unitSurfaceNormal= vec4(0);
+    vec4 retVolocity= vec4(0);
+    //usado para saber se entrou em colisão com a bola, para aumentar o RESTITUTION
+    int hitball=0;
+
+    //Ball
+    bool retcolision= detectCollisionBall(pos,vel,index,hitball, contactPoint, unitSurfaceNormal,retVolocity);
+
+    if(retcolision == false)
+        retcolision = detectCollisionV2(pos,vel,index,hitball, contactPoint, unitSurfaceNormal,retVolocity);
+
+
+    position[index]=contactPoint;
+    velocity[index]=retVolocity;
+}
