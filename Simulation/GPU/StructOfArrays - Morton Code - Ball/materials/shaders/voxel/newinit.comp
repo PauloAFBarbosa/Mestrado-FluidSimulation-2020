@@ -13,8 +13,8 @@ layout(std430, binding = 1) buffer Position
     vec4 ParticlePos[];
 };
 
-layout(r16f,binding = 3) uniform image3D voxelRep;
-layout(r16f,binding = 2) uniform image3D voxelRepAux;
+layout(rg16f,binding = 3) uniform image3D voxelRep;
+layout(rg16f,binding = 2) uniform image3D voxelRepAux;
 
 
 uniform vec3 voxdimvec;
@@ -23,7 +23,7 @@ uniform vec3 simmax;
 uniform vec3 voxmin;
 uniform vec3 voxmax;
 
-void checkNeighboor(ivec3 pos, ivec3 dir,int radius,inout vec3 aux, inout float weight){
+void checkNeighboor(ivec3 pos, ivec3 dir,int radius,inout vec3 aux, inout vec2 weight){
 
     for(int i = -radius; i <= radius; i++){
             //if (i != 0.0){
@@ -34,17 +34,20 @@ void checkNeighboor(ivec3 pos, ivec3 dir,int radius,inout vec3 aux, inout float 
 			    //float sqrDist = dot(d, d);
 			    //float w = (-sqrDist / (0.5f * 0.5f));
                 float tol = 0.000001;
-
                 vec3 worldpos = (voxmax-voxmin)*(pos+(i*dir)/voxdimvec) + voxmin ;
                 
                 if (posijk.x-1 < voxdimvec.x && posijk.y-1 < voxdimvec.y && posijk.z-1 < voxdimvec.z
                  && posijk.x >=0 && posijk.y >=0 && posijk.z >=0
                 ){
 
-               
                     float w = 1.0;
-                    aux += val * w;
-                    weight += w;
+
+                        aux += val * w;
+                        weight += w;
+                        //aux.y += val.y * w;
+                        //weight.y += w;
+                    
+                
                 }
 
 
@@ -102,10 +105,8 @@ void main(){
         return ;
     int side = 3 ;
     vec3 aux = vec3(0.0);
-
-    
     // int d = 2;
-    float weight = 0;
+    vec2 weight = vec2(0);
     if(pingpangpong == 0)
          checkNeighboor(pos,ivec3(1,0,0), blurradius, aux, weight);
     else 
@@ -117,8 +118,9 @@ void main(){
     //checkNeighboor(pos,ivec3(1,0,1), d, aux, weight);
     //checkNeighboor(pos,ivec3(1,0,-1),d, aux, weight);
     //checkNeighboorBrute(pos, blurradius, aux, weight);
-    aux /= weight;
-    imageStore(voxelRep, pos, vec4(aux.xyz,1.0) );
+    aux.x /= weight.x;
+    aux.y /= weight.y;
+    imageStore(voxelRep, pos, vec4(aux.xy,1.0,1.0) );
   
 
 }

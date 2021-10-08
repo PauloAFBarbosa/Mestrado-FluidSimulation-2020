@@ -15,6 +15,17 @@ uniform float RESTDENSITY;
 uniform int HASHSIZE;
 uniform int PONTOS_LADO;
 uniform float H;
+uniform vec4 GRAVITY;
+uniform float BALLDENSITY;
+uniform float BALLR;
+uniform float TIMESTEP;
+
+uniform float XMAX;
+uniform float YMAX;
+uniform float ZMAX;
+uniform float XMIN;
+uniform float YMIN;
+uniform float ZMIN;
 
 layout(std430, binding = 0) buffer Position
 {
@@ -36,6 +47,21 @@ layout(std430, binding = 2) buffer Index
 layout(std430, binding = 3) buffer TempIndex
 {
     uint tempIndex[];
+};
+
+layout(std430, binding = 4) buffer BallPos
+{
+    vec4 ballPos[];
+};
+
+layout(std430, binding = 5) buffer BallForce
+{
+    ivec4 ballForce[];
+};
+
+layout(std430, binding = 6) buffer Debug
+{
+    vec4 debug[];
 };
 
 
@@ -84,7 +110,43 @@ void main()
         return;
 
     uint index = gl_GlobalInvocationID.x;
+    
+    if (index==1){
 
+        vec4 bf =ballForce[0] / 1000;
+
+        vec4 totalFoces = GRAVITY * (BALLDENSITY) ;
+        totalFoces.y += ballForce[0].y*0.02*30; //Cada particula tem 0.02 de massa
+        totalFoces.x += ballForce[0].x /(ballForce[0].y/2); //Divide por .y para fazer a media. Pois no X tem a soma das velocidades do X, e no y tem o numero de particulas
+        totalFoces.z += ballForce[0].z /(ballForce[0].y/2); //Este /2 aparece como um fator de escala para por o movimento da bola mais relevante
+
+        vec4 acc = totalFoces/BALLDENSITY;
+        debug[0]=vec4(ballForce[0].x/ballForce[0].y,ballForce[0].y,ballForce[0].z/ballForce[0].y,ballForce[0].y*0.02*30);
+        debug[1]=vec4(totalFoces);
+        debug[2]=vec4(GRAVITY * (BALLDENSITY));
+        debug[3]=vec4(acc);
+
+        ballPos[0] += acc * TIMESTEP;
+
+        ballForce[0] = ivec4(0);
+
+        //manter dentro da caixa
+        if (ballPos[0].y-BALLR < YMIN)
+            ballPos[0].y=YMIN+BALLR;
+
+        if (ballPos[0].x-BALLR < XMIN)
+            ballPos[0].x=XMIN+BALLR;
+
+        if (ballPos[0].z -BALLR < ZMIN)
+            ballPos[0].z=ZMIN+BALLR;
+
+        if (ballPos[0].x+BALLR > XMAX)
+            ballPos[0].x=XMAX-BALLR;
+
+        if (ballPos[0].z+BALLR > ZMAX)
+            ballPos[0].z=ZMAX-BALLR;
+    }
+    
     uint offsetx = 47;
     uint offsety = 43;
     uint offsetz = 63;

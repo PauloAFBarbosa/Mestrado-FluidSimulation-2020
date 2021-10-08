@@ -13,7 +13,7 @@ def buildVoxelProj():
 	print('Reading Voxel Proj')
 	doc = getFileString('templates/voxelproj.xml')
 
-	numParticles = 1000000
+	numParticles = 1728000
 	voxeldims    = (290,268,386)
 	#voxeldims    = (0.7*290,0.7*268,0.7*386)
 	voxeldims    = (290*1.5,268*1.5,386*1.5)
@@ -43,7 +43,7 @@ def buildOldProj():
 	doc = getFileString('templates/oldRender.xml')
 
 
-	numParticles = 1000000
+	numParticles = 1728000
 	voxeldims    = (290,268,386)
 	
 	variables =  {

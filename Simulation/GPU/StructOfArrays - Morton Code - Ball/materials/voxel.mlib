@@ -6,19 +6,19 @@
             <WIDTH  value="VOX_SIDE_X"/>
             <HEIGHT value="VOX_SIDE_Y"/>
             <DEPTH  value="VOX_SIDE_Z"/>
-            <INTERNAL_FORMAT value="R16F"/>
+            <INTERNAL_FORMAT value="RG16F"/>
             
         </texture>
         <texture name="voxelRepAux">
             <WIDTH  value="VOX_SIDE_X"/>
             <HEIGHT value="VOX_SIDE_Y"/>
             <DEPTH  value="VOX_SIDE_Z"/>
-            <INTERNAL_FORMAT value="R16F"/>
-            
+            <INTERNAL_FORMAT value="RG16F"/>   
         </texture>
 
-        <texture name="ground" filename="textures/brick.png"/>
-        <texture name="height" filename="textures/height.png">
+        <texture name="ground" filename="textures/sand.jpg"/>
+        <texture name="foam" filename="textures/trfoam2.png"/>
+        <texture name="height" filename="textures/river.jpg">
             <MIPMAP value="TRUE"/>
         </texture>
         
@@ -32,7 +32,7 @@
         />
          
 
-        <cubeMap name="skybox2" 
+        <cubeMap name="skybox3" 
             fileNegX="TextureCubeMaps/Ulmer/nx.png"
             fileNegZ="TextureCubeMaps/Ulmer/nz.png"	
             filePosY="TextureCubeMaps/Ulmer/ny.png"
@@ -56,8 +56,14 @@
         />
         <shader name="quad"
             vs="shaders/voxel/quad.vert"
-            ps="shaders/voxel/quad.frag"
-        />
+            
+        >
+            <ps>
+                <file name="shaders/header460.glsl"/>
+                <file name="shaders/collisionSDF.glsl"/>
+                <file name="shaders/voxel/quad.frag"/>
+            </ps>
+        </shader>
     </shaders>
 
     <buffers>
@@ -82,6 +88,7 @@
                     <valueof uniform="particleradius" 		type="RENDERER" 		context="CURRENT" 		component="particleradius" />
                     <valueof uniform="voxelRep" 	        type="IMAGE_TEXTURE" 	context="CURRENT" 		component="UNIT"    id="3"/>
                     <valueof uniform="voxelRepAux" 	        type="IMAGE_TEXTURE" 	context="CURRENT" 		component="UNIT"    id="2"/>
+                    <valueof uniform="foamspeed" 		    type="RENDERER" 		context="CURRENT" 		component="foamspeed" />
                 </values>
             </shader>
             <imageTextures>
@@ -104,7 +111,7 @@
 				</buffer>
                 <buffer name="simulationLib::Velocity" >
 					<TYPE value="SHADER_STORAGE" />
-					<BINDING_POINT value="2" />
+					<BINDING_POINT value="4" />
 				</buffer>
             </buffers>
         </material>
@@ -225,6 +232,8 @@
         <material name="quad">
             <shader name="quad">
                 <values>
+                    <valueof uniform="BALLR"           type="RENDERER"     context="CURRENT"       component="BALLR" />
+
                     <valueof uniform="m_view_inv" 		type="CAMERA" 		context="CURRENT" 		component="VIEW_INVERSE_MATRIX" />
                     <valueof uniform="m_proj_inv" 		type="CAMERA" 		context="CURRENT" 		component="PROJECTION_INVERSE_MATRIX" />
                     <valueof uniform="cam_pos" 		    type="CAMERA" 		context="CURRENT" 		component="POSITION" />    
@@ -245,6 +254,7 @@
 
 					<valueof uniform="lightDir"		type="LIGHT" 			context="Sun" 			component="DIRECTION" />
 					<valueof uniform="view"			type="CAMERA"			context="CURRENT"	component="VIEW" />
+                    
 					<valueof uniform="right"		type="CAMERA"			context="CURRENT"	component="NORMALIZED_RIGHT" />
 					<valueof uniform="up"			type="CAMERA"			context="CURRENT"	component="NORMALIZED_UP" />
 					<valueof uniform="position"		type="CAMERA"			context="CURRENT"	component="POSITION" />
@@ -254,14 +264,23 @@
 					<valueof uniform="m_pv" 		type="RENDERER" 		context="CURRENT" 		component="PROJECTION_VIEW" />
 					<valueof uniform="fov"			type="CAMERA"			context="CURRENT"	component="FOV" />
 					<valueof uniform="windowSize"	type="VIEWPORT"			context="CURRENT"	component="SIZE" />
-					
+					<valueof uniform="foamThreshold" 		type="RENDERER" 		context="CURRENT" 		component="foamThreshold" />
 					<valueof uniform="eta" 	    			type="RENDERER" 		context="CURRENT" 		component="ETA" />
+
+                    <!-- Collision Render options-->
+                    <valueof uniform="Render" 		            type="RENDERER" 		context="CURRENT" 		component="Render" />
+
+                    <valueof uniform="HeightMultiplier" 		type="RENDERER" 		context="CURRENT" 		component="HeightMultiplier" />
+                    <valueof uniform="AUXVEC1" 		            type="RENDERER" 		context="CURRENT" 		component="AUXVEC1" />
+                    <valueof uniform="AUXVEC2" 		            type="RENDERER" 		context="CURRENT" 		component="AUXVEC2" />
+                    <valueof uniform="AUXVEC3" 		            type="RENDERER" 		context="CURRENT" 		component="AUXVEC3" />
 
                     <!-- TEXTURE-->
                     <valueof uniform="voxelRep"		type="TEXTURE_BINDING" 	context="CURRENT" 		component="UNIT" id="0" />      
 					<valueof uniform="skybox"		type="TEXTURE_BINDING" 	context="CURRENT" 		component="UNIT" id="1" />
                     <valueof uniform="ground" 		type="TEXTURE_BINDING" 	context="CURRENT" 		component="UNIT" id="2"/>
                     <valueof uniform="height" 		type="TEXTURE_BINDING" 	context="CURRENT" 		component="UNIT" id="3"/>
+                    <valueof uniform="foam" 		type="TEXTURE_BINDING" 	context="CURRENT" 		component="UNIT" id="4"/>
                 
 					<valueof uniform="SkyboxType" 		    type="RENDERER" 		context="CURRENT" 		component="SkyboxType" />
                     <valueof uniform="DebugParticles" 		type="RENDERER" 		context="CURRENT" 		component="DebugParticles" />
@@ -271,6 +290,7 @@
                     <valueof uniform="Particle_Thickness" 	type="RENDERER" 		context="CURRENT" 		component="Particle_Thickness" />
                     <valueof uniform="Particle_Color" 		type="RENDERER" 		context="CURRENT" 		component="Particle_Color" />
                     <valueof uniform="Thin_Color" 		    type="RENDERER" 		context="CURRENT" 		component="Thin_Color" />
+                    <valueof uniform="foamcolor" 		    type="RENDERER" 		context="CURRENT" 		component="foamcolor" />
                     <valueof uniform="shlickpower" 		    type="RENDERER" 		context="CURRENT" 		component="shlickpower" />
                     <valueof uniform="specular_power" 		type="RENDERER" 		context="CURRENT" 		component="specular_power" />
                     <valueof uniform="stepmultiplier" 		type="RENDERER" 		context="CURRENT" 		component="stepmultiplier" />
@@ -280,10 +300,14 @@
                 <texture name="voxelRep" UNIT="0"/>
 				<texture name="skybox"  UNIT="1"/>
                 <texture name="ground" UNIT="2"/>
-                <texture name="height" UNIT="3"/>
-                
             </textures>
-           
+
+            <buffers>
+                <buffer name="simulationLib::BallPos" >
+                    <TYPE value="SHADER_STORAGE" />
+                    <BINDING_POINT value="0" />
+                </buffer>
+            </buffers>
         </material>
     </materials>
 </materialLib>

@@ -1,33 +1,13 @@
+#version 460
+#define GLSLIFY 1
 
-#pragma nauinclude ../collision.glsl
-
-#ifndef SDF
-
-float mapSDF(inout vec3 pos){
-    return 100.0;
-}
-float mapBoder(inout vec3 pos){
-    return 100.0;
-}
-
-
-vec3 calcNormal( in vec3 pos )
-{
-    return vec3(1,0,0);
-}
-vec3 calcNormalBorder( in vec3 pos )
-{
-    return vec3(1,0,0);
-}
-
-#endif
+#pragma glslify: import ../collisionSDF.glsl
 
 const vec3 inf = vec3(1e20, 1e20, 1e20);
 
 #define LIGHTINGFRONT 1
 #define FRONTANDBACK  2
 #define THICKNESS     3
-
 
 uniform float       fov;
 uniform float       Particle_Thickness;
@@ -106,14 +86,6 @@ vec4 getNormal(vec3 index, float off){
     return vec4(normalize(normal),0); 
 }
 
-
-
-
-
-
-
-
-
 vec3 rayDir()
 {
     float aspectRatio = windowSize.x / windowSize.y;
@@ -123,7 +95,7 @@ vec3 rayDir()
 
     //vec3 right  = normalize(cross(view, vec3(0.0, 1.0, 0.0)));
     //vec3 up     = normalize(cross(right, view));
-    vec3 rayDir = normalize(view) + (right * height * aspectRatio * screenCoords.x) + (up * height * screenCoords.y);
+    vec3 rayDir = view + (right * height * aspectRatio * screenCoords.x) + (up * height * screenCoords.y);
     //rayDir = vec3(0, 0, -1) + (vec3(1, 0, 0) * height * aspectRatio * screenCoords.x) + (vec3(0, 1, 0) * height * screenCoords.y);
     return normalize(rayDir);
 }
@@ -182,7 +154,9 @@ bool isInsideBoundingBox(vec3 pos)
 
 uniform float HeightMultiplier;
 uniform int   Render;
-
+uniform vec4  AUXVEC1;
+uniform vec4  AUXVEC2;
+uniform vec4  AUXVEC3;
 
 vec4 getSkybox(vec3 raypos,vec3 rayDir){
 
@@ -200,14 +174,13 @@ vec4 getSkybox(vec3 raypos,vec3 rayDir){
 }
 
 float getheight(vec2 pos,vec2 rep){
-    float heightmult = HeightMultiplier;
+    float heightmult = HeightMultiplier+0.05;
     //float y = (pnoise(pos,rep));
     //y =  y* smoothstep(2.1,1.6,abs(pos.x))*smoothstep(2.9,2.0,abs(pos.y));
     return heightmult*
         texture(height,clamp(((pos.xy-voxmin.xz)/(voxmax.xz-voxmin.xz)).xy,vec2(0.0),vec2(1.0))).x
         ;//*smoothstep(0,1 ,abs(y) );
 }
-
 
     
 
@@ -230,7 +203,7 @@ bool colisionCheck( vec3 current,vec3 currentStep,inout vec3 color)
     }
 
     if ( ( Render == 0 || Render ==2 ) && mapSDF(next)<-0.0000){
-        color = (0.5+0.5*dot(-calcNormal(current),lightDir.xyz))*vec3(0.9,0.5,0.5);
+        color = (0.5+0.5*dot(-calcNormal(current),lightDir.xyz))*vec3(0.0,0.5,0.5);
         return true;
     }
 
@@ -251,7 +224,6 @@ bool colisionCheck( vec3 current,vec3 currentStep,inout vec3 color)
     return false;
 }
 
-
 vec3 worldpos2clip(vec3 current){
     current.z -=2.9;
     vec4 clip_space_pos = ((m_pv*vec4(current.xyz,1)));
@@ -259,8 +231,6 @@ vec3 worldpos2clip(vec3 current){
     clip_space_pos.z  = (clip_space_pos.z +1.0)/2.0;
     return vec3(clip_space_pos.xyz);
 }
-
-
 
 vec4 rayMarchTranslucent(vec3 rayPos, vec3 rayDir, int numRefracs)
 {
@@ -363,7 +333,6 @@ vec4 rayMarchTranslucent(vec3 rayPos, vec3 rayDir, int numRefracs)
                 }
             }
 
-
         }
         
 
@@ -391,7 +360,6 @@ vec4 rayMarchTranslucent(vec3 rayPos, vec3 rayDir, int numRefracs)
             }
             shlick = clamp(shlick,0.0 , 1.0);    
             //if(shlick < 0.7){
-
 
             vec3 h = normalize(lightDir - rayDir);
 		    // compute the specular intensity
@@ -444,7 +412,6 @@ vec4 rayMarchTranslucent(vec3 rayPos, vec3 rayDir, int numRefracs)
     
     if ( length(accum) == 0 && !colided)
         return getSkybox(current, rayDir);
-
 
     //return Particle_Color*vec4(0.2+0.8*clamp(dot(getNormal(lastPos).xyz,lightDir), 0.0,1.0));
     if (DebugParticles == THICKNESS)
@@ -597,7 +564,6 @@ vec4 rayMarch(vec3 rayPos, vec3 rayDir)
                 }
             }
 
-
         }
         
 
@@ -625,7 +591,6 @@ vec4 rayMarch(vec3 rayPos, vec3 rayDir)
             }
             shlick = clamp(shlick,0.0 , 1.0);    
             //if(shlick < 0.7){
-
 
             vec3 h = normalize(lightDir - rayDir);
 		    // compute the specular intensity
@@ -685,7 +650,6 @@ vec4 rayMarch(vec3 rayPos, vec3 rayDir)
     if ( length(accum) == 0 && !colided)
         return getSkybox(current, rayDir);
 
-
     //return Particle_Color*vec4(0.2+0.8*clamp(dot(getNormal(lastPos).xyz,lightDir), 0.0,1.0));
     if (DebugParticles == THICKNESS)
         return vec4(1-vec4(accum,0.0) );
@@ -733,7 +697,6 @@ vec4 rayMarch(vec3 rayPos, vec3 rayDir)
     return cout;
     
 }
-
 
 void main()
 {

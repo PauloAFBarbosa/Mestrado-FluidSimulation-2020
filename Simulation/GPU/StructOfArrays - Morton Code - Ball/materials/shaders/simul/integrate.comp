@@ -31,6 +31,8 @@ layout (local_size_x = WORK_GROUP_SIZE) in;
 #define WALL_SIZEX 0.5
 #define WALL_SIZEZ 0.5
 
+uniform int FLOWX;
+
 uniform int Number_Particles;
 uniform int Pause;
 uniform float WALL_DAMPING;
@@ -105,9 +107,14 @@ layout(std430, binding = 8) buffer Debug
     vec4 debug[];
 };
 
-layout(std430, binding = 9) buffer BallInfo
+layout(std430, binding = 9) buffer BallForce
 {
-    vec4 ballInfo[];
+    ivec4 ballForce[];
+};
+
+layout(std430, binding = 10) buffer BallPos
+{
+    vec4 ballPos[];
 };
 
 
@@ -121,52 +128,11 @@ bool detectCollisionV2(in vec4 pos,in vec4 vel,in uint index,out int hitBall, ou
     float newy = YMIN + (temp * DECLIVE);
     if (pos.x <= XMAX && pos.x >= XMIN && pos.y <= YMAX && pos.y >= newy && pos.z <= ZMAX && pos.z >= ZMIN){
         
-        //Colission with the ball
-        float dist=length(Ball-pos);
         
-        if(dist<BallSize){
-            vec4 pointer=normalize(pos-Ball);
-            contactPoint = Ball + pointer*BallSize;
-            unitSurfaceNormal=pointer;
-            //Como o contact point agora pode estar fora no volume tenho de verificar isso
-
-            if (contactPoint.x < XMIN) {
-                    contactPoint.x = XMIN;
-            }
-            else if (contactPoint.x > XMAX) {
-                    contactPoint.x = XMAX;
-            }
-            if (contactPoint.y < newy) {
-                    contactPoint.y =newy;
-                }
-                else if (contactPoint.y > YMAX) {
-                    contactPoint.y =YMAX;
-                }
-                
-            
-                if (contactPoint.z < ZMIN) {
-                    contactPoint.z =ZMIN;                    
-                }
-                else if (contactPoint.z > ZMAX) {
-                    contactPoint.z =ZMAX;                       
-                }
-
-            float penetrationDepth = length(pos - contactPoint);
-        if (COLLISIONTYPE == 0){
-            retVelocity= vel-(2) * dot(unitSurfaceNormal, (vel))*unitSurfaceNormal;
-            retVelocity *=0.5;
-        }
-        else
-            retVelocity= vel -  (1+RESTITUTION *(penetrationDepth/(TIMESTEP*length(vel)))) * dot(unitSurfaceNormal, vel)*unitSurfaceNormal;
-            hitBall=1;
-            return true;
-        }
-        else{
             contactPoint=pos;
             retVelocity=vel;
             hitBall=0;
             return false;
-        }
     }
 
 
@@ -177,6 +143,11 @@ bool detectCollisionV2(in vec4 pos,in vec4 vel,in uint index,out int hitBall, ou
     int zx =0;
     retVelocity=vel;
     if (pos.x < XMIN) {
+        if(FLOWX ==-1){
+            contactPoint.x = XMAX;
+            retVelocity=vel;
+            return false;
+        }
         zx=1;
             contactPoint.x = XMIN;
             
@@ -187,7 +158,12 @@ bool detectCollisionV2(in vec4 pos,in vec4 vel,in uint index,out int hitBall, ou
             
     }
     else if (pos.x > XMAX) {
-        zx=1;
+        if(FLOWX ==1){
+            contactPoint.x = XMIN;
+            retVelocity=vel;
+            return false;
+        }
+            zx=1;
             contactPoint.x = XMAX;
             
             unitSurfaceNormal = normalize(unitSurfaceNormal+vec4(-1,0,0,0));
@@ -250,7 +226,7 @@ bool detectCollisionV2(in vec4 pos,in vec4 vel,in uint index,out int hitBall, ou
 
 bool detectCollisionBall(in vec4 pos,in vec4 vel,in uint index,out int hitBall, out vec4 contactPoint, out vec4 unitSurfaceNormal,out vec4 retVelocity) {
     
-    vec4 ballPosition = ballInfo[0];
+    vec4 ballPosition = ballPos[0];
 
     float d= length(pos-ballPosition);
 
@@ -278,7 +254,18 @@ bool detectCollisionBall(in vec4 pos,in vec4 vel,in uint index,out int hitBall, 
     
     //Aqui vou somar a força, mas tenho que garantir que é atomico
     //ver https://www.khronos.org/opengl/wiki/Shader_Storage_Buffer_Object     Memory qualifiers
-    ballInfo[1]= vec4(ballInfo[1].x+1,0,0,0);
+    //Faço -normal para o resultado dar entre 1 e 0
+    
+    /*float dot = dot(-unitSurfaceNormal,normalize(vel));
+
+    //Quero valores entre 1 e 0
+    if (dot > 0){
+        vec4 scaledForce = vel * dot;
+
+        atomicAdd(ballForce[0].x,int(scaledForce.x*1000));
+        atomicAdd(ballForce[0].z,int(scaledForce.z*1000));
+    }
+    */
 
     return true;
 }
@@ -498,6 +485,19 @@ void main()
     if(retcolision == false)
         retcolision = detectCollisionV2(pos,vel,index,hitball, contactPoint, unitSurfaceNormal,retVolocity);
 
+
+    //Vai ver se a particula esta perto da bola ou nao
+    vec4 ballPosition = ballPos[0];
+    float d= length(pos-ballPosition);
+    if (d < BALLR+0.1 ){
+        //Todas as particulas que estão a 0.1 da bola
+        //Vai buscar as velocidades das particulas e soma tudo (x e z)
+        atomicAdd(ballForce[0].w,int(1));
+        atomicAdd(ballForce[0].y,int(1));
+
+        atomicAdd(ballForce[0].x,int(vel.x*1000));
+        atomicAdd(ballForce[0].z,int(vel.z*1000));
+    }
 
     position[index]=contactPoint;
     velocity[index]=retVolocity;

@@ -405,7 +405,7 @@ void main()
             
             for (int i = from; i < to; i++)
             {
-                total++;
+                //total++;
 
                 vec4 arg;
                 arg = p - position[i];
@@ -443,8 +443,8 @@ void main()
     pressure[index] = STIFF * ((sum*MASS*SIMULATIONSCALE) - RESTDENSITY);
     
 
-    if (debug[index].w <500)
-        debug[index] = vec4(total+debug[index].x,vizinhos+debug[index].y,0,debug[index].w+1.0);
+    //if (debug[index].w <500)
+    //    debug[index] = vec4(total+debug[index].x,vizinhos+debug[index].y,0,debug[index].w+1.0);
     //if(debug[index].y <500){
     //    debug[index] = vec4(debug[index].x+(distance/c),debug[index].y+1,debug[index].z+tras,debug[index].w); 
     //}

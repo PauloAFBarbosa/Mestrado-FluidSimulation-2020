@@ -17,8 +17,8 @@ layout(std430, binding = 4) buffer Velocity
     vec4 Vel[];
 };
 
-layout(rg16f,binding = 3) uniform image3D voxelRep;
-layout(rg16f,binding = 2) uniform image3D voxelRepAux;
+layout(rg16ui,binding = 3) uniform uimage3D voxelRep;
+layout(rg16ui,binding = 2) uniform uimage3D voxelRepAux;
 
 uniform int voxDim;
 
@@ -132,8 +132,6 @@ uniform vec3 voxmin;
 uniform vec3 voxmax;
 
 uniform float particleradius;
-uniform float foamspeed;
-
 
 void main(){    
     vec3 fpos = ParticlePos[gl_GlobalInvocationID.x].xyz; 
@@ -147,21 +145,20 @@ void main(){
     float particlerad = particleradius;
     ivec3 side = ivec3(ceil(voxdimvec*(particlerad/(voxmax-voxmin))));
     //ivec3 side = ivec3(2);
-    float f = (smoothstep(0.0, foamspeed,length(Vel[gl_GlobalInvocationID.x])));
-
     for(int i = -side.x; i <= side.x; i++){
        for(int j = -side.y; j <= side.y; j++){
             for(int k = -side.z; k <= side.z; k++){
 
                 vec3 worldpos = (voxmax-voxmin)*((pos+ivec3(i,j,k))/voxdimvec) + voxmin ;
+                
                 float dit = distance(worldpos,worldposcenter);
                 if(dit <= particlerad){
-                        imageStore(voxelRepAux, pos+ivec3(i,j,k), vec4((1.0),f,1.0,1.0) );
-                        
-                        //if( length(Vel[gl_GlobalInvocationID.x])+ > 2.0)
-                        //else
-                        //    imageStore(voxelRepAux, pos+ivec3(i,j,k), vec4(1.0,0.0,1.0,1.0) );
+                        if( length(Vel[gl_GlobalInvocationID.x])+0.5*(pnoise(worldpos.xy/20.0,vec2(10.0))) > 2.0)
+                            imageAtomicAdd(voxelRepAux, pos+ivec3(i,j,k), imageLoad(voxelRepAux, pos+ivec3(i,j,k))+vec4((particlerad-dit)/(particlerad),0.1,1.0,1.0) );
+                        else
+                            imageAtomicAdd(voxelRepAux, pos+ivec3(i,j,k), imageLoad(voxelRepAux, pos+ivec3(i,j,k))+vec4((particlerad-dit)/(particlerad),0.0,1.0,1.0) );
                 }
+                memoryBarrier();
             }
         } 
     }

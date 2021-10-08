@@ -30,11 +30,19 @@
 			<CLEAR value="NEVER" />
 		</buffer>
 
-		<buffer name="BallInfo">
+		<buffer name="BallPos">
 			<!-- [0] -Position ... [1]- Force -->
-			<DIM x="2" y="1" z="1" />
+			<DIM x="1" y="1" z="1" />
 			<structure>
 				<field value="VEC4" />
+			</structure>
+			<CLEAR value="NEVER" />
+		</buffer>
+		<buffer name="BallForce">
+			<!-- [0] -Position ... [1]- Force -->
+			<DIM x="1" y="1" z="1" />
+			<structure>
+				<field value="IVEC4" />
 			</structure>
 			<CLEAR value="NEVER" />
 		</buffer>
@@ -228,7 +236,7 @@
 						<BINDING_POINT value="4" />
 					</buffer>
 
-					<buffer name="BallInfo" >
+					<buffer name="BallPos" >
 						<TYPE value="SHADER_STORAGE" />
 						<BINDING_POINT value="5" />
 					</buffer>
@@ -247,7 +255,16 @@
 					<valueof uniform="PONTOS_LADO" 		type="RENDERER" 		context="CURRENT" 		component="PONTOS_LADO" />
 					<valueof uniform="H" 		type="RENDERER" 		context="CURRENT" 		component="H" />
 					<valueof uniform="Pause" 		type="RENDERER" 		context="CURRENT" 		component="Pause" />
-
+					<valueof uniform="GRAVITY" 		type="RENDERER" 		context="CURRENT" 		component="GRAVITY" />
+					<valueof uniform="BALLDENSITY" 		type="RENDERER" 		context="CURRENT" 		component="BALLDENSITY" />
+					<valueof uniform="BALLR" 		type="RENDERER" 		context="CURRENT" 		component="BALLR" />
+					<valueof uniform="TIMESTEP" 		type="RENDERER" 		context="CURRENT" 		component="TIMESTEP" />
+					<valueof uniform="XMAX" 		type="RENDERER" 		context="CURRENT" 		component="XMAX" />
+					<valueof uniform="YMAX" 		type="RENDERER" 		context="CURRENT" 		component="YMAX" />
+					<valueof uniform="ZMAX" 		type="RENDERER" 		context="CURRENT" 		component="ZMAX" />
+					<valueof uniform="XMIN" 		type="RENDERER" 		context="CURRENT" 		component="XMIN" />
+					<valueof uniform="YMIN" 		type="RENDERER" 		context="CURRENT" 		component="YMIN" />
+					<valueof uniform="ZMIN" 		type="RENDERER" 		context="CURRENT" 		component="ZMIN" />
 				</values>
 		    </shader>
 			<buffers>
@@ -269,7 +286,18 @@
 						<TYPE value="SHADER_STORAGE" />
 						<BINDING_POINT value="3" />
 					</buffer>
-					
+					<buffer name="BallPos" >
+						<TYPE value="SHADER_STORAGE" />
+						<BINDING_POINT value="4" />
+					</buffer>
+					<buffer name="BallForce" >
+						<TYPE value="SHADER_STORAGE" />
+						<BINDING_POINT value="5" />
+					</buffer>
+					<buffer name="Debug" >
+						<TYPE value="SHADER_STORAGE" />
+						<BINDING_POINT value="6" />
+					</buffer>
 								
 		        </buffers>
 		</material>
@@ -376,6 +404,7 @@
 					<valueof uniform="computeGravity" 		type="RENDERER" 		context="CURRENT" 		component="computeGravity" />
 					<valueof uniform="BALLDENSITY" 		type="RENDERER" 		context="CURRENT" 		component="BALLDENSITY" />
 					<valueof uniform="BALLR" 		type="RENDERER" 		context="CURRENT" 		component="BALLR" />
+					<valueof uniform="FLOWX" 		type="RENDERER" 		context="CURRENT" 		component="FLOWX" />
 				</values>
 		    </shader>
 			<buffers>
@@ -418,9 +447,13 @@
 						<TYPE value="SHADER_STORAGE" />
 						<BINDING_POINT value="8" />
 					</buffer>
-					<buffer name="BallInfo" >
+					<buffer name="BallForce" >
 						<TYPE value="SHADER_STORAGE" />
 						<BINDING_POINT value="9" />
+					</buffer>
+					<buffer name="BallPos" >
+						<TYPE value="SHADER_STORAGE" />
+						<BINDING_POINT value="10" />
 					</buffer>
 					
 			</buffers>

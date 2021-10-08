@@ -2,10 +2,10 @@
 <project name="SPH_Fluid_Sim" width = "1280" height = "720">
 	<assets>
 		<constants>
-			<constant name="NUMBER_OF_PARTICLES" value="1000000" />
-			<constant name="NUMBER_OF_VERTICES"  value="6000000" />
+			<constant name="NUMBER_OF_PARTICLES" value="1728000" />
+			<constant name="NUMBER_OF_VERTICES"  value="10368000" />
 			<!-- Lança com 625 workgroups. Cada workgroup vai ter 25 threads-->
-			<constant name="NUMBER_OF_WORK_GROUPS" value="31250" />
+			<constant name="NUMBER_OF_WORK_GROUPS" value="54000" />
 			<constant name="NUMBER_OF_WORK_GROUPS_DENSITY_PRESSURE" value="15625" />
 
 			<constant name="NUMBER_OF_WORK_GROUPS_DENSITY_PRESSURE" value="27000" />
@@ -74,11 +74,12 @@
 			<!-- LUA ATTRIBUTES -->
 				<attribute name="Blur_PingPong" 	data="INT" 		type="RENDERER" value="0"  />
 				<attribute name="Sim_Iters" 		data="INT" 		type="RENDERER" value="0"  />
-				<attribute name="Sim_MaxIters" 		data="INT" 		type="RENDERER" value="400"  />
+				<attribute name="Sim_MaxIters" 		data="INT" 		type="RENDERER" value="0"  />
                 <!-- Atributos Simulaçao -->
 				<attribute name="Pause"						data="INT" 	type="RENDERER" value="1" />
-				<attribute name="BALLDENSITY" 					data="FLOAT" type="RENDERER" value = "1000.0" />
-				<attribute name="BALLR" 					data="FLOAT" type="RENDERER" value = "0.5" />
+				<attribute name="BALLDENSITY" 					data="FLOAT" type="RENDERER" value = "500.0" />
+				<attribute name="BALLR" 					data="FLOAT" type="RENDERER" value = "0.25" />
+				<attribute name="FLOWX" 					data="INT" type="RENDERER" value = "0" />
 				<attribute name="computeGravity"						data="INT" 	type="RENDERER" value="0" />
 				<attribute name="External_Force" 			data="VEC3" 	type="RENDERER" x="0" y="0.0" z="0.0" />
 				<attribute name="Viscosity"					data="FLOAT" 	type="RENDERER" value="3000" />
@@ -106,12 +107,12 @@
 				<!--X pode ir de -2.17 até 2.17 -->
 				<!--Y pode ir de -2 até 2 -->
 				<!--Z pode ir de -2.9 até 2.9 -->
-				<attribute name="XMIN" 						data="FLOAT" 		type="RENDERER" value="-2.17"/>
-				<attribute name="XMAX" 						data="FLOAT" 		type="RENDERER" value="2.17"/>
+				<attribute name="XMIN" 						data="FLOAT" 		type="RENDERER" value="-2"/>
+				<attribute name="XMAX" 						data="FLOAT" 		type="RENDERER" value="2"/>
 				<attribute name="YMIN" 						data="FLOAT" 		type="RENDERER" value="-2.0"/>
 				<attribute name="YMAX" 						data="FLOAT" 		type="RENDERER" value="2.0"/>
-				<attribute name="ZMIN" 						data="FLOAT" 		type="RENDERER" value="-2.9"/>
-				<attribute name="ZMAX" 						data="FLOAT" 		type="RENDERER" value="2.9"/>
+				<attribute name="ZMIN" 						data="FLOAT" 		type="RENDERER" value="-2"/>
+				<attribute name="ZMAX" 						data="FLOAT" 		type="RENDERER" value="2"/>
 				
 				<attribute name="SAVEXMIN" 						data="FLOAT" 		type="RENDERER" value="-2.17"/>
 				<attribute name="SAVEZMIN" 						data="FLOAT" 		type="RENDERER" value="-2.9"/>
@@ -142,7 +143,7 @@
 		<cameras>
 			<camera name="MainCamera">
 				<viewport name="MainViewport" />
-				<POSITION x="-0.298" y="-0.873" z="0.274" />
+				<POSITION x="5" y="2" z="5" />
 				<NEAR 	value="0.02" />
 				<FAR 	value="100" /> 
 				<LOOK_AT_POINT x="0.154" y="-1.278" z="-0.521"/>
@@ -346,8 +347,9 @@
 		</window>
 		        <window label = "Simulation">
             <var label="Pause"                        type="RENDERER" context="CURRENT" component="Pause"   def="min=0 max=1" />
-            <var label="BALLDENSITY"                   type="RENDERER" context="CURRENT" component="BALLDENSITY" def="min=1 max=10000 step=100"/>
-            <var label="BALLR"                   type="RENDERER" context="CURRENT" component="BALLDENSITY" def="min=0.1 max=2 step=0.1"/>
+            <var label="BALLDENSITY"                   type="RENDERER" context="CURRENT" component="BALLDENSITY" def="min=1 max=2000 step=50"/>
+            <var label="BALLR"                   type="RENDERER" context="CURRENT" component="BALLR" def="min=0.1 max=2 step=0.05"/>
+            <var label="FLOWX"                        type="RENDERER" context="CURRENT" component="FLOWX"   def="min=-1 max=1" />
             
                   <var label="TIMESTEP"               type="RENDERER" context="CURRENT" component="TIMESTEP" def="min=0.001 step=0.001 max=0.05"/>
                   <var label="SURFACETENSION"   type="RENDERER" context="CURRENT" component="SURFACETENSION" def="min=0.0001 max=2 step=0.0001" />

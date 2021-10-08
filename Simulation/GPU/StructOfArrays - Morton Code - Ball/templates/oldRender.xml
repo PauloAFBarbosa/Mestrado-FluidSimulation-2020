@@ -74,7 +74,7 @@
 			<!-- LUA ATTRIBUTES -->
 				<attribute name="Blur_PingPong" 	data="INT" 		type="RENDERER" value="0"  />
 				<attribute name="Sim_Iters" 		data="INT" 		type="RENDERER" value="0"  />
-				<attribute name="Sim_MaxIters" 		data="INT" 		type="RENDERER" value="400"  />
+				<attribute name="Sim_MaxIters" 		data="INT" 		type="RENDERER" value="0"  />
                 $simattributes
             </attributes>
 
@@ -103,7 +103,7 @@
 		<cameras>
 			<camera name="MainCamera">
 				<viewport name="MainViewport" />
-				<POSITION x="-0.298" y="-0.873" z="0.274" />
+				<POSITION x="5" y="2" z="5" />
 				<NEAR 	value="0.02" />
 				<FAR 	value="100" /> 
 				<LOOK_AT_POINT x="0.154" y="-1.278" z="-0.521"/>

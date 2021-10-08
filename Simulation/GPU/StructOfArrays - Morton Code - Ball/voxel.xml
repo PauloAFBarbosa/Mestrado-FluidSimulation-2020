@@ -11,10 +11,10 @@
             <constant name="VOX_SIDE_GROUPS_X"  value="14" />
             <constant name="VOX_SIDE_GROUPS_Y"  value="13" />
 
-			<constant name="NUMBER_OF_PARTICLES"    value="1000000" />
-			<constant name="NUMBER_OF_VERTICES"     value="6000000" />
+			<constant name="NUMBER_OF_PARTICLES"    value="1728000" />
+			<constant name="NUMBER_OF_VERTICES"     value="10368000" />
 			<!-- tem wg com tamanho 32-->
-			<constant name="NUMBER_OF_WORK_GROUPS"  value="31250" />
+			<constant name="NUMBER_OF_WORK_GROUPS"  value="54000" />
 			
 			<!-- density pressure tem wg com tamanho 64-->
 			<!-- 64*NUMBER_OF_WORK_GROUPS_DENSITY_PRESSURE tem de dar igual ao nr de particulas-->
@@ -58,9 +58,10 @@
 			<attribute name="Number_Particles" 			data="INT" 		type="RENDERER" value="NUMBER_OF_PARTICLES"/>
 			<attribute name="Particle_Color" 			data="VEC4" 	type="RENDERER" x="0.0" y="0.7" z="0.9" w="1"/>
 			<attribute name="Thin_Color" 				data="VEC4" 	type="RENDERER" x="0.6" y="1.0" z="1.0" w="0.3"/>
-
+			<attribute name="foamcolor" 				data="VEC4" 	type="RENDERER" x="1.0" y="1.0" z="1.0" w="1.0"/>
+			
 			<attribute name="DebugParticles"			data="INT" 		type="RENDERER" value="0" />
-			<attribute name="Particle_Thickness"		data="FLOAT" 	type="RENDERER" value="0.8" />
+			<attribute name="Particle_Thickness"		data="FLOAT" 	type="RENDERER" value="0.35" />
 			<attribute name="Particle_Size"				data="VEC3" 	type="RENDERER" x="0.015" y="0.015" z="0.015" />
 
 			<attribute name="stepSize" 				data="FLOAT" 	type="RENDERER" value="0.0500"  />
@@ -86,11 +87,21 @@
 				<attribute name="blurradius" 		data="INT" 		type="RENDERER" value="1"  />
 			<!-- 					-->
 			
-			
+			<!--- foam attributes-->
+			<attribute name="foamspeed" data="FLOAT" type="RENDERER" value="2.5"  />
+			<attribute name="foamThreshold" data="FLOAT" type="RENDERER" value="0.75"  />
+
 			<attribute name="WAVE_CLEAR" data="INT" type="RENDERER" value="0"  />
 			<attribute name="WAVE_NUM_DIR" data="INT" type="RENDERER" value="0"  />
 			<attribute name="WAVE_PERIOD" 	data="FLOAT" type="RENDERER" value="40"  />
 			<attribute name="WAVE_STRENGTH" data="FLOAT" type="RENDERER" value="3"  />
+
+			<!-- Scene Rendering-->
+			<attribute name="HeightMultiplier"  data="FLOAT" 	type="RENDERER" value="1.0"  />
+			<attribute name="Render"  			data="INT" 		type="RENDERER" value="0"  />
+			<attribute name="AUXVEC1" 			data="VEC4" 	type="RENDERER" x="0.0" y="1.2" z="1.34" w="0.0" />
+			<attribute name="AUXVEC2" 			data="VEC4" 	type="RENDERER" x="1.55" y="0.5" z="1.550" w="0.0" />
+			<attribute name="AUXVEC3" 			data="VEC4" 	type="RENDERER" x="0.000" y="-1.0" z="1.55" w="0.0" />
 
 			<!-- LUA ATTRIBUTES -->
 				<attribute name="Blur_PingPong" 	data="INT" 		type="RENDERER" value="0"  />
@@ -101,8 +112,9 @@
 				-->
 			<!-- Atributos Simulaçao -->
 				<attribute name="Pause"						data="INT" 	type="RENDERER" value="1" />
-				<attribute name="BALLDENSITY" 					data="FLOAT" type="RENDERER" value = "1000.0" />
-				<attribute name="BALLR" 					data="FLOAT" type="RENDERER" value = "0.5" />
+				<attribute name="BALLDENSITY" 					data="FLOAT" type="RENDERER" value = "500.0" />
+				<attribute name="BALLR" 					data="FLOAT" type="RENDERER" value = "0.25" />
+				<attribute name="FLOWX" 					data="INT" type="RENDERER" value = "0" />
 				<attribute name="computeGravity"						data="INT" 	type="RENDERER" value="0" />
 				<attribute name="External_Force" 			data="VEC3" 	type="RENDERER" x="0" y="0.0" z="0.0" />
 				<attribute name="Viscosity"					data="FLOAT" 	type="RENDERER" value="3000" />
@@ -130,12 +142,12 @@
 				<!--X pode ir de -2.17 até 2.17 -->
 				<!--Y pode ir de -2 até 2 -->
 				<!--Z pode ir de -2.9 até 2.9 -->
-				<attribute name="XMIN" 						data="FLOAT" 		type="RENDERER" value="-2.17"/>
-				<attribute name="XMAX" 						data="FLOAT" 		type="RENDERER" value="2.17"/>
+				<attribute name="XMIN" 						data="FLOAT" 		type="RENDERER" value="-2"/>
+				<attribute name="XMAX" 						data="FLOAT" 		type="RENDERER" value="2"/>
 				<attribute name="YMIN" 						data="FLOAT" 		type="RENDERER" value="-2.0"/>
 				<attribute name="YMAX" 						data="FLOAT" 		type="RENDERER" value="2.0"/>
-				<attribute name="ZMIN" 						data="FLOAT" 		type="RENDERER" value="-2.9"/>
-				<attribute name="ZMAX" 						data="FLOAT" 		type="RENDERER" value="2.9"/>
+				<attribute name="ZMIN" 						data="FLOAT" 		type="RENDERER" value="-2"/>
+				<attribute name="ZMAX" 						data="FLOAT" 		type="RENDERER" value="2"/>
 				
 				<attribute name="SAVEXMIN" 						data="FLOAT" 		type="RENDERER" value="-2.17"/>
 				<attribute name="SAVEZMIN" 						data="FLOAT" 		type="RENDERER" value="-2.9"/>
@@ -158,7 +170,7 @@
         <cameras>
             <camera name="MainCamera">
 				<viewport name="MainViewport" />
-				<POSITION x="2" y="2" z="2" />
+				<POSITION x="2.00" y="2.00" z="2.00" />
 				<NEAR 	value="0.02" />
 				<FAR 	value="100" /> 
 				<LOOK_AT_POINT x="0.0" y="0.0" z="0.0"/>
@@ -216,12 +228,13 @@
             <pass class="compute" name="UpdateIndex">
                 <material name="UpdateIndex" fromLibrary="simulationLib" dimX="NUMBER_OF_WORK_GROUPS" dimY="1" dimZ="1"/>
             </pass>
+
+			
 		</pipeline>
         <pipeline name="pipvox">
             
             
-
-            <pass class="compute" name="vox_init">
+			<pass class="compute" name="vox_init">
 				<preScript file="scripts/waves.lua" script="waves"/>
 				<!--mode value="RUN_ONCE"/-->
                 <material name="init" fromLibrary="voxelLib" dimX="NUMBER_OF_WORK_GROUPS" dimY="1" dimZ="1"/>
@@ -238,6 +251,8 @@
 				<!--mode value="RUN_ONCE"/-->
                 <material name="newinitpong" fromLibrary="voxelLib" dimX="VOX_SIDE_GROUPS_X" dimY="VOX_SIDE_GROUPS_Y" dimZ="VOX_SIDE_Z"/>
             </pass>
+            
+			
             
             <pass   class="default"     name="Cube">
 				
@@ -268,6 +283,7 @@
 		<window label = "Color/Thickness">
 			<var label="Color"   			type="RENDERER" context="CURRENT" component="Particle_Color" 	mode="COLOR"/>
             <var label="Thin Color"   		type="RENDERER" context="CURRENT" component="Thin_Color" 		mode="COLOR"/>
+            <var label="Foam Color"   		type="RENDERER" context="CURRENT" component="foamcolor" 		mode="COLOR"/>
             <var label="Thickness"			type="RENDERER" context="CURRENT" component="Particle_Thickness"	def="min=0.0 max=5.0" />
             
 			<var label="Shlick power" 		type="RENDERER" context="CURRENT" component="shlickpower" 		def="min=0 max=10"/>
@@ -282,10 +298,22 @@
 			
 			
 		</window>
+
+		<window label="Scene Control">
+
+			<var label="HeightMultiplier" 	type="RENDERER" context="CURRENT" component="HeightMultiplier" 	/>
+			<var label="Render" 			type="RENDERER" context="CURRENT" component="Render" 	strings="All,Heightmap,SDFs,None"/>
+			<var label="AUXVEC1" 			type="RENDERER" context="CURRENT" component="AUXVEC1" 	def="min=-3 max=3"/>
+			<var label="AUXVEC2" 			type="RENDERER" context="CURRENT" component="AUXVEC2" 	def="min=-3 max=3"/>
+			<var label="AUXVEC3" 			type="RENDERER" context="CURRENT" component="AUXVEC3" 	def="min=0.0 max=0.60"/>
+
+		</window>
 		
 		<window label = "Voxel Grid Settings">
 			<var label="Particle Radius"		type="RENDERER" context="CURRENT" component="particleradius"  	def="min=0.005 max=0.05"/>
 			<var label="densityThreshold" 		type="RENDERER" context="CURRENT" component="densityThreshold" 	def="min=0 max=1"/>
+			<var label="foamThreshold" 			type="RENDERER" context="CURRENT" component="foamThreshold" 	def="min=0 max=1"/>
+			<var label="foamspeed" 				type="RENDERER" context="CURRENT" component="foamspeed" 	def="min=0 max=10" />
 			<var label="stepmultiplier" 		type="RENDERER" context="CURRENT" component="stepmultiplier" 	def="min=0 max=1"/>
 			<var label="Blur Radius" 			type="RENDERER" context="CURRENT" component="blurradius"  		def="min=0 max=10"	/>
 		</window>
@@ -303,8 +331,9 @@
 		
 		        <window label = "Simulation">
             <var label="Pause"                        type="RENDERER" context="CURRENT" component="Pause"   def="min=0 max=1" />
-            <var label="BALLDENSITY"                   type="RENDERER" context="CURRENT" component="BALLDENSITY" def="min=1 max=10000 step=100"/>
-            <var label="BALLR"                   type="RENDERER" context="CURRENT" component="BALLDENSITY" def="min=0.1 max=2 step=0.1"/>
+            <var label="BALLDENSITY"                   type="RENDERER" context="CURRENT" component="BALLDENSITY" def="min=1 max=2000 step=50"/>
+            <var label="BALLR"                   type="RENDERER" context="CURRENT" component="BALLR" def="min=0.1 max=2 step=0.05"/>
+            <var label="FLOWX"                        type="RENDERER" context="CURRENT" component="FLOWX"   def="min=-1 max=1" />
             
                   <var label="TIMESTEP"               type="RENDERER" context="CURRENT" component="TIMESTEP" def="min=0.001 step=0.001 max=0.05"/>
                   <var label="SURFACETENSION"   type="RENDERER" context="CURRENT" component="SURFACETENSION" def="min=0.0001 max=2 step=0.0001" />

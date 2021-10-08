@@ -1,7 +1,8 @@
 <!-- Atributos Simulaçao -->
 				<attribute name="Pause"						data="INT" 	type="RENDERER" value="1" />
-				<attribute name="BALLDENSITY" 					data="FLOAT" type="RENDERER" value = "1000.0" />
-				<attribute name="BALLR" 					data="FLOAT" type="RENDERER" value = "0.5" />
+				<attribute name="BALLDENSITY" 					data="FLOAT" type="RENDERER" value = "500.0" />
+				<attribute name="BALLR" 					data="FLOAT" type="RENDERER" value = "0.25" />
+				<attribute name="FLOWX" 					data="INT" type="RENDERER" value = "0" />
 				<attribute name="computeGravity"						data="INT" 	type="RENDERER" value="0" />
 				<attribute name="External_Force" 			data="VEC3" 	type="RENDERER" x="0" y="0.0" z="0.0" />
 				<attribute name="Viscosity"					data="FLOAT" 	type="RENDERER" value="3000" />
@@ -23,18 +24,18 @@
 				
 				<attribute name="COLLISIONTYPE" 					data="INT" type="RENDERER" value="0" />
 	
-				<attribute name="PONTOS_LADO" 				data="INT" 		type="RENDERER" value="100"/>
+				<attribute name="PONTOS_LADO" 				data="INT" 		type="RENDERER" value="120"/>
 				<attribute name="HASHSIZE" 					data="INT" 		type="RENDERER" value="HASH_SIZE"/>
 				<!--Usado para definir o volume onde vai ser feita a simulação-->
 				<!--X pode ir de -2.17 até 2.17 -->
 				<!--Y pode ir de -2 até 2 -->
 				<!--Z pode ir de -2.9 até 2.9 -->
-				<attribute name="XMIN" 						data="FLOAT" 		type="RENDERER" value="-2.17"/>
-				<attribute name="XMAX" 						data="FLOAT" 		type="RENDERER" value="2.17"/>
+				<attribute name="XMIN" 						data="FLOAT" 		type="RENDERER" value="-2"/>
+				<attribute name="XMAX" 						data="FLOAT" 		type="RENDERER" value="2"/>
 				<attribute name="YMIN" 						data="FLOAT" 		type="RENDERER" value="-2.0"/>
 				<attribute name="YMAX" 						data="FLOAT" 		type="RENDERER" value="2.0"/>
-				<attribute name="ZMIN" 						data="FLOAT" 		type="RENDERER" value="-2.9"/>
-				<attribute name="ZMAX" 						data="FLOAT" 		type="RENDERER" value="2.9"/>
+				<attribute name="ZMIN" 						data="FLOAT" 		type="RENDERER" value="-2"/>
+				<attribute name="ZMAX" 						data="FLOAT" 		type="RENDERER" value="2"/>
 				
 				<attribute name="SAVEXMIN" 						data="FLOAT" 		type="RENDERER" value="-2.17"/>
 				<attribute name="SAVEZMIN" 						data="FLOAT" 		type="RENDERER" value="-2.9"/>
