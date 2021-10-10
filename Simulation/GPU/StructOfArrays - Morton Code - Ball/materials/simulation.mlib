@@ -38,6 +38,14 @@
 			</structure>
 			<CLEAR value="NEVER" />
 		</buffer>
+		<buffer name="BallVel">
+			<!-- [0] -Position ... [1]- Force -->
+			<DIM x="1" y="1" z="1" />
+			<structure>
+				<field value="VEC4" />
+			</structure>
+			<CLEAR value="NEVER" />
+		</buffer>
 		<buffer name="BallForce">
 			<!-- [0] -Position ... [1]- Force -->
 			<DIM x="1" y="1" z="1" />
@@ -297,6 +305,10 @@
 					<buffer name="Debug" >
 						<TYPE value="SHADER_STORAGE" />
 						<BINDING_POINT value="6" />
+					</buffer>
+					<buffer name="BallVel" >
+						<TYPE value="SHADER_STORAGE" />
+						<BINDING_POINT value="7" />
 					</buffer>
 								
 		        </buffers>
