@@ -493,7 +493,7 @@ void main()
         //Todas as particulas que estão a 0.1 da bola
         //Vai buscar as velocidades das particulas e soma tudo (x e z)
         atomicAdd(ballForce[0].w,int(1));
-        atomicAdd(ballForce[0].y,int(1));
+        atomicAdd(ballForce[0].y,int(vel.y*1000));
 
         atomicAdd(ballForce[0].x,int(vel.x*1000));
         atomicAdd(ballForce[0].z,int(vel.z*1000));

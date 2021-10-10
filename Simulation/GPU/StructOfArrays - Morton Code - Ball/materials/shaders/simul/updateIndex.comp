@@ -120,15 +120,15 @@ void main()
         vec4 bf =ballForce[0] / 1000;
 
         vec4 totalFoces = GRAVITY * (BALLDENSITY) ;
-        totalFoces.y += ballForce[0].y*0.02*30; //Cada particula tem 0.02 de massa
-        totalFoces.x += ballForce[0].x /(ballForce[0].y/2); //Divide por .y para fazer a media. Pois no X tem a soma das velocidades do X, e no y tem o numero de particulas
-        totalFoces.z += ballForce[0].z /(ballForce[0].y/2); //Este /2 aparece como um fator de escala para por o movimento da bola mais relevante
+        totalFoces.y += ballForce[0].w*0.02*30;//Cada particula tem 0.02 de massa--- Por cada particula a volta empurra para cima
+
+        //Da a bola a media de velocidades das particulas a sua volta
+        totalFoces.y += ballForce[0].y /(ballForce[0].w/2);
+        totalFoces.x += ballForce[0].x /(ballForce[0].w/2); //Divide por .y para fazer a media. Pois no X tem a soma das velocidades do X, e no y tem o numero de particulas
+        totalFoces.z += ballForce[0].z /(ballForce[0].w/2); //Este /2 aparece como um fator de escala para por o movimento da bola mais relevante
 
         vec4 acc = totalFoces/BALLDENSITY;
-        debug[0]=vec4(ballForce[0].x/ballForce[0].y,ballForce[0].y,ballForce[0].z/ballForce[0].y,ballForce[0].y*0.02*30);
-        debug[1]=vec4(totalFoces);
-        debug[2]=vec4(GRAVITY * (BALLDENSITY));
-        debug[3]=vec4(acc);
+        
 
         ballVel[0] =ballVel[0]*0.99 + acc * TIMESTEP;
 

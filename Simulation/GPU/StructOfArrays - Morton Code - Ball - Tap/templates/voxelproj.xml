@@ -1,0 +1,265 @@
+<?xml version="1.0"  encoding="UTF-8"?>
+<project name="Voxel_Fluid_sim" width = "1280" height = "720">
+    <assets>
+        <constants>
+            <!-- VOX SIDE is VOX SIDE GROUPS * 32 -->
+            <constant name="VOX_SIDE"   		value="256" />
+            <constant name="VOX_SIDE_X" 		value="$VOX_SIDE_X" />
+            <constant name="VOX_SIDE_Y" 		value="$VOX_SIDE_Y" />
+            <constant name="VOX_SIDE_Z" 		value="$VOX_SIDE_Z" />
+			
+            <constant name="VOX_SIDE_GROUPS_X"  value="$VOX_SIDE_GROUPS_X" />
+            <constant name="VOX_SIDE_GROUPS_Y"  value="$VOX_SIDE_GROUPS_Y" />
+
+			<constant name="NUMBER_OF_PARTICLES"    value="$NUMPARTICLES" />
+			<constant name="NUMBER_OF_VERTICES"     value="$NUMVERTS" />
+			<!-- tem wg com tamanho 32-->
+			<constant name="NUMBER_OF_WORK_GROUPS"  value="$WORKGROUPS" />
+			
+			<!-- density pressure tem wg com tamanho 64-->
+			<!-- 64*NUMBER_OF_WORK_GROUPS_DENSITY_PRESSURE tem de dar igual ao nr de particulas-->
+			<constant name="NUMBER_OF_WORK_GROUPS_DENSITY_PRESSURE" value="27000" />
+
+			<constant name="HASH_SIZE" value="20000" />
+
+			<constant name="FLUID_RES_W" value="1280"/> <constant name="FLUID_RES_H" value="720"/>
+	
+				<!--X pode ir de -2.17 até 2.17 -->
+				<!--Y pode ir de -2 até 2 -->
+				<!--Z pode ir de -2.9 até 2.9 -->
+			<constant name="XMI" value="-2.17" />
+			<constant name="XMA" value=" 2.17" />
+			<constant name="YMI" value="-2.0" />
+			<constant name="YMA" value=" 2.0" />
+			<constant name="ZMI" value="-2.9" />
+			<constant name="ZMA" value=" 2.9" />
+        </constants>
+        
+        <attributes>
+			<attribute name="ping" data="INT" type="RENDERER" value="0"  />
+			<attribute name="pang" data="INT" type="RENDERER" value="1"  />
+			<attribute name="pong" data="INT" type="RENDERER" value="2"  />
+			
+            <attribute name="voxDim" data="INT" type="RENDERER" value="VOX_SIDE"  />
+            <attribute name="voxDimVec" data="VEC3" type="RENDERER" x="VOX_SIDE_X" y="VOX_SIDE_Y" z="VOX_SIDE_Z"  />
+			
+			<attribute name="voxmin" data="VEC3" type="RENDERER" x="-2.17" y="-2.0" z="-2.9"  />
+            <attribute name="voxmax" data="VEC3" type="RENDERER" x="2.17" y="2.0" z="2.9"  />
+
+			<attribute name="simmin" data="VEC3" type="RENDERER" x="XMI"  y="YMI"  z="ZMI"  />
+			<attribute name="simmax" data="VEC3" type="RENDERER" x="XMA"  y="YMA"  z="ZMA"  />
+            
+			
+        			<!-- Atributos Rendering -->
+			<attribute name="Particle_Radius" 			data="FLOAT" 	type="RENDERER" value="0.005"/>
+			<attribute name="Particle_Resting_Density" 	data="INT" 		type="RENDERER" value="1000" />
+			<attribute name="Particle_Mass" 			data="FLOAT" 	type="RENDERER" value="0.02" />
+			<attribute name="Particle_Stiffness" 		data="INT" 		type="RENDERER" value="2000" />
+			<attribute name="Number_Particles" 			data="INT" 		type="RENDERER" value="NUMBER_OF_PARTICLES"/>
+			<attribute name="Particle_Color" 			data="VEC4" 	type="RENDERER" x="0.0" y="0.7" z="0.9" w="1"/>
+			<attribute name="Thin_Color" 				data="VEC4" 	type="RENDERER" x="0.6" y="1.0" z="1.0" w="0.3"/>
+			<attribute name="foamcolor" 				data="VEC4" 	type="RENDERER" x="1.0" y="1.0" z="1.0" w="1.0"/>
+			
+			<attribute name="DebugParticles"			data="INT" 		type="RENDERER" value="0" />
+			<attribute name="Particle_Thickness"		data="FLOAT" 	type="RENDERER" value="0.35" />
+			<attribute name="Particle_Size"				data="VEC3" 	type="RENDERER" x="0.015" y="0.015" z="0.015" />
+
+			<attribute name="stepSize" 				data="FLOAT" 	type="RENDERER" value="0.0500"  />
+			<attribute name="maxSteps" 				data="INT"	 	type="RENDERER" value="1000"  />
+			<attribute name="power" 				data="INT" 		type="RENDERER" value="5"  />
+			<attribute name="specular_power"		data="INT" 		type="RENDERER" value="30"  />
+
+			<attribute name="SkyboxType" data="INT" type="RENDERER" value="0"  />
+			<attribute name="maxrefrat" data="INT" type="RENDERER" value="10"  />
+
+			<!-- Atribute Voxel Rendering -->
+				<attribute name="densityThreshold" 	data="FLOAT" 	type="RENDERER" value="0.7"  />
+				<attribute name="ETA"				data="FLOAT" 	type="RENDERER" value="0.77" />
+				<!-- 
+					<attribute name="Particle_Color" 	data="VEC4" 	type="RENDERER" x="0.0" y="0.6" z="0.7" w="1"/>
+					<attribute name="Thin_Color" 		data="VEC4" 	type="RENDERER" x="0.3" y="1.0" z="1.0" w="0.3"/>
+					<attribute name="specular_power"	data="INT" type="RENDERER" value="128"  />
+				-->
+				<attribute name="shlickpower" 		data="INT" type="RENDERER" value="5"  />
+				<attribute name="stepmultiplier" 	data="FLOAT" type="RENDERER" value="0.2"  />
+
+				<attribute name="particleradius" 	data="FLOAT" 	type="RENDERER" value="0.02"  />
+				<attribute name="blurradius" 		data="INT" 		type="RENDERER" value="1"  />
+			<!-- 					-->
+			
+			<!--- foam attributes-->
+			<attribute name="foamspeed" data="FLOAT" type="RENDERER" value="2.5"  />
+			<attribute name="foamThreshold" data="FLOAT" type="RENDERER" value="0.75"  />
+
+			<attribute name="WAVE_CLEAR" data="INT" type="RENDERER" value="0"  />
+			<attribute name="WAVE_NUM_DIR" data="INT" type="RENDERER" value="0"  />
+			<attribute name="WAVE_PERIOD" 	data="FLOAT" type="RENDERER" value="40"  />
+			<attribute name="WAVE_STRENGTH" data="FLOAT" type="RENDERER" value="3"  />
+
+			<!-- Scene Rendering-->
+			<attribute name="HeightMultiplier"  data="FLOAT" 	type="RENDERER" value="1.0"  />
+			<attribute name="Render"  			data="INT" 		type="RENDERER" value="0"  />
+			<attribute name="AUXVEC1" 			data="VEC4" 	type="RENDERER" x="0.0" y="1.2" z="1.34" w="0.0" />
+			<attribute name="AUXVEC2" 			data="VEC4" 	type="RENDERER" x="1.55" y="0.5" z="1.550" w="0.0" />
+			<attribute name="AUXVEC3" 			data="VEC4" 	type="RENDERER" x="0.000" y="-1.0" z="1.55" w="0.0" />
+
+			<!-- LUA ATTRIBUTES -->
+				<attribute name="Blur_PingPong" 	data="INT" 		type="RENDERER" value="0"  />
+				<attribute name="Sim_Iters" 		data="INT" 		type="RENDERER" value="0"  />
+				<attribute name="Sim_MaxIters" 		data="INT" 		type="RENDERER" value="0"  />
+				<!-- 	
+					<attribute name="Sim_MaxIters" 		data="INT" 		type="RENDERER" value="400"  />
+				-->
+			$simattributes
+	
+        </attributes>
+
+        <scenes>
+            <scene name="Cube">
+                <geometry name = "cube_skybox" type = "BOX"/>
+				<SCALE x="5" y="5" z="5" />
+
+            </scene>
+        </scenes>
+
+        <viewports>
+            <viewport name="MainViewport">
+			</viewport>
+        </viewports>
+
+        <cameras>
+            <camera name="MainCamera">
+				<viewport name="MainViewport" />
+				<POSITION x="2.00" y="2.00" z="2.00" />
+				<NEAR 	value="0.02" />
+				<FAR 	value="100" /> 
+				<LOOK_AT_POINT x="0.0" y="0.0" z="0.0"/>
+			</camera>
+        </cameras>
+
+        
+		<lights>
+			<light name="Sun">
+				<DIRECTION x="-0.5" y="-0.8" z="-0.5" />
+			</light>
+		</lights>
+
+        <materialLibs>
+            <materialLib filename="materials/simulation.mlib" />
+            <materialLib filename="materials/voxel.mlib" />
+            <!-- 
+                <materialLib filename="rendering.mlib" />
+            -->
+		</materialLibs>
+    </assets>
+
+    <pipelines default="pipvox" mode="RUN_SEQUENTIAL">
+		<pipeline name="simpip">
+			<testScript file="scripts/pipelines.lua" script="SimController" />
+
+			$simpipeline
+
+			
+		</pipeline>
+        <pipeline name="pipvox">
+            
+            
+			<pass class="compute" name="vox_init">
+				<preScript file="scripts/waves.lua" script="waves"/>
+				<!--mode value="RUN_ONCE"/-->
+                <material name="init" fromLibrary="voxelLib" dimX="NUMBER_OF_WORK_GROUPS" dimY="1" dimZ="1"/>
+            </pass>
+			<pass class="compute" name="vox_extend">
+				<!--mode value="RUN_ONCE"/-->
+                <material name="newinitping" fromLibrary="voxelLib" dimX="VOX_SIDE_GROUPS_X" dimY="VOX_SIDE_GROUPS_Y" dimZ="VOX_SIDE_Z"/>
+            </pass>
+			<pass class="compute" name="vox_extend">
+				<!--mode value="RUN_ONCE"/-->
+                <material name="newinitpang" fromLibrary="voxelLib" dimX="VOX_SIDE_GROUPS_X" dimY="VOX_SIDE_GROUPS_Y" dimZ="VOX_SIDE_Z"/>
+            </pass>
+			<pass class="compute" name="vox_extend">
+				<!--mode value="RUN_ONCE"/-->
+                <material name="newinitpong" fromLibrary="voxelLib" dimX="VOX_SIDE_GROUPS_X" dimY="VOX_SIDE_GROUPS_Y" dimZ="VOX_SIDE_Z"/>
+            </pass>
+            
+			
+            
+            <pass   class="default"     name="Cube">
+				
+                <scenes>
+					<scene name="Cube" />
+				</scenes>
+                <camera name="MainCamera" />
+				<lights>
+					<light name="Sun" />
+				</lights>
+
+            </pass>
+
+            <pass   class="quad"        name="quad">
+				<COLOR_CLEAR value="FALSE" />
+				<DEPTH_CLEAR value="FALSE" />
+                <preScript file="scripts/waves.lua" script="waves"/>
+                <camera name="MainCamera" />
+
+				<material name="quad" fromLibrary="voxelLib"/>
+			</pass>
+    
+			
+
+        </pipeline>
+    </pipelines>
+    <interface> 
+		<window label = "Color/Thickness">
+			<var label="Color"   			type="RENDERER" context="CURRENT" component="Particle_Color" 	mode="COLOR"/>
+            <var label="Thin Color"   		type="RENDERER" context="CURRENT" component="Thin_Color" 		mode="COLOR"/>
+            <var label="Foam Color"   		type="RENDERER" context="CURRENT" component="foamcolor" 		mode="COLOR"/>
+            <var label="Thickness"			type="RENDERER" context="CURRENT" component="Particle_Thickness"	def="min=0.0 max=5.0" />
+            
+			<var label="Shlick power" 		type="RENDERER" context="CURRENT" component="shlickpower" 		def="min=0 max=10"/>
+			<var label="specular power" 	type="RENDERER" context="CURRENT" component="specular_power" 	def="min=0 max=256"	/>
+			
+			<var label="ETA"				type="RENDERER" context="CURRENT" component="ETA"  				def="min=0 max=1"	/>
+			
+			<var label="DebugParticles"     type="RENDERER" context="CURRENT" component="DebugParticles" 	strings="Regular,Lighting,FrontBackOnly,Thickness"/>
+			<var label="SkyboxType"     	type="RENDERER" context="CURRENT" component="SkyboxType" 		strings="Regular,White,Black"/>
+
+			<var label="Maximum Refractions"	type="RENDERER" context="CURRENT" component="maxrefrat"  		def="min=0 max=20"	/>
+			
+			
+		</window>
+
+		<window label="Scene Control">
+
+			<var label="HeightMultiplier" 	type="RENDERER" context="CURRENT" component="HeightMultiplier" 	/>
+			<var label="Render" 			type="RENDERER" context="CURRENT" component="Render" 	strings="All,Heightmap,SDFs,None"/>
+			<var label="AUXVEC1" 			type="RENDERER" context="CURRENT" component="AUXVEC1" 	def="min=-3 max=3"/>
+			<var label="AUXVEC2" 			type="RENDERER" context="CURRENT" component="AUXVEC2" 	def="min=-3 max=3"/>
+			<var label="AUXVEC3" 			type="RENDERER" context="CURRENT" component="AUXVEC3" 	def="min=0.0 max=0.60"/>
+
+		</window>
+		
+		<window label = "Voxel Grid Settings">
+			<var label="Particle Radius"		type="RENDERER" context="CURRENT" component="particleradius"  	def="min=0.005 max=0.05"/>
+			<var label="densityThreshold" 		type="RENDERER" context="CURRENT" component="densityThreshold" 	def="min=0 max=1"/>
+			<var label="foamThreshold" 			type="RENDERER" context="CURRENT" component="foamThreshold" 	def="min=0 max=1"/>
+			<var label="foamspeed" 				type="RENDERER" context="CURRENT" component="foamspeed" 	def="min=0 max=10" />
+			<var label="stepmultiplier" 		type="RENDERER" context="CURRENT" component="stepmultiplier" 	def="min=0 max=1"/>
+			<var label="Blur Radius" 			type="RENDERER" context="CURRENT" component="blurradius"  		def="min=0 max=10"	/>
+		</window>
+
+		<window label="My Sim Controller">
+            <var label="Pause"				type="RENDERER" context="CURRENT" component="Pause" 	def="min=0 max=1" />
+			<var label="WAVE_NUM_DIR" 		type="RENDERER" context="CURRENT" component="WAVE_NUM_DIR" def="min=0 max=2" 	/>
+			<var label="WAVE_PERIOD" 		type="RENDERER" context="CURRENT" component="WAVE_PERIOD" 	/>
+			<var label="WAVE_STRENGTH" 		type="RENDERER" context="CURRENT" component="WAVE_STRENGTH" 	/>
+			<var label="WAVE_CLEAR_BUTTON" 	type="RENDERER" context="CURRENT" component="WAVE_CLEAR" def="min=0 max=1"	/>
+			<var label="Sim_Iters" 			type="RENDERER" context="CURRENT" component="Sim_Iters" 	/>
+			<var label="Sim_MaxIters" 		type="RENDERER" context="CURRENT" component="Sim_MaxIters" 	/>
+		</window>
+		
+		
+		$windowSimul
+		
+    </interface>
+</project>
