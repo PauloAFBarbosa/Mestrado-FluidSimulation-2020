@@ -512,6 +512,11 @@ void main()
     count=0;
 
     int vizinhos= adj[index*MAXADJ];
+
+    float distance=0;
+    float c =1.0;
+    float tras =0;
+    int indexAnterior=int(index);
     
     for (int i = 0 ; i< vizinhos ; i ++){
         //Viscosity
@@ -534,6 +539,15 @@ void main()
 
             //Esta é a formula que esta no kelegar06 equação 4.11
             sumForce += SIMULATIONSCALEFORCE* ret_kernel *((pressure[adji]+press)/(2))*(MASS/density[adji]);
+
+
+            float d =float(abs(int(adji)-int(indexAnterior)));
+            if (indexAnterior > adji)
+                tras +=1.0;
+
+            distance += d;
+            c+=1.0;
+            indexAnterior=adji;
             
             //SurfaceNormal ------------ nao faz diferença
 
@@ -622,4 +636,8 @@ void main()
             surfaceTension[index]= vec4(0);
         }
     */
+    if(debug[index].y <500){
+        //Distancia total percorrida --- Frames ---- tras
+        debug[index] = vec4(debug[index].x+(distance),debug[index].y+1,debug[index].z+tras,debug[index].w); 
+    }
 }

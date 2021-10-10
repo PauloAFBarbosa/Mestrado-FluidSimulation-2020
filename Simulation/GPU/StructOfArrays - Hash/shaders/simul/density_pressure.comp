@@ -450,10 +450,10 @@ void main()
     vec4 p= position[index];
 
     
-    //float distance=0;
-    //float c =1.0;
-    //float tras =0;
-    //int indexAnterior=int(index);
+    float distance=0;
+    float c =1.0;
+    float tras =0;
+    int indexAnterior=int(index);
     
     int total=0;
 
