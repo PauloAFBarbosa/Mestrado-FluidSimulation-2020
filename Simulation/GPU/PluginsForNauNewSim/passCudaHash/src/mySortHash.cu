@@ -5,6 +5,7 @@
 #include <chrono>
 #include <cuda_runtime.h>
 #include "cutil_math.h"
+#include "nau/debug/profile.h"
 //#include <math_functions.h>
 
 
@@ -12,16 +13,20 @@
 void mysort(int * index1, float4 * values1, int* index2, float4 * values2,int particles){
 	
 	
-	
-	thrust::device_ptr<int> i1buff = thrust::device_pointer_cast((index1));
-	thrust::device_ptr<float4> v1buff = thrust::device_pointer_cast((values1));
-	thrust::device_ptr<int> i2buff = thrust::device_pointer_cast((index2));
-	thrust::device_ptr<float4> v2buff = thrust::device_pointer_cast((values2));
-
-	
-	thrust::sort_by_key(i1buff, i1buff + particles, v1buff);
-	thrust::sort_by_key(i2buff, i2buff + particles, v2buff);
-	
+    
+        thrust::device_ptr<int> i1buff = thrust::device_pointer_cast((index1));
+        thrust::device_ptr<float4> v1buff = thrust::device_pointer_cast((values1));
+        thrust::device_ptr<int> i2buff = thrust::device_pointer_cast((index2));
+        thrust::device_ptr<float4> v2buff = thrust::device_pointer_cast((values2));
+    
+    {
+        PROFILE("Sort_by_key_Pos");
+        thrust::sort_by_key(i1buff, i1buff + particles, v1buff);
+    }
+    {
+        PROFILE("Sort_by_key_Velocity");
+        thrust::sort_by_key(i2buff, i2buff + particles, v2buff);
+    }
 }
 
 //functions for density Pressure

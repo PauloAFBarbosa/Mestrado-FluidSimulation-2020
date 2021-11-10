@@ -1,7 +1,7 @@
 
 #include <cuda.h>
 
-void mysort(int* index1, float4 * values1, int* index2, float4 * values2,int particles);
+void mysort(int* index1, float4 * values1, int* index2, float4 * values2, int* index3, int* values3,int hasTwoDensities,int particles);
 
 void kernelWraper(int* dptrssboIndex, int* dptrssboCellStart, int* dptrssboCellEnd, int nrParticles);
 

@@ -5,6 +5,7 @@
 #include "iNau.h"
 #include "nau/render/pass.h"
 
+
 class PAssCudaPIHash : public Pass
 		{
 		protected:

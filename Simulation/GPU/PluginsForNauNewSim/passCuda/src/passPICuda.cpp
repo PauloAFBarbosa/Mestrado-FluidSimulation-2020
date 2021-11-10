@@ -16,7 +16,7 @@
 #include <cuda_gl_interop.h>
 #include <cuda.h>
 
-
+#include "nau/debug/profile.h"
 //using namespace gl;
 
 //static nau::INau *NAU_INTERFACE;
@@ -88,6 +88,10 @@ struct cudaGraphicsResource* cuda_ssbo_Velocity;
 struct cudaGraphicsResource* cuda_ssbo_CellStart;
 struct cudaGraphicsResource* cuda_ssbo_CellEnd;
 
+//multiple densities
+struct cudaGraphicsResource* cuda_ssbo_Densities;
+struct cudaGraphicsResource* cuda_ssbo_DensitiesIndex;
+
 struct cudaGraphicsResource* cuda_ssbo_Density;
 struct cudaGraphicsResource* cuda_ssbo_Pressure;
 struct cudaGraphicsResource* cuda_ssbo_Adj;
@@ -100,11 +104,11 @@ struct cudaGraphicsResource* cuda_ssbo_Acceleration;
 struct cudaGraphicsResource* cuda_ssbo_AdjV2;
 
 int particleNumber=0;
+int hasTwoDensities = 0;
 
 #include "mySort.h"
 void
 PAssCudaPI::prepare (void) {
-
 	int densityPressure = 0;
 
 	if (first == 0) {
@@ -130,6 +134,26 @@ PAssCudaPI::prepare (void) {
 		int buffIdVelocity = bVelocity->getPropi(IBuffer::ID);
 		//cell start and end
 
+		//Multiple densities
+		int buffIdDensities;
+		int buffIdDensitiesIndex;
+		
+			
+		IBuffer* bDensities = RESOURCEMANAGER->getBuffer("simulationLib::Densities");
+			
+		if (bDensities != NULL)
+			hasTwoDensities = 1;
+
+		printf("Has two densities %d\n", hasTwoDensities);
+
+		if (hasTwoDensities == 1) {
+			buffIdDensities = bDensities->getPropi(IBuffer::ID);
+
+			IBuffer* bDensitiesIndex = RESOURCEMANAGER->getBuffer("simulationLib::DensitiesIndex");
+			buffIdDensitiesIndex = bDensitiesIndex->getPropi(IBuffer::ID);
+		}
+
+
 		IBuffer* bCellStart = RESOURCEMANAGER->getBuffer("simulationLib::CellStart");
 		int buffIdCellStart = bCellStart->getPropi(IBuffer::ID);
 		IBuffer* bCellEnd = RESOURCEMANAGER->getBuffer("simulationLib::CellEnd");
@@ -148,6 +172,11 @@ PAssCudaPI::prepare (void) {
 		cudaGraphicsGLRegisterBuffer(&cuda_ssbo_CellEnd, buffIdCellEnd, cudaGraphicsMapFlagsNone);
 		cudaGraphicsGLRegisterBuffer(&cuda_ssbo_AdjV2, buffIdAdjV2, cudaGraphicsMapFlagsNone);
 
+		//Multiple densities
+		if (hasTwoDensities == 1) {
+			cudaGraphicsGLRegisterBuffer(&cuda_ssbo_Densities, buffIdDensities, cudaGraphicsMapFlagsNone);
+			cudaGraphicsGLRegisterBuffer(&cuda_ssbo_DensitiesIndex, buffIdDensitiesIndex, cudaGraphicsMapFlagsNone);
+		}
 		if (densityPressure == 1) {
 			IBuffer* bDensity = RESOURCEMANAGER->getBuffer("simulationLib::Density");
 			int buffIdDensity = bDensity->getPropi(IBuffer::ID);
@@ -206,6 +235,10 @@ PAssCudaPI::prepare (void) {
 	int* dptrssboCellStart;
 	int* dptrssboCellEnd;
 
+	//Multiple densities
+	int* dptrssboDensities;
+	int* dptrssboDensitiesIndex;
+
 	float* dptrssboDensity;
 	float* dptrssboPressure;
 	int* dptrssboAdj;
@@ -220,14 +253,20 @@ PAssCudaPI::prepare (void) {
 
 	//cudaDeviceSynchronize();
 	//std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
-	
-	cudaGraphicsMapResources(1, &cuda_ssbo_Index, NULL);
-	cudaGraphicsMapResources(1, &cuda_ssbo_TempIndex, NULL);
-	cudaGraphicsMapResources(1, &cuda_ssbo_Position, NULL);
-	cudaGraphicsMapResources(1, &cuda_ssbo_Velocity, NULL);
-	cudaGraphicsMapResources(1, &cuda_ssbo_CellStart, NULL);
-	cudaGraphicsMapResources(1, &cuda_ssbo_CellEnd, NULL);
-	
+	{
+		PROFILE("MapResources");
+		cudaGraphicsMapResources(1, &cuda_ssbo_Index, NULL);
+		cudaGraphicsMapResources(1, &cuda_ssbo_TempIndex, NULL);
+		cudaGraphicsMapResources(1, &cuda_ssbo_Position, NULL);
+		cudaGraphicsMapResources(1, &cuda_ssbo_Velocity, NULL);
+		cudaGraphicsMapResources(1, &cuda_ssbo_CellStart, NULL);
+		cudaGraphicsMapResources(1, &cuda_ssbo_CellEnd, NULL);
+		
+		if (hasTwoDensities == 1) {
+			cudaGraphicsMapResources(1, &cuda_ssbo_Densities, NULL);
+			cudaGraphicsMapResources(1, &cuda_ssbo_DensitiesIndex, NULL);
+		}
+	}
 	if (densityPressure == 1) {
 		cudaGraphicsMapResources(1, &cuda_ssbo_Density, NULL);
 		cudaGraphicsMapResources(1, &cuda_ssbo_Pressure, NULL);
@@ -252,6 +291,9 @@ PAssCudaPI::prepare (void) {
 	size_t num_bytesssbo_Velocity;
 	size_t num_bytesssbo_CellStart;
 	size_t num_bytesssbo_CellEnd;
+
+	size_t num_bytesssbo_Densities;
+	size_t num_bytesssbo_DensitiesIndex;
 	
 	size_t num_bytesssbo_Density;
 	size_t num_bytesssbo_Pressure;
@@ -264,14 +306,20 @@ PAssCudaPI::prepare (void) {
 	size_t num_bytesssbo_Viscosity;
 
 	size_t num_bytesssbo_Acceleration;
-	
-	cudaGraphicsResourceGetMappedPointer((void**)&dptrssboIndex, &num_bytesssbo_Index, cuda_ssbo_Index);
-	cudaGraphicsResourceGetMappedPointer((void**)&dptrssboTempIndex, &num_bytesssbo_TempIndex, cuda_ssbo_TempIndex);
-	cudaGraphicsResourceGetMappedPointer((void**)&dptrssboPosition, &num_bytesssbo_Position, cuda_ssbo_Position);
-	cudaGraphicsResourceGetMappedPointer((void**)&dptrssboVelocity, &num_bytesssbo_Velocity, cuda_ssbo_Velocity);
-	cudaGraphicsResourceGetMappedPointer((void**)&dptrssboCellStart, &num_bytesssbo_CellStart, cuda_ssbo_CellStart);
-	cudaGraphicsResourceGetMappedPointer((void**)&dptrssboCellEnd, &num_bytesssbo_CellEnd, cuda_ssbo_CellEnd);
+	{
+		PROFILE("GetMappedPointer");
+		cudaGraphicsResourceGetMappedPointer((void**)&dptrssboIndex, &num_bytesssbo_Index, cuda_ssbo_Index);
+		cudaGraphicsResourceGetMappedPointer((void**)&dptrssboTempIndex, &num_bytesssbo_TempIndex, cuda_ssbo_TempIndex);
+		cudaGraphicsResourceGetMappedPointer((void**)&dptrssboPosition, &num_bytesssbo_Position, cuda_ssbo_Position);
+		cudaGraphicsResourceGetMappedPointer((void**)&dptrssboVelocity, &num_bytesssbo_Velocity, cuda_ssbo_Velocity);
+		cudaGraphicsResourceGetMappedPointer((void**)&dptrssboCellStart, &num_bytesssbo_CellStart, cuda_ssbo_CellStart);
+		cudaGraphicsResourceGetMappedPointer((void**)&dptrssboCellEnd, &num_bytesssbo_CellEnd, cuda_ssbo_CellEnd);
 
+		if (hasTwoDensities == 1) {
+			cudaGraphicsResourceGetMappedPointer((void**)&dptrssboDensities, &num_bytesssbo_Densities, cuda_ssbo_Densities);
+			cudaGraphicsResourceGetMappedPointer((void**)&dptrssboDensitiesIndex, &num_bytesssbo_DensitiesIndex, cuda_ssbo_DensitiesIndex);
+		}
+	}
 	if (densityPressure == 1) {
 		
 		cudaGraphicsResourceGetMappedPointer((void**)&dptrssboDensity, &num_bytesssbo_Density, cuda_ssbo_Density);
@@ -286,12 +334,16 @@ PAssCudaPI::prepare (void) {
 
 		cudaGraphicsResourceGetMappedPointer((void**)&dptrssboAcceleration, &num_bytesssbo_Acceleration, cuda_ssbo_Acceleration);
 	}
+	{
+		PROFILE("MySortThrust");
+		mysort(dptrssboIndex, dptrssboPosition, dptrssboTempIndex, dptrssboVelocity, dptrssboDensitiesIndex, dptrssboDensities,hasTwoDensities, particleNumber);
+	}
 
-	mysort(dptrssboIndex,dptrssboPosition, dptrssboTempIndex, dptrssboVelocity, particleNumber);
-
-	//calls a kernel that counds each index to cellstart and cellend
-	kernelWraper(dptrssboIndex, dptrssboCellStart, dptrssboCellEnd,particleNumber);
-
+	{
+		PROFILE("CellStartEnd");
+		//calls a kernel that counds each index to cellstart and cellend
+		kernelWraper(dptrssboIndex, dptrssboCellStart, dptrssboCellEnd, particleNumber);
+	}
 	if (densityPressure == 1) {
 		//cudaDeviceSynchronize();
 		//begin = std::chrono::steady_clock::now();
@@ -310,14 +362,19 @@ PAssCudaPI::prepare (void) {
 	
 	//cudaDeviceSynchronize();
 	//begin = std::chrono::steady_clock::now();
-	
-	cudaGraphicsUnmapResources(1, &cuda_ssbo_Index, NULL);
-	cudaGraphicsUnmapResources(1, &cuda_ssbo_TempIndex, NULL);
-	cudaGraphicsUnmapResources(1, &cuda_ssbo_Position, NULL);
-	cudaGraphicsUnmapResources(1, &cuda_ssbo_Velocity, NULL);
-	cudaGraphicsUnmapResources(1, &cuda_ssbo_CellStart, NULL);
-	cudaGraphicsUnmapResources(1, &cuda_ssbo_CellEnd, NULL);
-
+	{
+		PROFILE("UnmapResources");
+		cudaGraphicsUnmapResources(1, &cuda_ssbo_Index, NULL);
+		cudaGraphicsUnmapResources(1, &cuda_ssbo_TempIndex, NULL);
+		cudaGraphicsUnmapResources(1, &cuda_ssbo_Position, NULL);
+		cudaGraphicsUnmapResources(1, &cuda_ssbo_Velocity, NULL);
+		cudaGraphicsUnmapResources(1, &cuda_ssbo_CellStart, NULL);
+		cudaGraphicsUnmapResources(1, &cuda_ssbo_CellEnd, NULL);
+		if (hasTwoDensities == 1) {
+			cudaGraphicsUnmapResources(1, &cuda_ssbo_Densities, NULL);
+			cudaGraphicsUnmapResources(1, &cuda_ssbo_DensitiesIndex, NULL);
+		}
+	}
 	if (densityPressure == 1) {
 		cudaGraphicsUnmapResources(1, &cuda_ssbo_Density, NULL);
 		cudaGraphicsUnmapResources(1, &cuda_ssbo_Pressure, NULL);

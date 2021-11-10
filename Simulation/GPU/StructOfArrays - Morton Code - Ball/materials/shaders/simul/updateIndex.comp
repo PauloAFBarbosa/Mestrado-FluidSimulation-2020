@@ -120,6 +120,7 @@ void main()
         vec4 bf =ballForce[0] / 1000;
 
         vec4 totalFoces = GRAVITY * (BALLDENSITY) ;
+        
         totalFoces.y += ballForce[0].w*0.02*30;//Cada particula tem 0.02 de massa--- Por cada particula a volta empurra para cima
 
         //Da a bola a media de velocidades das particulas a sua volta

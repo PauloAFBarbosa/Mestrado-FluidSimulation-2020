@@ -1,0 +1,465 @@
+// Copyright (c) 2017-2018, Samuel Ivan Gunadi
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+
+#version 460
+
+#define WORK_GROUP_SIZE 64
+
+layout (local_size_x = WORK_GROUP_SIZE) in;
+
+// constants
+
+#define PI_FLOAT 3.1415927410125732421875f
+#define PARTICLE_RADIUS 0.005f
+#define PARTICLE_RESTING_DENSITY 4000
+#define MAXADJ 500
+// Mass = Density * Volume
+#define PARTICLE_MASS 0.02
+#define SMOOTHING_LENGTH (4 * PARTICLE_RADIUS)
+
+#define PARTICLE_STIFFNESS 2000
+
+uniform int Pause;
+uniform int Number_Particles;
+uniform int HASHSIZE;
+uniform float RESTDENSITY;
+uniform float RESTDENSITY2;
+uniform float H;
+uniform float MASS;
+uniform float STIFF;
+uniform float SIMULATIONSCALE;
+
+layout(std430, binding = 0) readonly restrict buffer Position
+{
+    vec4 position[];
+};
+
+
+layout(std430, binding = 1) restrict buffer Density
+{
+    float density[];
+};
+
+layout(std430, binding = 2) restrict buffer Pressure
+{
+    float pressure[];
+};
+
+layout(std430, binding = 3) restrict buffer Debug
+{
+    vec4 debug[];
+};
+
+layout(std430, binding = 4) restrict buffer Adj
+{
+    int adj[];
+};
+
+layout(std430, binding = 5) readonly restrict buffer CellStart
+{
+    int cellStart[];
+};
+
+layout(std430, binding = 6) readonly restrict buffer CellEnd
+{
+    int cellEnd[];
+};
+
+layout(std430, binding = 7) readonly restrict buffer Index
+{
+    uint bufferIndex[];
+};
+
+layout(std430, binding = 8) readonly restrict buffer AdjV2
+{
+    int adjV2[];
+};
+
+layout(std430, binding = 9) readonly restrict buffer Densities
+{
+    uint densities[];
+};
+
+//Morton code --------------------------------------------
+
+
+
+uint part1by2(uint n) {
+    n &= 0x000003ff;
+    n = (n ^ (n << 16)) & 0xff0000ff;
+    n = (n ^ (n << 8)) & 0x0300f00f;
+    n = (n ^ (n << 4)) & 0x030c30c3;
+    n = (n ^ (n << 2)) & 0x09249249;
+    return n;
+}
+
+
+uint unpart1by2(uint n) {
+    n &= 0x09249249;
+    n = (n ^ (n >> 2)) & 0x030c30c3;
+    n = (n ^ (n >> 4)) & 0x0300f00f;
+    n = (n ^ (n >> 8)) & 0xff0000ff;
+    n = (n ^ (n >> 16)) & 0x000003ff;
+    return n;
+}
+
+
+uint  interleave3(uint x, uint y, uint z) {
+    return part1by2(x) | (part1by2(y) << 1) | (part1by2(z) << 2);
+}
+
+
+void deinterleave3(uint n, uint x, uint y, uint z) {
+    x = unpart1by2(n);
+    y = unpart1by2(n >> 1);
+    z = unpart1by2(n >> 2);
+}
+
+
+
+bool contains(uint arr[27], int size, uint member) {
+    bool ret = false;
+
+    for (int i = 0; i < size; i++)
+    {
+        if (arr[i] == member)
+            ret = true;
+    }
+    return ret;
+}
+
+int getAdj(vec4 pos, float H, out uint ret[27]) {
+    
+    int retSize=0;
+
+    uint offsetx = 47;
+    uint offsety = 43;
+    uint offsetz = 63;
+
+    uint morton_x = uint((pos.x / H) +offsetx);
+    uint morton_y = uint((pos.y / H) +offsety);
+    uint morton_z = uint((pos.z / H) +offsetz);
+
+    uint morton_cell;
+    
+    if (morton_x > 0 && morton_y > 0 && morton_z > 0) {
+        morton_cell = interleave3(morton_x - 1, morton_y - 1, morton_z - 1);
+        ret[retSize] = morton_cell;
+        retSize++;
+    }
+    if (morton_y > 0 && morton_z > 0) {
+        morton_cell = interleave3(morton_x, morton_y - 1, morton_z - 1);
+        ret[retSize] = morton_cell;
+        retSize++;
+    }
+    if (morton_x > 0 && morton_z > 0) {
+        morton_cell = interleave3(morton_x - 1, morton_y, morton_z - 1);
+        ret[retSize] = morton_cell;
+        retSize++;
+    }
+    if (morton_z > 0) {
+        morton_cell = interleave3(morton_x, morton_y, morton_z - 1);
+        ret[retSize] = morton_cell;
+        retSize++;
+    }
+    if (morton_x > 0 && morton_y > 0) {
+        morton_cell = interleave3(morton_x - 1, morton_y - 1, morton_z);
+        ret[retSize] = morton_cell;
+        retSize++;
+    }
+    if (morton_y > 0) {
+        morton_cell = interleave3(morton_x, morton_y - 1, morton_z);
+        ret[retSize] = morton_cell;
+        retSize++;
+    }
+    if (morton_x > 0) {
+        morton_cell = interleave3(morton_x - 1, morton_y, morton_z);
+        ret[retSize] = morton_cell;
+        retSize++;
+    }
+
+    morton_cell = interleave3(morton_x, morton_y, morton_z);
+    ret[retSize] = morton_cell;
+    retSize++;
+
+    //86 é o numero maximo que o morton code pode devolver num cubo de -2 a 2 
+    if (morton_x < 94 && morton_y > 0 && morton_z > 0) {
+        morton_cell = interleave3(morton_x + 1, morton_y - 1, morton_z - 1);
+        ret[retSize] = morton_cell;
+        retSize++;
+    }
+    if (morton_x < 94 && morton_z > 0) {
+        morton_cell = interleave3(morton_x + 1, morton_y, morton_z - 1);
+        ret[retSize] = morton_cell;
+        retSize++;
+    }
+    if (morton_x < 94 && morton_y > 0) {
+        morton_cell = interleave3(morton_x + 1, morton_y - 1, morton_z);
+        ret[retSize] = morton_cell;
+        retSize++;
+    }
+
+    if (morton_x < 94) {
+        morton_cell = interleave3(morton_x + 1, morton_y, morton_z);
+        ret[retSize] = morton_cell;
+        retSize++;
+    }
+
+    if (morton_x > 0 && morton_y < 86 && morton_z > 0) {
+        morton_cell = interleave3(morton_x - 1, morton_y + 1, morton_z - 1);
+        ret[retSize] = morton_cell;
+        retSize++;
+    }
+
+    if (morton_y < 86 && morton_z > 0) {
+        morton_cell = interleave3(morton_x, morton_y + 1, morton_z - 1);
+        ret[retSize] = morton_cell;
+        retSize++;
+    }
+
+    if (morton_y < 86 && morton_x > 0) {
+        morton_cell = interleave3(morton_x - 1, morton_y + 1, morton_z);
+        ret[retSize] = morton_cell;
+        retSize++;
+    }
+    if (morton_y < 86) {
+        morton_cell = interleave3(morton_x, morton_y + 1, morton_z);
+        ret[retSize] = morton_cell;
+        retSize++;
+    }
+
+    if (morton_x < 94 && morton_y < 86 && morton_z > 0) {
+        morton_cell = interleave3(morton_x + 1, morton_y + 1, morton_z - 1);
+        ret[retSize] = morton_cell;
+        retSize++;
+    }
+
+    if (morton_x < 94 && morton_y < 86) {
+        morton_cell = interleave3(morton_x + 1, morton_y + 1, morton_z);
+        ret[retSize] = morton_cell;
+        retSize++;
+    }
+
+    if (morton_x > 0 && morton_y > 0 && morton_z < 126) {
+        morton_cell = interleave3(morton_x - 1, morton_y - 1, morton_z + 1);
+        ret[retSize] = morton_cell;
+        retSize++;
+    }
+    if (morton_y > 0 && morton_z < 126) {
+        morton_cell = interleave3(morton_x, morton_y - 1, morton_z + 1);
+        ret[retSize] = morton_cell;
+        retSize++;
+    }
+    if (morton_x > 0 && morton_z < 126) {
+        morton_cell = interleave3(morton_x - 1, morton_y, morton_z + 1);
+        ret[retSize] = morton_cell;
+        retSize++;
+    }
+
+    if (morton_z < 126) {
+        morton_cell = interleave3(morton_x, morton_y, morton_z + 1);
+        ret[retSize] = morton_cell;
+        retSize++;
+    }
+
+    if (morton_x < 94 && morton_y >0 && morton_z < 126) {
+        morton_cell = interleave3(morton_x + 1, morton_y - 1, morton_z + 1);
+        ret[retSize] = morton_cell;
+        retSize++;
+    }
+    if (morton_x < 94 && morton_z < 126) {
+        morton_cell = interleave3(morton_x + 1, morton_y, morton_z + 1);
+        ret[retSize] = morton_cell;
+        retSize++;
+    }
+
+    if (morton_x > 0 && morton_y < 86 && morton_z < 126) {
+        morton_cell = interleave3(morton_x - 1, morton_y + 1, morton_z + 1);
+        ret[retSize] = morton_cell;
+        retSize++;
+    }
+
+    if (morton_y < 86 && morton_z < 126) {
+        morton_cell = interleave3(morton_x, morton_y + 1, morton_z + 1);
+        ret[retSize] = morton_cell;
+        retSize++;
+    }
+
+    if (morton_x < 94 && morton_y < 86 && morton_z < 126) {
+        morton_cell = interleave3(morton_x + 1, morton_y + 1, morton_z + 1);
+        ret[retSize] = morton_cell;
+        retSize++;
+    }
+
+    return retSize;
+    
+}
+
+float useDefaultKernel(vec4 distVector, float supportRadius) {
+    float dist = length(distVector);
+    
+    if (dist > supportRadius) {
+        
+        return 0.0;
+    }
+    else {
+        return (315 / (64 * PI_FLOAT * pow(supportRadius, 9.0f)))*pow( pow(supportRadius,2) - pow(dist,2), 3.0f);
+    }
+}
+
+uint hashFunction(vec4 pos,double H,int size) {
+    
+    int p1 = 2693;
+    int p2 = 3163;
+    int p3 = 4091;
+
+    int part1 = (int((pos.x / H)) * p1);
+    int part2 = (int((pos.y / H)) * p2);
+    int part3 = (int ((pos.z / H)) * p3);
+    
+    uint ret = uint((part1 ^ part2 ^ part3) % size);
+    
+    return ret;
+}
+
+float random (vec2 uv)
+{
+    return fract(sin(dot(uv,vec2(12.9898,78.233)))*43758.5453123);
+}
+
+float map(float value, float min1, float max1, float min2, float max2) {
+  return min2 + (value - min1) * (max2 - min2) / (max1 - min1);
+}
+
+void main()
+{
+    
+    if (Pause == 1)
+        return;
+
+    
+    
+    uint index = gl_GlobalInvocationID.x;
+
+    if (index > Number_Particles)
+        return;
+
+
+    uint ret[27];
+    int retSize=0;
+    vec4 p = position[index];
+
+    uint offsetx = 47;
+    uint offsety = 43;
+    uint offsetz = 63;
+    //17,13,33
+    uint morton_x = uint((p.x / H) +offsetx);
+    uint morton_y = uint((p.y / H) +offsety);
+    uint morton_z = uint((p.z / H) +offsetz);
+
+    //O mycell ja tem o * 28, pois cada celula pode ter 27 vizinhos mais 1 posição para guardar o tamanho
+    uint mycell=28*interleave3(morton_x,morton_y,morton_z);
+    
+    //debug[index] = vec4 (morton_x,morton_y,morton_z,0);    
+
+    //retSize=getAdj(p, H, ret);
+
+    retSize=adjV2[mycell];
+
+    //debug[index]= vec4(mycell,retSize,adjV2[mycell*28],0);
+    
+    // compute density
+    float sum=1;
+
+    int vizinhos=0;
+
+    int total =0;
+
+    //float distance=0;
+    //float c =1.0;
+    //float tras =0;
+    //int indexAnterior=int(index);
+
+    for (int j = 0; j < retSize; j++)
+        {
+            //uint bucket = uint(adjMat[(28*b)+(j+1)]) ;
+            //uint cell = ret[j];
+
+            uint cell = adjV2[(mycell)+(j+1)];
+    
+            int from = cellStart[cell];
+            int to = from + cellEnd[cell];
+
+
+            
+            for (int i = from; i < to; i++)
+            {
+                //total++;
+
+                vec4 arg;
+                arg = p - position[i];
+
+                float ker_res = useDefaultKernel(arg, H);
+                if (ker_res!=0 ){
+                    //calcular a distancia que se vai percorrer para testar todos os vizinhos
+                    //Vamos usar isto para saber qual dos metodos trabalha melhor com a cache
+                    //Teoria, menor distancia media = melhor desempenho
+                    //float d =float(abs(int(i)-int(indexAnterior)));
+
+                    //if (indexAnterior > i)
+                    //	tras +=1.0;
+
+                    //distance += d;
+                    //c+=1.0;
+                    //indexAnterior=i;
+                    
+                    //int vizinhos = adj[index*MAXADJ];
+                    //Aqui é MAXADJ porque no maximo vai dar para guardar 99 vizinhos mais 1 posição para dizer quantos vizinhos se guardou
+                    adj[index*MAXADJ + vizinhos + 1]= i;
+                    //adj[index*MAXADJ ]++;
+                    vizinhos++;
+                    sum += ker_res;   
+                }
+
+                
+            }
+        }
+    
+    adj[index*MAXADJ]=vizinhos;
+    
+    density[index] = sum*MASS*SIMULATIONSCALE;
+    // compute pressure
+
+    if(densities[index]==1){
+        pressure[index] = STIFF * ((sum*MASS*SIMULATIONSCALE) - RESTDENSITY);
+    }
+    else{
+        pressure[index] = STIFF * ((sum*MASS*SIMULATIONSCALE) - RESTDENSITY2);
+    }
+    
+
+    //if (debug[index].w <500)
+    //    debug[index] = vec4(total+debug[index].x,vizinhos+debug[index].y,0,debug[index].w+1.0);
+    //if(debug[index].y <500){
+    //    debug[index] = vec4(debug[index].x+(distance/c),debug[index].y+1,debug[index].z+tras,debug[index].w); 
+    //}
+    
+    
+}

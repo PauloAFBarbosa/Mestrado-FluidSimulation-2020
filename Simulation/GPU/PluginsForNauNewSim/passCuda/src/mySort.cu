@@ -5,11 +5,12 @@
 #include <chrono>
 #include <cuda_runtime.h>
 #include "cutil_math.h"
+#include "nau/debug/profile.h"
 //#include <math_functions.h>
 
 
 
-void mysort(int * index1, float4 * values1, int* index2, float4 * values2,int particles){
+void mysort(int * index1, float4 * values1, int* index2, float4 * values2,int* index3, int* values3,int hasTwoDensities,int particles){
 	
 	
 	
@@ -17,10 +18,27 @@ void mysort(int * index1, float4 * values1, int* index2, float4 * values2,int pa
 	thrust::device_ptr<float4> v1buff = thrust::device_pointer_cast((values1));
 	thrust::device_ptr<int> i2buff = thrust::device_pointer_cast((index2));
 	thrust::device_ptr<float4> v2buff = thrust::device_pointer_cast((values2));
+    thrust::device_ptr<int> i3buff;
+    thrust::device_ptr<int> v3buff;
+    if (hasTwoDensities == 1) {
+        i3buff = thrust::device_pointer_cast((index3));
+        v3buff = thrust::device_pointer_cast((values3));
+    }
+    {
+        PROFILE("Sort_by_key_Pos");
+        thrust::sort_by_key(i1buff, i1buff + particles, v1buff);
+    }
+    {
+        PROFILE("Sort_by_key_Velocity");
+        thrust::sort_by_key(i2buff, i2buff + particles, v2buff);
+    }
 
-	
-	thrust::sort_by_key(i1buff, i1buff + particles, v1buff);
-	thrust::sort_by_key(i2buff, i2buff + particles, v2buff);
+    {
+        PROFILE("Sort_by_key_Densities");
+        if (hasTwoDensities == 1) {
+            thrust::sort_by_key(i3buff, i3buff + particles, v3buff);
+        }
+    }
 	
 }
 

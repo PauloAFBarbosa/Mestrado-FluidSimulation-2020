@@ -50,7 +50,8 @@ layout(std430, binding = 4) buffer AdjV2
 
 
 uint part1by2(uint n) {
-    n &= 0x000003ff;
+    n &= 0x000003ff; //do valor N vai por tudo a zero, menos os primeiros 10 bits -> faz n && 1111111111 fazendo com que os bits depois do decimo fiquem a zero
+    //^ é o ou exclusivo, so da true quando tem 1 e apenas 1 verdadeiro, por isso V V da F
     n = (n ^ (n << 16)) & 0xff0000ff;
     n = (n ^ (n << 8)) & 0x0300f00f;
     n = (n ^ (n << 4)) & 0x030c30c3;

@@ -1,0 +1,82 @@
+<?xml version="1.0"  encoding="UTF-8"?>
+
+<project name="SPH_Fluid_Sim" width = "1280" height = "720">
+    <assets>
+
+        <constants>
+
+        </constants>
+
+        <attributes>
+
+        </attributes>
+        
+        <scenes>
+            <scene name="Ball">
+				<geometry name = "Sphere" type="SPHERE" material="mat_Ball"  > 
+
+                </geometry>           
+			</scene>
+        </scenes>
+    
+        <viewports>
+            <viewport name="MainViewport">
+            </viewport>
+        </viewports>
+        
+        <cameras>
+            <camera name="MainCamera" >
+                <viewport name="MainViewport" />
+                <POSITION x="0.0" y="0.0" z="4.0" />
+                <NEAR 	value="0.02" />
+                <FAR 	value="100" /> 
+                <LOOK_AT_POINT x="-0.053" y="-1.0" z="0.936"/>
+            </camera>
+        </cameras>
+
+        <lights>
+			<light name="Sun">
+				<DIRECTION x="0" y="-1" z="-1" />
+			</light>
+		</lights>
+
+
+    <materialLibs>
+        <materialLib filename="renderScene.mlib" />
+    </materialLibs>
+
+
+    </assets>
+    
+    <pipelines default="pip">
+
+        <pipeline name="pip">
+
+            <pass class="default" name="Objects">
+                <scenes>
+                    <scene name="Ball"/>
+                </scenes>
+                <camera name="MainCamera"/>
+                <lights>
+                    <light name="Sun" />
+                </lights>
+                <materialMaps>
+                    <map fromMaterial="mat_Ball" toLibrary="renderScene" toMaterial="default"/>
+                </materialMaps>
+				<renderTarget name="scene" fromLibrary="renderScene" />
+            </pass>
+
+            <pass class="quad" name="Final">
+                <camera name="MainCamera" />
+				<viewport name="MainViewport" />
+				<material name="Final" fromLibrary="renderScene" />
+            </pass>
+
+        </pipeline>
+
+
+    </pipelines>
+    
+
+
+</project>

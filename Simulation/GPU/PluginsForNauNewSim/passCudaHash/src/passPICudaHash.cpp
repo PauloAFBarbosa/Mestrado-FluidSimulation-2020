@@ -5,7 +5,6 @@
 #include "nau/render/passFactory.h"
 #include "nau/material/iTexture.h"
 
-
 #include <glbinding/gl/gl.h>
 #include <glbinding/Binding.h>
 
@@ -16,7 +15,7 @@
 #include <cuda_gl_interop.h>
 #include <cuda.h>
 
-
+#include "nau/debug/profile.h"
 //using namespace gl;
 
 //static nau::INau *NAU_INTERFACE;
@@ -95,7 +94,7 @@ int hashSize = 0;
 void
 PAssCudaPIHash::prepare (void) {
 
-	std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+	//std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
 	if (first == 0) {
 		
 
@@ -150,14 +149,15 @@ PAssCudaPIHash::prepare (void) {
 
 	//cudaDeviceSynchronize();
 	//std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
-	
-	cudaGraphicsMapResources(1, &cuda_ssbo_Index, NULL);
-	cudaGraphicsMapResources(1, &cuda_ssbo_TempIndex, NULL);
-	cudaGraphicsMapResources(1, &cuda_ssbo_Position, NULL);
-	cudaGraphicsMapResources(1, &cuda_ssbo_Velocity, NULL);
-	cudaGraphicsMapResources(1, &cuda_ssbo_CellStart, NULL);
-	cudaGraphicsMapResources(1, &cuda_ssbo_CellEnd, NULL);
-	
+	{
+		PROFILE("MapResources");
+		cudaGraphicsMapResources(1, &cuda_ssbo_Index, NULL);
+		cudaGraphicsMapResources(1, &cuda_ssbo_TempIndex, NULL);
+		cudaGraphicsMapResources(1, &cuda_ssbo_Position, NULL);
+		cudaGraphicsMapResources(1, &cuda_ssbo_Velocity, NULL);
+		cudaGraphicsMapResources(1, &cuda_ssbo_CellStart, NULL);
+		cudaGraphicsMapResources(1, &cuda_ssbo_CellEnd, NULL);
+	}
 
 	//cudaDeviceSynchronize();
 	//std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
@@ -170,37 +170,43 @@ PAssCudaPIHash::prepare (void) {
 	size_t num_bytesssbo_CellStart;
 	size_t num_bytesssbo_CellEnd;
 	
+	{
+		PROFILE("GetMappedPointer");
+		cudaGraphicsResourceGetMappedPointer((void**)&dptrssboIndex, &num_bytesssbo_Index, cuda_ssbo_Index);
+		cudaGraphicsResourceGetMappedPointer((void**)&dptrssboTempIndex, &num_bytesssbo_TempIndex, cuda_ssbo_TempIndex);
+		cudaGraphicsResourceGetMappedPointer((void**)&dptrssboPosition, &num_bytesssbo_Position, cuda_ssbo_Position);
+		cudaGraphicsResourceGetMappedPointer((void**)&dptrssboVelocity, &num_bytesssbo_Velocity, cuda_ssbo_Velocity);
+		cudaGraphicsResourceGetMappedPointer((void**)&dptrssboCellStart, &num_bytesssbo_CellStart, cuda_ssbo_CellStart);
+		cudaGraphicsResourceGetMappedPointer((void**)&dptrssboCellEnd, &num_bytesssbo_CellEnd, cuda_ssbo_CellEnd);
+	}
 	
-	cudaGraphicsResourceGetMappedPointer((void**)&dptrssboIndex, &num_bytesssbo_Index, cuda_ssbo_Index);
-	cudaGraphicsResourceGetMappedPointer((void**)&dptrssboTempIndex, &num_bytesssbo_TempIndex, cuda_ssbo_TempIndex);
-	cudaGraphicsResourceGetMappedPointer((void**)&dptrssboPosition, &num_bytesssbo_Position, cuda_ssbo_Position);
-	cudaGraphicsResourceGetMappedPointer((void**)&dptrssboVelocity, &num_bytesssbo_Velocity, cuda_ssbo_Velocity);
-	cudaGraphicsResourceGetMappedPointer((void**)&dptrssboCellStart, &num_bytesssbo_CellStart, cuda_ssbo_CellStart);
-	cudaGraphicsResourceGetMappedPointer((void**)&dptrssboCellEnd, &num_bytesssbo_CellEnd, cuda_ssbo_CellEnd);
-
+	{
+		PROFILE("MySortThrust");
+		mysort(dptrssboIndex, dptrssboPosition, dptrssboTempIndex, dptrssboVelocity, particleNumber);
+	}
 	
-
-	mysort(dptrssboIndex,dptrssboPosition, dptrssboTempIndex, dptrssboVelocity, particleNumber);
-
-	//calls a kernel that counds each index to cellstart and cellend
-	kernelWraper(dptrssboIndex, dptrssboCellStart, dptrssboCellEnd,particleNumber,hashSize);
-
+	{
+		PROFILE("CellStartEnd");
+		//calls a kernel that counds each index to cellstart and cellend
+		kernelWraper(dptrssboIndex, dptrssboCellStart, dptrssboCellEnd, particleNumber, hashSize);
+	}
 	
 	
 	//cudaDeviceSynchronize();
 	//begin = std::chrono::steady_clock::now();
-	
-	cudaGraphicsUnmapResources(1, &cuda_ssbo_Index, NULL);
-	cudaGraphicsUnmapResources(1, &cuda_ssbo_TempIndex, NULL);
-	cudaGraphicsUnmapResources(1, &cuda_ssbo_Position, NULL);
-	cudaGraphicsUnmapResources(1, &cuda_ssbo_Velocity, NULL);
-	cudaGraphicsUnmapResources(1, &cuda_ssbo_CellStart, NULL);
-	cudaGraphicsUnmapResources(1, &cuda_ssbo_CellEnd, NULL);
+	{
+		PROFILE("UnmapResources");
+		cudaGraphicsUnmapResources(1, &cuda_ssbo_Index, NULL);
+		cudaGraphicsUnmapResources(1, &cuda_ssbo_TempIndex, NULL);
+		cudaGraphicsUnmapResources(1, &cuda_ssbo_Position, NULL);
+		cudaGraphicsUnmapResources(1, &cuda_ssbo_Velocity, NULL);
+		cudaGraphicsUnmapResources(1, &cuda_ssbo_CellStart, NULL);
+		cudaGraphicsUnmapResources(1, &cuda_ssbo_CellEnd, NULL);
+	}
+	//std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
 
-	std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
-
 	
-	std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << "[milliseconds]" << std::endl;
+	//std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << "[milliseconds]" << std::endl;
 	
 }
 
