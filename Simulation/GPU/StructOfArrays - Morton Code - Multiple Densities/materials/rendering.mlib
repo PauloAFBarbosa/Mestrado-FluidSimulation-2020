@@ -210,11 +210,15 @@
 					<valueof uniform="Particle_Size" 	type="RENDERER" 		context="CURRENT" 		component="Particle_Size" />
 				</values>
 			</shader>
-			<state name="DepthPeeling"/>
+			<!--state name="DepthPeeling"/-->
 			<buffers>
 				<buffer name="simulationLib::Position" >
 					<TYPE value="SHADER_STORAGE" />
 					<BINDING_POINT value="0" />
+				</buffer>
+				<buffer name="simulationLib::Densities" >
+					<TYPE value="SHADER_STORAGE" />
+					<BINDING_POINT value="1" />
 				</buffer>
 			</buffers>
 		</material>

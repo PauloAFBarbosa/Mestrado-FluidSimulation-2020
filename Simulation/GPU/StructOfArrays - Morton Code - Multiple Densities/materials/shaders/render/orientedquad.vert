@@ -6,6 +6,10 @@ layout(std430, binding = 0) buffer Position{
     vec4 testpos[];
 };
 
+layout(std430, binding = 1) buffer Densities{
+    uint densities[];
+};
+
 uniform mat4 m_model;
 uniform vec4 m_nup;
 uniform vec4 m_nright;
@@ -22,6 +26,8 @@ out vec2 iuv;
 out vec4 ipos;
 out vec4 icenter;
 out mat3 rotation;
+
+flat out uint c;
 
 void main()
 {
@@ -73,4 +79,6 @@ void main()
     //pos.z -= (trianglenum%1000)/100.0;
     gl_Position = (PROJECTION_VIEW * pos).xyzw;
     oposition = pos;
+
+    c=densities[particleId];
 }

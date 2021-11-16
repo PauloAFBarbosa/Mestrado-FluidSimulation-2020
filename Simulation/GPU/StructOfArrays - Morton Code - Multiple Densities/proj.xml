@@ -238,9 +238,9 @@
 				<lights>
 					<light name="Sun" />
 				</lights>
-				<renderTarget name="deferred_particles" fromLibrary="renderingLib" />
+				<!--renderTarget name="deferred_particles" fromLibrary="renderingLib" /-->
 			</pass>
-			<pass class="quad" name="invertFrontDepth">
+			<!--pass class="quad" name="invertFrontDepth">
 				<camera 		name="MainCamera" />
 				<material 		name="invert_frontal_depth" 	fromLibrary="renderingLib"/>
 				<renderTarget 	name="invert_frontal_depth" 	fromLibrary="renderingLib" />
@@ -268,10 +268,10 @@
 				<camera 		name="MainCamera" />
 				<material		name="Smooth_Init" 		fromLibrary="renderingLib"/>
 				<renderTarget 	name="Smoothing_Init" 	fromLibrary="renderingLib" />
-			</pass>
+			</pass-->
 		</pipeline>
 
-		<pipeline name="PingPong" repetitions="10000">
+		<!--pipeline name="PingPong" repetitions="10000">
 			<preScript file="scripts/pipelines.lua" script="SmoothPre" />
 			<testScript file="scripts/pipelines.lua" script="SmoothPipeline" />
 
@@ -295,7 +295,7 @@
 				<viewport name="MainViewport" />
 				<material name="FinalStep" fromLibrary="renderingLib" />
 			</pass>		
-		</pipeline>
+		</pipeline-->
 
 	</pipelines>
 

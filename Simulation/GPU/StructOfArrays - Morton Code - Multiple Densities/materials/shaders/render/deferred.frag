@@ -16,6 +16,7 @@ in vec2 iuv;
 in vec4 ipos;
 in vec4 icenter;
 in mat3 rotation;
+flat in uint c;
 
 layout (location = 0) out vec4 depth;
 //out vec4 outColor;
@@ -32,9 +33,11 @@ void main()
     if (distance(iuv,vec2(0.5,0.5))<=0.5){
         float a = PI*iuv.x;
         float b = PI*iuv.y;
-        //float y = sin(a)*cos(b);//sen a cos b
+        float y = sin(a)*cos(b);//sen a cos b
         float z = sin(a)*sin(b);//sen a sen b
-        //float x = cos(a);//cos a
+        float x = cos(a);//cos a
+
+        vec3 lol = vec3(x,y,z);
         
         vec3 n = -1*vec3(0,0,z); //vec3(iuv.x-0.5,iuv.y-0.5,0.5-distance(iuv,vec2(0.5,0.5)));//texture(sphereNormal,vec2(1,1)*iuv).xyz;
         
@@ -59,6 +62,17 @@ void main()
 
         
         depth   = vec4(vec2(1-ndc_depth,far_ndc_depth),1,1);
+
+        vec3 nn = normalize(ipos-icenter).xyz;
+        
+
+        vec3 novaNormal = normalize(icenter.xyz-lol);
+        float d = dot(novaNormal,normalize(vec3(0,0.5,0)));
+
+        if (c ==1)
+            depth = vec4(0.8,0,0,0)*d+vec4(1,0,0,0);
+        else
+            depth = vec4(0,0.8,0,0)*d+vec4(0,1,0,0);
     }
     else
         discard;
