@@ -298,6 +298,7 @@
 					<valueof uniform="Number_Particles" type="RENDERER" 		context="CURRENT" 		component="Number_Particles" />
 					<valueof uniform="External_Force" 			type="RENDERER"			context="CURRENT" 		component="External_Force" />
 					<valueof uniform="VISCOSITY" 		type="RENDERER" 		context="CURRENT" 		component="VISCOSITY" />
+					<valueof uniform="VISCOSITY2" 		type="RENDERER" 		context="CURRENT" 		component="VISCOSITY2" />
 					<valueof uniform="HASHSIZE" 		type="RENDERER" 		context="CURRENT" 		component="HASHSIZE" />
 					<valueof uniform="Pause" 			type="RENDERER" 		context="CURRENT" 		component="Pause" />
 					<valueof uniform="H" 		type="RENDERER" 		context="CURRENT" 		component="H" />
@@ -366,6 +367,10 @@
 					<buffer name="Adj">
 						<TYPE value="SHADER_STORAGE" />
 						<BINDING_POINT value="10" />
+					</buffer>	
+					<buffer name="Densities">
+						<TYPE value="SHADER_STORAGE" />
+						<BINDING_POINT value="11" />
 					</buffer>					
 		        </buffers>
 		</material> 	
